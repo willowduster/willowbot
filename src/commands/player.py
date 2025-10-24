@@ -157,14 +157,26 @@ class PlayerCommands(commands.Cog):
     async def stats(self, ctx):
         """View your character stats"""
         if player := await self.get_player(ctx.author.id, ctx):
+            # Get deaths and kills from database
+            async with await self.bot.db_connect() as db:
+                cursor = await db.execute('SELECT deaths FROM players WHERE id = ?', (ctx.author.id,))
+                deaths_row = await cursor.fetchone()
+                deaths = deaths_row[0] if deaths_row else 0
+                
+                cursor = await db.execute('SELECT COUNT(*) FROM player_kills WHERE player_id = ?', (ctx.author.id,))
+                kills_row = await cursor.fetchone()
+                kills = kills_row[0] if kills_row else 0
+            
             embed = discord.Embed(
                 title=f"{player.name}'s Stats",
                 color=discord.Color.blue()
             )
-            embed.add_field(name="Level", value=player.level)
-            embed.add_field(name="Health", value=f"{player.health}/{player.max_health}")
-            embed.add_field(name="Mana", value=f"{player.mana}/{player.max_mana}")
-            embed.add_field(name="XP", value=f"{player.xp}/{player.xp_needed_for_next_level()}")
+            embed.add_field(name="Level", value=player.level, inline=True)
+            embed.add_field(name="Health", value=f"{player.health}/{player.max_health}", inline=True)
+            embed.add_field(name="Mana", value=f"{player.mana}/{player.max_mana}", inline=True)
+            embed.add_field(name="XP", value=f"{player.xp}/{player.xp_needed_for_next_level()}", inline=True)
+            embed.add_field(name="💀 Deaths", value=deaths, inline=True)
+            embed.add_field(name="⚔️ Kills", value=kills, inline=True)
             await ctx.send(embed=embed)
         else:
             await ctx.send("You haven't started your adventure yet! Use `!w start` to begin!")

@@ -381,17 +381,24 @@ class CombatCommands(commands.Cog):
                 ''', (player.health, player.mana, player.xp, player.level, 
                       player.max_health, player.max_mana, player.id))
                 
-                # Get updated stats for display
+                # Get updated stats for display including deaths and kills
                 cursor = await db.execute('''
-                    SELECT level, health, max_health, mana, max_mana, xp, gold 
+                    SELECT level, health, max_health, mana, max_mana, xp, gold, deaths 
                     FROM players WHERE id = ?
                 ''', (user_id,))
                 stats = await cursor.fetchone()
+                
+                cursor = await db.execute('''
+                    SELECT COUNT(*) FROM player_kills WHERE player_id = ?
+                ''', (user_id,))
+                kills_row = await cursor.fetchone()
+                kills = kills_row[0] if kills_row else 0
+                
                 await db.commit()
             
             # Add stats footer
             if stats:
-                level, hp, max_hp, mana, max_mana, xp, gold = stats
+                level, hp, max_hp, mana, max_mana, xp, gold, deaths = stats
                 xp_needed = level * 100
                 victory_embed.add_field(
                     name="📊 Your Stats",
@@ -399,7 +406,8 @@ class CombatCommands(commands.Cog):
                           f"HP: {hp}/{max_hp}\n"
                           f"Mana: {mana}/{max_mana}\n"
                           f"XP: {xp}/{xp_needed}\n"
-                          f"Gold: {gold}",
+                          f"Gold: {gold}\n"
+                          f"💀 Deaths: {deaths} | ⚔️ Kills: {kills}",
                     inline=False
                 )
             
@@ -724,14 +732,24 @@ class CombatCommands(commands.Cog):
         
         # Check if player is defeated
         if not player.is_alive():
+            # Get current stats for display
+            async with await self.bot.db_connect() as db:
+                cursor = await db.execute('SELECT deaths FROM players WHERE id = ?', (user_id,))
+                deaths_row = await cursor.fetchone()
+                deaths = deaths_row[0] if deaths_row else 0
+                
+                cursor = await db.execute('SELECT COUNT(*) FROM player_kills WHERE player_id = ?', (user_id,))
+                kills_row = await cursor.fetchone()
+                kills = kills_row[0] if kills_row else 0
+            
             defeat_embed = discord.Embed(
-                title="Defeat",
-                description="You have been defeated! Your health has been restored to 50%.",
+                title="💀 Defeat",
+                description=f"You have died. Would you like to rest and play again?\n\n**Stats:**\n💀 Deaths: {deaths}\n⚔️ Kills: {kills}",
                 color=discord.Color.red()
             )
             defeat_embed.add_field(
                 name="Options",
-                value=f"{self.RESTART_EMOJI} Heal HP and Mana, then restart quest\n{self.LEAVE_EMOJI} Leave battle and view your status",
+                value=f"{self.RESTART_EMOJI} Rest and restart (penalty: 10% gold & XP)\n{self.LEAVE_EMOJI} Leave battle and view your status",
                 inline=False
             )
             defeat_msg = await channel.send(embed=defeat_embed)
@@ -1196,11 +1214,11 @@ class CombatCommands(commands.Cog):
             await channel.send(embed=embed)
     
     async def handle_defeat_restart(self, channel, user):
-        """Handle defeat restart - heal fully and restart quest"""
+        """Handle defeat restart - heal fully, apply penalties, and restart quest"""
         async with await self.bot.db_connect() as db:
-            # Heal player to full HP and Mana
+            # Get player data
             cursor = await db.execute('''
-                SELECT max_health, max_mana FROM players WHERE id = ?
+                SELECT max_health, max_mana, gold, xp, level FROM players WHERE id = ?
             ''', (user.id,))
             player_data = await cursor.fetchone()
             
@@ -1208,14 +1226,20 @@ class CombatCommands(commands.Cog):
                 await channel.send(f"{user.mention} No player data found!")
                 return
             
-            max_hp, max_mana = player_data
+            max_hp, max_mana, gold, xp, level = player_data
             
-            # Update to full health and mana
+            # Apply 10% penalty to gold and XP
+            gold_penalty = int(gold * 0.1)
+            xp_penalty = int(xp * 0.1)
+            new_gold = max(0, gold - gold_penalty)
+            new_xp = max(0, xp - xp_penalty)
+            
+            # Update to full health and mana, apply penalties
             await db.execute('''
                 UPDATE players 
-                SET health = ?, mana = ?
+                SET health = ?, mana = ?, gold = ?, xp = ?
                 WHERE id = ?
-            ''', (max_hp, max_mana, user.id))
+            ''', (max_hp, max_mana, new_gold, new_xp, user.id))
             await db.commit()
             
             # Get current quest
@@ -1226,13 +1250,17 @@ class CombatCommands(commands.Cog):
             ''', (user.id,))
             quest_data = await cursor.fetchone()
             
+            penalty_msg = ""
+            if gold_penalty > 0 or xp_penalty > 0:
+                penalty_msg = f"\n**Penalty:** -{gold_penalty} gold, -{xp_penalty} XP"
+            
             if quest_data:
                 quest_id = quest_data[0]
                 quest = self.quest_manager.quests.get(quest_id)
                 
                 await channel.send(
-                    f"✨ {user.mention} You have been fully healed!\n"
-                    f"**HP:** {max_hp}/{max_hp} | **Mana:** {max_mana}/{max_mana}\n"
+                    f"✨ {user.mention} You have rested and recovered!\n"
+                    f"**HP:** {max_hp}/{max_hp} | **Mana:** {max_mana}/{max_mana}{penalty_msg}\n"
                     f"Restarting quest: **{quest.title}**"
                 )
                 
@@ -1240,8 +1268,8 @@ class CombatCommands(commands.Cog):
                 await self.start_quest_combat(channel, user.id)
             else:
                 await channel.send(
-                    f"✨ {user.mention} You have been fully healed!\n"
-                    f"**HP:** {max_hp}/{max_hp} | **Mana:** {max_mana}/{max_mana}\n"
+                    f"✨ {user.mention} You have rested and recovered!\n"
+                    f"**HP:** {max_hp}/{max_hp} | **Mana:** {max_mana}/{max_mana}{penalty_msg}\n"
                     f"No active quest to restart. Use `!w quests` to view available quests."
                 )
     
@@ -1387,9 +1415,9 @@ class CombatCommands(commands.Cog):
         # Check if player is defeated
         if not player.is_alive():
             embed.add_field(
-                name="Defeat!",
-                value=f"You have been defeated! Your health has been restored to 50%.\n\n"
-                      f"{self.RESTART_EMOJI} Heal HP and Mana, then restart quest\n"
+                name="💀 Defeat!",
+                value=f"You have died. Would you like to rest and play again?\n\n"
+                      f"{self.RESTART_EMOJI} Rest and restart (penalty: 10% gold & XP)\n"
                       f"{self.LEAVE_EMOJI} Leave battle and view your status",
                 inline=False
             )
@@ -1898,9 +1926,9 @@ class CombatCommands(commands.Cog):
             # Check if player is defeated
             if not player.is_alive():
                 embed.add_field(
-                    name="Defeat!",
-                    value=f"You have been defeated! Your health has been restored to 50%.\n\n"
-                          f"{self.RESTART_EMOJI} Heal HP and Mana, then restart quest\n"
+                    name="💀 Defeat!",
+                    value=f"You have died. Would you like to rest and play again?\n\n"
+                          f"{self.RESTART_EMOJI} Rest and restart (penalty: 10% gold & XP)\n"
                           f"{self.LEAVE_EMOJI} Leave battle and view your status",
                     inline=False
                 )
