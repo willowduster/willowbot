@@ -1,102 +1,284 @@
+import json
 import discord
+import logging
+import asyncio
 from discord.ext import commands
 from ..models.quest_manager import QuestManager
 from ..models.enemy import EnemyGenerator
+from ..models.quest import QuestType
+
+logger = logging.getLogger('willowbot.quests')
 
 class QuestCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.quest_manager = QuestManager(bot)
         self.enemy_generator = EnemyGenerator()
+        self.quest_pages = {}
 
-    @commands.command(name='quests')
-    async def list_quests(self, ctx):
-        """List available quests"""
-        available_quests = await self.quest_manager.get_available_quests(ctx.author.id)
-        
-        if not available_quests:
-            await ctx.send("No quests available right now!")
-            return
-
+    def get_quest_embed(self, quest, page_num, total_pages):
+        """Create an embed for a single quest"""
         embed = discord.Embed(
-            title="📜 Available Quests",
+            title=f"📜 Quest Details ({page_num + 1}/{total_pages})",
+            description=quest.title,
             color=discord.Color.blue()
         )
 
-        for quest in available_quests:
-            # Create quest description
-            objectives_text = "\n".join([
-                f"- {obj.description}" for obj in quest.objectives
+        # Create quest description
+        objectives_text = "\n".join([
+            f"- {obj.description}" for obj in quest.objectives
+        ])
+        rewards_text = f"Rewards:\n- {quest.rewards.xp} XP\n- {quest.rewards.gold} Gold"
+        if quest.rewards.items:
+            rewards_text += "\n" + "\n".join([
+                f"- {item['count']}x {self.quest_manager.items[item['id']].name}"
+                for item in quest.rewards.items
             ])
-            rewards_text = f"Rewards:\n- {quest.rewards.xp} XP\n- {quest.rewards.gold} Gold"
-            if quest.rewards.items:
-                rewards_text += "\n" + "\n".join([
-                    f"- {item['count']}x {self.quest_manager.items[item['id']].name}"
-                    for item in quest.rewards.items
-                ])
-            if quest.rewards.title:
-                rewards_text += f"\n- Title: {self.quest_manager.titles[quest.rewards.title].name}"
+        if quest.rewards.title:
+            rewards_text += f"\n- Title: {self.quest_manager.titles[quest.rewards.title].name}"
 
-            embed.add_field(
-                name=f"{quest.title} (ID: {quest.id})",
-                value=f"{quest.description}\n\n**Objectives:**\n{objectives_text}\n\n**{rewards_text}**",
-                inline=False
-            )
+        embed.add_field(name="Description", value=quest.description, inline=False)
+        embed.add_field(name="Objectives", value=objectives_text, inline=False)
+        embed.add_field(name="Rewards", value=rewards_text, inline=False)
 
-        await ctx.send(embed=embed)
+        # Add footer with controls help
+        embed.set_footer(text="▶️ Start Quest | ❌ Cancel")
+        return embed
 
-    @commands.command(name='start_quest')
-    async def start_quest(self, ctx, quest_id: str):
-        """Start a specific quest"""
-        quest = await self.quest_manager.start_quest(ctx.author.id, quest_id)
+    @commands.command(name='quests', aliases=['q'])
+    async def list_quests(self, ctx):
+        """List available quests with reaction controls"""
+        logger.info(f"Listing quests for user {ctx.author.id}")
+        available_quests = await self.quest_manager.get_available_quests(ctx.author.id)
         
-        if not quest:
-            await ctx.send("Invalid quest ID or quest is already active!")
+        if not available_quests:
+            logger.info(f"No quests available for user {ctx.author.id}")
+            await ctx.send("No quests available right now!")
+            return
+        
+        logger.info(f"Found {len(available_quests)} available quests for user {ctx.author.id}")
+
+        # Store quests in a list for pagination
+        self.quest_pages = {}
+        self.quest_pages[ctx.author.id] = {
+            'quests': available_quests,
+            'current_page': 0
+        }
+        
+        # Send initial embed
+        current_quest = available_quests[0]
+        embed = self.get_quest_embed(current_quest, 0, len(available_quests))
+        message = await ctx.send(embed=embed)
+        
+        # Store message ID
+        self.quest_pages[ctx.author.id]['message_id'] = message.id
+        
+        # Add reaction controls
+        await message.add_reaction("▶️")   # Start
+        await message.add_reaction("❌")   # Cancel
+
+    @commands.Cog.listener()
+    async def on_reaction_add(self, reaction, user):
+        """Handle quest navigation and selection via reactions"""
+        if user.bot:
             return
 
-        embed = discord.Embed(
-            title=f"📜 Quest Started: {quest.title}",
-            description=quest.description,
-            color=discord.Color.green()
-        )
+        message = reaction.message
+        # Check if this is a quest message we're tracking
+        if not any(pages.get('message_id') == message.id for pages in self.quest_pages.values()):
+            return
 
-        objectives_text = "\n".join([
-            f"- {obj.description} (0/{obj.count})" for obj in quest.objectives
-        ])
-        embed.add_field(
-            name="Objectives",
-            value=objectives_text,
-            inline=False
+        # Find the user's quest pages
+        user_pages = next(
+            (pages for user_id, pages in self.quest_pages.items() if pages.get('message_id') == message.id),
+            None
         )
+        if not user_pages:
+            return
 
-        if quest.type == "combat":
-            # Start first combat if it's a combat quest
-            first_objective = quest.objectives[0]
-            if first_objective.type.value.startswith('combat'):
-                enemy = self.enemy_generator.generate_enemy(
-                    ctx.author.level,
-                    enemy_type=first_objective.enemy_type,
-                    enemy_prefix=first_objective.enemy_prefix,
-                    enemy_suffix=first_objective.enemy_suffix
+        quests = user_pages['quests']
+        current_page = user_pages['current_page']
+
+        # Try to remove user's reaction if we have permission
+        try:
+            await reaction.remove(user)
+        except discord.Forbidden:
+            pass  # Bot doesn't have permission to manage reactions
+        except Exception:
+            pass  # Other errors shouldn't stop the command from working
+
+        emoji = str(reaction.emoji)
+        if emoji == "▶️":  # Start quest
+            logger.info(f"User {user.id} attempting to start quest")
+            quest = quests[current_page]
+            logger.info(f"Starting quest {quest.id} for user {user.id}")
+            # Start the quest
+            started_quest = await self.quest_manager.start_quest(user.id, quest.id)
+            if not started_quest:
+                logger.warning(f"Quest {quest.id} unavailable for user {user.id}")
+                await message.channel.send("This quest is unavailable!", delete_after=5)
+                return
+            logger.info(f"Successfully started quest {quest.id} for user {user.id}")
+            
+            # Heal player at quest start
+            async with await self.bot.db_connect() as db:
+                # Get player's max health and mana
+                cursor = await db.execute('''
+                    SELECT max_health, max_mana 
+                    FROM players 
+                    WHERE id = ?
+                ''', (user.id,))
+                player_stats = await cursor.fetchone()
+                
+                if player_stats:
+                    max_health, max_mana = player_stats
+                    # Restore full health and mana
+                    await db.execute('''
+                        UPDATE players 
+                        SET health = ?, mana = ?
+                        WHERE id = ?
+                    ''', (max_health, max_mana, user.id))
+                    await db.commit()
+                    logger.info(f"Healed player {user.id} to full HP/Mana at quest start")
+
+            try:
+                logger.info("=== ENTERING TRY BLOCK ===")
+                # Get the current progress
+                progress = getattr(started_quest, 'objectives_progress', [0] * len(started_quest.objectives))
+                logger.info(f"Got progress: {progress}")
+                
+                # Get the first objective
+                first_objective = started_quest.objectives[0]
+                logger.info(f"Got first objective: {first_objective}")
+                
+                logger.info(f"About to check quest type. Quest object: {started_quest}")
+                logger.info(f"Started quest type: {started_quest.type if hasattr(started_quest, 'type') else 'NO TYPE ATTR'}")
+                logger.info(f"Original quest type: {quest.type if hasattr(quest, 'type') else 'NO TYPE ATTR'}")
+            except Exception as e:
+                logger.error(f"Error getting quest info: {str(e)}", exc_info=True)
+                await message.channel.send(f"Error starting quest: {str(e)}")
+                return
+
+            # Try to clean up the old message first
+            old_msg = None
+            try:
+                # Try to clear reactions first
+                await message.clear_reactions()
+                # Then update the message
+                progress_embed = discord.Embed(
+                    title="Quest Started!",
+                    description=f"Preparing your quest: {quest.title}",
+                    color=discord.Color.green()
                 )
-                await self.bot.get_cog('CombatCommands').start_combat(ctx, enemy)
-        
-        await ctx.send(embed=embed)
+                old_msg = await message.edit(embed=progress_embed)
+            except Exception as e:
+                logger.warning(f"Could not update quest message: {str(e)}")
+
+            # Start or resume combat if it's a combat quest
+            logger.info(f"Quest type: {started_quest.type}")
+            logger.info("=== LINE 158 DEBUG ===")
+            logger.info("=== LINE 159 DEBUG ===")
+            logger.info(f"Comparison result: {started_quest.type == QuestType.COMBAT}")
+            logger.info(f"Type of started_quest.type: {type(started_quest.type)}")
+            logger.info(f"QuestType.COMBAT: {QuestType.COMBAT}")
+            logger.info("=== ABOUT TO CHECK IF STATEMENT ===")
+            if started_quest.type == QuestType.COMBAT or started_quest.type == QuestType.BOSS_COMBAT:
+                logger.info("=== INSIDE COMBAT IF STATEMENT ===")
+                first_objective = started_quest.objectives[0]
+                current_progress = progress[0] if progress else 0
+                logger.info(f"First objective type: {first_objective.type.value}, progress: {current_progress}, count: {first_objective.count}")
+                
+                if first_objective.type.value.startswith('combat') and current_progress < first_objective.count:
+                    logger.info(f"Combat conditions met, starting combat")
+                    # Get combat cog
+                    combat_cog = self.bot.get_cog('CombatCommands')
+                    if not combat_cog:
+                        logger.error("Combat cog not found!")
+                        await message.channel.send("There was an error initializing combat. Please try again.")
+                        return
+                    
+                    # If we managed to keep the old message, delete it after sending the new one
+                    if old_msg:
+                        try:
+                            await old_msg.delete()
+                        except Exception as e:
+                            logger.warning(f"Could not delete old quest message: {str(e)}")
+                        
+                    try:
+                        # Start combat directly - no need for intermediate message
+                        logger.info(f"Starting combat for user {user.id}")
+                        combat_msg = await combat_cog.start_quest_combat(message.channel, user.id)
+                        if combat_msg:
+                            logger.info(f"Combat started successfully for user {user.id}")
+                        else:
+                            logger.error(f"Failed to start combat for user {user.id}")
+                            await message.channel.send("There was an error starting combat. Please try again.")
+                    except Exception as e:
+                        logger.error(f"Error starting combat: {str(e)}", exc_info=True)
+                        await message.channel.send("There was an error starting combat. Please try again.")
+            else:
+                # For non-combat quests, just send the quest info
+                quest_embed = discord.Embed(
+                    title="Quest Started!",
+                    description=f"**{quest.title}**\n{quest.description}",
+                    color=discord.Color.green()
+                )
+                await message.channel.send(embed=quest_embed)
+                
+                # If we managed to keep the old message, delete it
+                if old_msg:
+                    try:
+                        await old_msg.delete()
+                    except Exception as e:
+                        logger.warning(f"Could not delete old quest message: {str(e)}")
+            
+            del self.quest_pages[user.id]
+            return
+        elif emoji == "❌":  # Close quest viewer
+            try:
+                await message.delete()
+            except (discord.Forbidden, discord.NotFound):
+                try:
+                    # If we can't delete, try to edit it to show it's closed
+                    embed = discord.Embed(
+                        title="Quest Viewer Closed",
+                        description="This quest viewer has been closed.",
+                        color=discord.Color.dark_grey()
+                    )
+                    await message.edit(embed=embed)
+                    await message.clear_reactions()
+                except (discord.Forbidden, discord.NotFound):
+                    pass  # Message might be already gone or we lack permissions
+            del self.quest_pages[user.id]
+            return
+
+        # Update current page and edit message
+        user_pages['current_page'] = current_page
+        quest = quests[current_page]
+        embed = self.get_quest_embed(quest, current_page, len(quests))
+        await message.edit(embed=embed)
+
+    @commands.command(name='start_quest')
+    async def start_quest(self, ctx, quest_id: str = None):
+        """Show available quests or start a specific quest (Legacy command)"""
+        await ctx.send("Use the `!quests` command to view and start quests using the new reaction interface!")
+        await self.list_quests(ctx)
 
     @commands.command(name='quest_progress')
     async def quest_progress(self, ctx):
         """Check your current quest progress"""
-        async with self.bot.db.execute(
-            '''SELECT quest_id, objectives_progress, completed, rewards_claimed
-               FROM active_quests 
-               WHERE player_id = ?''',
-            (ctx.author.id,)
-        ) as cursor:
-            active_quests = await cursor.fetchall()
+        async with await self.bot.db_connect() as db:
+            async with db.execute(
+                '''SELECT quest_id, objectives_progress, completed, rewards_claimed
+                   FROM active_quests 
+                   WHERE player_id = ?''',
+                (ctx.author.id,)
+            ) as cursor:
+                active_quests = await cursor.fetchall()
 
-        if not active_quests:
-            await ctx.send("You have no active quests!")
-            return
+            if not active_quests:
+                await ctx.send("You have no active quests!")
+                return
 
         embed = discord.Embed(
             title="📋 Quest Progress",

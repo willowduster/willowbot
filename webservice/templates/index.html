@@ -47,6 +47,18 @@
                 </div>
             </div>
         </div>
+        
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card border-danger">
+                    <div class="card-body">
+                        <h5 class="card-title text-danger">Danger Zone</h5>
+                        <p class="card-text">Reset all players and their data. This action cannot be undone!</p>
+                        <button id="resetPlayers" class="btn btn-danger">Reset All Players</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -69,6 +81,23 @@
         document.getElementById('stopBot').addEventListener('click', () => {
             fetch('/api/bot/stop', { method: 'POST' })
                 .then(() => updateBotStatus());
+        });
+
+        document.getElementById('resetPlayers').addEventListener('click', () => {
+            if (confirm('Are you sure you want to reset ALL players? This will delete all player data, inventories, equipment, and quests. This action CANNOT be undone!')) {
+                fetch('/api/players/reset', { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            alert('All players have been successfully reset!');
+                        } else {
+                            alert('Error: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        alert('Failed to reset players: ' + error);
+                    });
+            }
         });
 
         // Update status every 5 seconds

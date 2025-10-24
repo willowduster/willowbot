@@ -7,8 +7,14 @@ services:
       - "5000:5000"
     volumes:
       - ./data:/app/data
-      - .env:/app/.env
+      - ./.env:/app/.env
     environment:
       - FLASK_APP=webservice/app.py
       - FLASK_ENV=development
+      - PYTHONPATH=/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/bot/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     restart: unless-stopped

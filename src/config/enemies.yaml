@@ -7,21 +7,21 @@ enemy_types:
       - Tiger
       - Boar
     base_stats:
-      health_range: [80, 120]
-      mana_range: [50, 80]
+      health_range: [50, 70]
+      mana_range: [30, 50]
       level_range: [1, 5]
     attacks:
       melee:
         - name: Bite
-          damage: [15, 25]
-          mana_cost: 10
-          miss_chance: 0.1
-          crit_chance: 0.15
-        - name: Claw Slash
-          damage: [20, 30]
-          mana_cost: 15
+          damage: [8, 15]
+          mana_cost: 5
           miss_chance: 0.15
-          crit_chance: 0.2
+          crit_chance: 0.1
+        - name: Claw Slash
+          damage: [10, 18]
+          mana_cost: 8
+          miss_chance: 0.2
+          crit_chance: 0.15
 
   - type: Undead
     names:
@@ -31,22 +31,22 @@ enemy_types:
       - Wraith
       - Ghoul
     base_stats:
-      health_range: [60, 100]
-      mana_range: [80, 120]
+      health_range: [40, 60]
+      mana_range: [50, 80]
       level_range: [2, 6]
     attacks:
       melee:
         - name: Bone Crush
-          damage: [15, 25]
-          mana_cost: 12
-          miss_chance: 0.12
-          crit_chance: 0.15
+          damage: [8, 15]
+          mana_cost: 8
+          miss_chance: 0.15
+          crit_chance: 0.12
       magic:
         - name: Death Touch
-          damage: [25, 35]
-          mana_cost: 25
-          miss_chance: 0.2
-          crit_chance: 0.25
+          damage: [12, 20]
+          mana_cost: 15
+          miss_chance: 0.25
+          crit_chance: 0.2
 
   - type: Elemental
     names:
@@ -56,64 +56,64 @@ enemy_types:
       - Wind Wisp
       - Lightning Spark
     base_stats:
-      health_range: [70, 90]
-      mana_range: [100, 150]
+      health_range: [45, 65]
+      mana_range: [60, 100]
       level_range: [3, 7]
     attacks:
       magic:
         - name: Elemental Blast
-          damage: [30, 40]
-          mana_cost: 30
-          miss_chance: 0.15
-          crit_chance: 0.2
-        - name: Nature's Fury
-          damage: [25, 35]
-          mana_cost: 25
-          miss_chance: 0.1
+          damage: [15, 22]
+          mana_cost: 18
+          miss_chance: 0.2
           crit_chance: 0.15
+        - name: Nature's Fury
+          damage: [12, 18]
+          mana_cost: 12
+          miss_chance: 0.15
+          crit_chance: 0.12
 
 affixes:
   prefixes:
     - name: Fierce
       stat_multipliers:
-        damage: 1.2
-        health: 1.1
+        damage: 1.15
+        health: 1.05
     - name: Tough
       stat_multipliers:
-        health: 1.3
-        damage: 0.9
+        health: 1.2
+        damage: 0.95
     - name: Magical
       stat_multipliers:
-        mana: 1.3
-        magic_damage: 1.2
+        mana: 1.2
+        magic_damage: 1.15
     - name: Swift
       stat_multipliers:
-        miss_chance: 0.8
-        crit_chance: 1.2
+        miss_chance: 0.85
+        crit_chance: 1.15
     - name: Ancient
       stat_multipliers:
-        health: 1.4
-        mana: 1.4
-        damage: 1.2
+        health: 1.25
+        mana: 1.25
+        damage: 1.1
 
   suffixes:
     - name: "of Darkness"
       stat_multipliers:
-        magic_damage: 1.3
+        magic_damage: 1.2
     - name: "of the Mountain"
       stat_multipliers:
-        health: 1.5
+        health: 1.3
     - name: "of Rage"
       stat_multipliers:
-        damage: 1.4
-        crit_chance: 1.3
+        damage: 1.25
+        crit_chance: 1.2
     - name: "of Wisdom"
       stat_multipliers:
-        mana: 1.5
-        magic_damage: 1.2
+        mana: 1.3
+        magic_damage: 1.15
     - name: "of Speed"
       stat_multipliers:
-        miss_chance: 0.7
+        miss_chance: 0.8
 
 # Example generated enemies:
 # 1. Fierce Wolf of Rage

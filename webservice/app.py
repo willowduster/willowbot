@@ -1,4 +1,5 @@
 import os
+import asyncio
 from flask import Flask, render_template, jsonify, request
 import sqlite3
 from threading import Thread
@@ -10,10 +11,24 @@ app = Flask(__name__)
 bot_instance = None
 bot_thread = None
 
+def start_bot_if_not_running():
+    global bot_instance, bot_thread
+    if bot_instance is None or not bot_instance.is_ready():
+        bot_instance = WillowBot()
+        token = os.getenv('DISCORD_TOKEN')
+        if token:
+            bot_thread = Thread(target=lambda: bot_instance.run(token))
+            bot_thread.start()
+
 def get_db():
-    db = sqlite3.connect('willowbot.db')
+    db_path = os.environ.get('DATABASE_PATH', '/app/data/willowbot.db')
+    db = sqlite3.connect(db_path)
     db.row_factory = sqlite3.Row
     return db
+
+# Start bot when Flask starts
+with app.app_context():
+    start_bot_if_not_running()
 
 @app.route('/')
 def index():
@@ -31,7 +46,10 @@ def start_bot():
     global bot_instance, bot_thread
     if bot_instance is None or not bot_instance.is_ready():
         bot_instance = WillowBot()
-        bot_thread = Thread(target=bot_instance.run)
+        token = os.getenv('DISCORD_TOKEN')
+        if not token:
+            return jsonify({'status': 'error', 'message': 'Discord token not found in environment variables'})
+        bot_thread = Thread(target=lambda: bot_instance.run(token))
         bot_thread.start()
         return jsonify({'status': 'started'})
     return jsonify({'status': 'already_running'})
@@ -40,7 +58,7 @@ def start_bot():
 def stop_bot():
     global bot_instance, bot_thread
     if bot_instance and bot_instance.is_ready():
-        bot_instance.close()
+        asyncio.run_coroutine_threadsafe(bot_instance.close(), bot_instance.loop)
         bot_thread.join()
         bot_instance = None
         bot_thread = None
@@ -106,6 +124,24 @@ def get_quests():
         GROUP BY q.id
     ''').fetchall()
     return render_template('quests.html', quests=quests)
+
+@app.route('/api/players/reset', methods=['POST'])
+def reset_all_players():
+    try:
+        db = get_db()
+        
+        # Delete all player-related data
+        db.execute('DELETE FROM active_quests')
+        db.execute('DELETE FROM inventory')
+        db.execute('DELETE FROM equipment')
+        db.execute('DELETE FROM players')
+        
+        db.commit()
+        db.close()
+        
+        return jsonify({'status': 'success', 'message': 'All players have been reset'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

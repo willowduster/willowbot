@@ -26,23 +26,23 @@ A Discord RPG bot that allows users to create and manage characters with stats, 
 ## Commands
 
 Character Management:
-- `!wb start` - Create your character and begin your adventure
-- `!wb stats` - View your character's current stats
+- `!w start` - Create your character and begin your adventure
+- `!w stats` (or `!w s`) - View your character's current stats
 
 Equipment & Inventory:
-- `!wb inventory` - View your inventory
-- `!wb equip <item>` - Equip an item
-- `!wb unequip <slot>` - Unequip an item from a slot
+- `!w inventory` - View your inventory
+- `!w equip <item>` - Equip an item
+- `!w unequip <slot>` - Unequip an item from a slot
 
 Combat:
-- `!wb attack <type>` - Use a melee or magic attack
-- `!wb flee` - Attempt to flee from combat
+- `!w attack <type>` - Use a melee or magic attack
+- `!w flee` - Attempt to flee from combat
 
 Quests:
-- `!wb quests` - List available quests
-- `!wb start_quest <quest_id>` - Start a specific quest
-- `!wb quest_progress` - Check your current quest progress
-- `!wb claim_rewards <quest_id>` - Claim rewards for a completed quest
+- `!w quests` (or `!w q`) - List available quests
+- `!w start_quest <quest_id>` - Start a specific quest
+- `!w quest_progress` - Check your current quest progress
+- `!w claim_rewards <quest_id>` - Claim rewards for a completed quest
 
 ## Setup
 

@@ -5,7 +5,8 @@ from pathlib import Path
 import yaml
 
 async def setup_database():
-    async with aiosqlite.connect('willowbot.db') as db:
+    db_path = os.getenv('DATABASE_PATH', 'willowbot.db')
+    async with aiosqlite.connect(db_path) as db:
         # Create players table
         await db.execute('''
             CREATE TABLE IF NOT EXISTS players (

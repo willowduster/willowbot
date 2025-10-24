@@ -47,7 +47,7 @@ class InventoryManager:
             data = yaml.safe_load(f)
 
         self.items = {}
-        for item_data in data['items']:
+        for item_id, item_data in data['items'].items():
             effects = [
                 ItemEffect(**effect_data)
                 for effect_data in item_data.get('effects', [])
@@ -68,19 +68,20 @@ class InventoryManager:
 
     async def get_inventory(self, player_id: int) -> Optional[Inventory]:
         """Get a player's inventory"""
-        async with self.bot.db.execute(
-            'SELECT level FROM players WHERE id = ?',
-            (player_id,)
-        ) as cursor:
-            row = await cursor.fetchone()
-            if not row:
-                return None
-            
-            level = row[0]
-            inventory = Inventory(player_id, level)
+        async with await self.bot.db_connect() as db:
+            async with db.execute(
+                'SELECT level FROM players WHERE id = ?',
+                (player_id,)
+            ) as cursor:
+                row = await cursor.fetchone()
+                if not row:
+                    return None
+                
+                level = row[0]
+                inventory = Inventory(player_id, level)
 
             # Load inventory items
-            async with self.bot.db.execute(
+            async with db.execute(
                 'SELECT item_id, count FROM inventory WHERE player_id = ?',
                 (player_id,)
             ) as cursor:
@@ -93,44 +94,45 @@ class InventoryManager:
 
     async def save_inventory(self, inventory: Inventory):
         """Save inventory to database"""
-        async with self.bot.db.execute(
-            'DELETE FROM inventory WHERE player_id = ?',
-            (inventory.player_id,)
-        ):
-            pass
-
-        # Insert new inventory items
-        for slot in inventory.slots.values():
-            await self.bot.db.execute(
-                'INSERT INTO inventory (player_id, item_id, count) VALUES (?, ?, ?)',
-                (inventory.player_id, slot.item.id, slot.count)
+        async with await self.bot.db_connect() as db:
+            await db.execute(
+                'DELETE FROM inventory WHERE player_id = ?',
+                (inventory.player_id,)
             )
-        await self.bot.db.commit()
+
+            # Insert new inventory items
+            for slot in inventory.slots.values():
+                await db.execute(
+                    'INSERT INTO inventory (player_id, item_id, count) VALUES (?, ?, ?)',
+                    (inventory.player_id, slot.item.id, slot.count)
+                )
+            await db.commit()
 
     async def get_equipment(self, player_id: int) -> EquipmentSlots:
         """Get player's equipment"""
         equipment = EquipmentSlots()
         
-        async with self.bot.db.execute(
-            'SELECT * FROM equipment WHERE player_id = ?',
-            (player_id,)
-        ) as cursor:
-            row = await cursor.fetchone()
-            if not row:
-                # Create empty equipment entry if none exists
-                await self.bot.db.execute(
-                    'INSERT INTO equipment (player_id) VALUES (?)',
-                    (player_id,)
-                )
-                await self.bot.db.commit()
-                return equipment
+        async with await self.bot.db_connect() as db:
+            async with db.execute(
+                'SELECT * FROM equipment WHERE player_id = ?',
+                (player_id,)
+            ) as cursor:
+                row = await cursor.fetchone()
+                if not row:
+                    # Create empty equipment entry if none exists
+                    await db.execute(
+                        'INSERT INTO equipment (player_id) VALUES (?)',
+                        (player_id,)
+                    )
+                    await db.commit()
+                    return equipment
 
             # Load equipped items
             columns = [desc[0] for desc in cursor.description]
             for i, value in enumerate(row):
                 if value and columns[i].endswith('_id'):
                     slot_name = columns[i][:-3]  # Remove '_id' suffix
-                    item = self.get_item(value)
+                    item = self.items.get(value)
                     if item:
                         setattr(equipment, slot_name, item)
 
@@ -138,23 +140,24 @@ class InventoryManager:
 
     async def save_equipment(self, player_id: int, equipment: EquipmentSlots):
         """Save player's equipment"""
-        await self.bot.db.execute('''
-            INSERT OR REPLACE INTO equipment (
-                player_id, helmet_id, armor_id, pants_id, boots_id,
-                weapon_id, ring1_id, ring2_id, amulet_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            player_id,
-            equipment.helmet.id if equipment.helmet else None,
-            equipment.armor.id if equipment.armor else None,
-            equipment.pants.id if equipment.pants else None,
-            equipment.boots.id if equipment.boots else None,
-            equipment.weapon.id if equipment.weapon else None,
-            equipment.ring1.id if equipment.ring1 else None,
-            equipment.ring2.id if equipment.ring2 else None,
-            equipment.amulet.id if equipment.amulet else None
-        ))
-        await self.bot.db.commit()
+        async with await self.bot.db_connect() as db:
+            await db.execute('''
+                INSERT OR REPLACE INTO equipment (
+                    player_id, helmet_id, armor_id, pants_id, boots_id,
+                    weapon_id, ring1_id, ring2_id, amulet_id
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                player_id,
+                equipment.helmet.id if equipment.helmet else None,
+                equipment.armor.id if equipment.armor else None,
+                equipment.pants.id if equipment.pants else None,
+                equipment.boots.id if equipment.boots else None,
+                equipment.weapon.id if equipment.weapon else None,
+                equipment.ring1.id if equipment.ring1 else None,
+                equipment.ring2.id if equipment.ring2 else None,
+                equipment.amulet.id if equipment.amulet else None
+            ))
+            await db.commit()
 
         # Update player stats based on equipment
         await self.update_player_stats(player_id, equipment)
@@ -163,37 +166,54 @@ class InventoryManager:
         """Update player's stats based on equipment"""
         stats = equipment.get_total_stats()
         
-        await self.bot.db.execute('''
-            UPDATE players SET
-                damage_bonus = ?,
-                magic_damage_bonus = ?,
-                defense = ?,
-                magic_defense = ?,
-                crit_chance_bonus = ?,
-                flee_chance_bonus = ?,
-                health_bonus = ?,
-                mana_bonus = ?
-            WHERE id = ?
-        ''', (
-            stats['damage'],
-            stats['magic_damage'],
-            stats['defense'],
-            stats['magic_defense'],
-            stats['crit_chance'],
-            stats['flee_chance'],
-            stats['health_bonus'],
-            stats['mana_bonus'],
-            player_id
-        ))
-        await self.bot.db.commit()
-
-        for slot in inventory.slots.values():
-            await self.bot.db.execute(
-                'INSERT INTO inventory (player_id, item_id, count) VALUES (?, ?, ?)',
-                (inventory.player_id, slot.item.id, slot.count)
+        async with await self.bot.db_connect() as db:
+            # Get base stats (level-based)
+            cursor = await db.execute(
+                'SELECT level, health, mana FROM players WHERE id = ?',
+                (player_id,)
             )
-
-        await self.bot.db.commit()
+            row = await cursor.fetchone()
+            if not row:
+                return
+            
+            level, current_health, current_mana = row
+            
+            # Calculate base max stats (from level)
+            base_max_health = 100 + ((level - 1) * 10)
+            base_max_mana = 100 + ((level - 1) * 5)
+            
+            # Apply equipment bonuses
+            new_max_health = base_max_health + stats['health_bonus']
+            new_max_mana = base_max_mana + stats['mana_bonus']
+            
+            # Update all stats including max health/mana
+            await db.execute('''
+                UPDATE players SET
+                    max_health = ?,
+                    max_mana = ?,
+                    damage_bonus = ?,
+                    magic_damage_bonus = ?,
+                    defense = ?,
+                    magic_defense = ?,
+                    crit_chance_bonus = ?,
+                    flee_chance_bonus = ?,
+                    health_bonus = ?,
+                    mana_bonus = ?
+                WHERE id = ?
+            ''', (
+                new_max_health,
+                new_max_mana,
+                stats['damage'],
+                stats['magic_damage'],
+                stats['defense'],
+                stats['magic_defense'],
+                stats['crit_chance'],
+                stats['flee_chance'],
+                stats['health_bonus'],
+                stats['mana_bonus'],
+                player_id
+            ))
+            await db.commit()
 
     def generate_loot(self, enemy_type: str, enemy_level: int, is_boss: bool = False) -> List[Tuple[Item, int]]:
         """Generate loot drops based on enemy type and level"""
@@ -249,3 +269,101 @@ class InventoryManager:
 
         await self.save_inventory(inventory)
         return added, failed
+    
+    async def auto_equip_better_gear(self, player_id: int):
+        """Automatically equip items from inventory if they're better than current equipment"""
+        # Get current equipment
+        equipment = await self.get_equipment(player_id)
+        current_stats = equipment.get_total_stats()
+        
+        # Get inventory
+        inventory = await self.get_inventory(player_id)
+        if not inventory:
+            return
+        
+        # Check each equipment slot
+        equipped_any = False
+        for slot_name in ['weapon', 'helmet', 'armor', 'pants', 'boots', 'ring1', 'ring2', 'amulet']:
+            # Get current item in slot
+            current_item = getattr(equipment, slot_name)
+            
+            # Find best item for this slot in inventory
+            best_item = None
+            best_score = self._calculate_item_score(current_item) if current_item else 0
+            
+            for item_id, slot in inventory.slots.items():
+                item = slot.item
+                
+                # Check if item can go in this slot and player can use it
+                if not equipment.can_equip(item, slot_name):
+                    continue
+                if item.level_requirement > inventory.level:
+                    continue
+                
+                # For rings, skip if it's already equipped in the other ring slot
+                if slot_name == 'ring2' and equipment.ring1 and equipment.ring1.id == item.id:
+                    continue
+                if slot_name == 'ring1' and equipment.ring2 and equipment.ring2.id == item.id:
+                    continue
+                
+                # Calculate score for this item
+                item_score = self._calculate_item_score(item)
+                
+                # If this item is better than current best, remember it
+                if item_score > best_score:
+                    best_item = item
+                    best_score = item_score
+            
+            # If we found a better item, equip it
+            if best_item and best_item != current_item:
+                # Unequip current item back to inventory
+                if current_item:
+                    inventory.add_item(current_item, 1)
+                
+                # Remove new item from inventory
+                if inventory.slots[best_item.id].count > 1:
+                    inventory.slots[best_item.id].count -= 1
+                else:
+                    del inventory.slots[best_item.id]
+                
+                # Equip the new item
+                equipment.equip(best_item, slot_name)
+                equipped_any = True
+        
+        # Save changes if anything was equipped
+        if equipped_any:
+            await self.save_inventory(inventory)
+            await self.save_equipment(player_id, equipment)
+    
+    def _calculate_item_score(self, item: Optional[Item]) -> float:
+        """Calculate a score for an item based on its stats"""
+        if not item or not item.effects:
+            return 0.0
+        
+        score = 0.0
+        stat_weights = {
+            'damage': 2.0,
+            'magic_damage': 2.0,
+            'defense': 1.5,
+            'magic_defense': 1.5,
+            'health_bonus': 0.1,
+            'mana_bonus': 0.05,
+            'crit_chance': 3.0,
+            'flee_chance': 0.5
+        }
+        
+        for effect in item.effects:
+            weight = stat_weights.get(effect.type, 1.0)
+            score += effect.value * weight
+        
+        # Factor in rarity as a tie-breaker
+        rarity_bonus = {
+            ItemRarity.COMMON: 0,
+            ItemRarity.UNCOMMON: 1,
+            ItemRarity.RARE: 3,
+            ItemRarity.EPIC: 6,
+            ItemRarity.LEGENDARY: 10
+        }
+        score += rarity_bonus.get(item.rarity, 0)
+        
+        return score

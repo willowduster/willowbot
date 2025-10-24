@@ -42,16 +42,17 @@ class EnemyGenerator:
 
         # Generate base stats
         base_stats = enemy_type['base_stats']
+        # Enemy level should be close to player level (player_level +/- 1)
         level = max(1, min(
             random.randint(
                 base_stats['level_range'][0],
                 base_stats['level_range'][1]
             ),
-            player_level + 2
+            player_level + 1  # Max 1 level above player
         ))
 
-        # Apply level scaling (10% increase per level)
-        level_scale = 1 + (0.1 * (level - 1))
+        # Apply level scaling (5% increase per level instead of 10%)
+        level_scale = 1 + (0.05 * (level - 1))
 
         # Get multipliers from affixes
         multipliers = self._apply_affixes(enemy_type, prefix, suffix)

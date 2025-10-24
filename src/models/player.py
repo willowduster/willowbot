@@ -19,6 +19,7 @@ class Player:
     defense: int = 0
     magic_defense: int = 0
     crit_chance_bonus: float = 0.0
+    crit_chance_multiplier: float = 1.0
     flee_chance_bonus: float = 0.0
     health_bonus: int = 0
     mana_bonus: int = 0
@@ -67,3 +68,7 @@ class Player:
         self.max_mana += 5
         self.mana = self.max_mana
         self.xp = 0  # Reset XP for next level
+    
+    def is_alive(self) -> bool:
+        """Check if player is still alive"""
+        return self.health > 0

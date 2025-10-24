@@ -28,7 +28,7 @@ class InventoryCommands(commands.Cog):
         """Show your equipped items"""
         equipment = await self.inventory_manager.get_equipment(ctx.author.id)
         if not equipment:
-            await ctx.send("You don't have a character yet! Use `!wb start` to create one.")
+            await ctx.send("You don't have a character yet! Use `!w start` to create one.")
             return
 
         embed = discord.Embed(
@@ -90,7 +90,7 @@ class InventoryCommands(commands.Cog):
         """Show your inventory"""
         inventory = await self.inventory_manager.get_inventory(ctx.author.id)
         if not inventory:
-            await ctx.send("You don't have a character yet! Use `!wb start` to create one.")
+            await ctx.send("You don't have a character yet! Use `!w start` to create one.")
             return
 
         embed = discord.Embed(
@@ -136,7 +136,7 @@ class InventoryCommands(commands.Cog):
         """Show detailed information about an item"""
         inventory = await self.inventory_manager.get_inventory(ctx.author.id)
         if not inventory:
-            await ctx.send("You don't have a character yet! Use `!wb start` to create one.")
+            await ctx.send("You don't have a character yet! Use `!w start` to create one.")
             return
 
         # Find item in inventory
@@ -425,7 +425,7 @@ class InventoryCommands(commands.Cog):
         """Use a consumable item"""
         inventory = await self.inventory_manager.get_inventory(ctx.author.id)
         if not inventory:
-            await ctx.send("You don't have a character yet! Use `!wb start` to create one.")
+            await ctx.send("You don't have a character yet! Use `!w start` to create one.")
             return
 
         # Find item in inventory
@@ -498,6 +498,59 @@ class InventoryCommands(commands.Cog):
                     value=f"Health: {health}/{max_health}\nMana: {mana}/{max_mana}"
                 )
                 await ctx.send(embed=embed)
+    
+    @commands.command(name='refreshstats', aliases=['recalc', 'fixstats'])
+    async def refresh_stats(self, ctx):
+        """Recalculate your stats based on level and equipment"""
+        # Get equipment
+        equipment = await self.inventory_manager.get_equipment(ctx.author.id)
+        
+        # Recalculate and update stats
+        await self.inventory_manager.update_player_stats(ctx.author.id, equipment)
+        
+        # Get updated stats
+        async with await self.bot.db_connect() as db:
+            cursor = await db.execute('''
+                SELECT level, health, max_health, mana, max_mana, xp, gold,
+                       damage_bonus, magic_damage_bonus, defense, magic_defense,
+                       crit_chance_bonus, health_bonus, mana_bonus
+                FROM players WHERE id = ?
+            ''', (ctx.author.id,))
+            stats = await cursor.fetchone()
+        
+        if not stats:
+            await ctx.send("You don't have a character yet! Use `!w start` to create one.")
+            return
+        
+        level, hp, max_hp, mana, max_mana, xp, gold, dmg, magic_dmg, defense, magic_def, crit, hp_bonus, mana_bonus = stats
+        
+        embed = discord.Embed(
+            title="✨ Stats Recalculated",
+            description=f"Your stats have been updated based on your equipment and level!",
+            color=discord.Color.blue()
+        )
+        
+        embed.add_field(
+            name="📊 Core Stats",
+            value=f"**Level {level}**\n"
+                  f"HP: {hp}/{max_hp} (+{hp_bonus} bonus)\n"
+                  f"Mana: {mana}/{max_mana} (+{mana_bonus} bonus)\n"
+                  f"XP: {xp}/{level * 100}\n"
+                  f"Gold: {gold}",
+            inline=False
+        )
+        
+        embed.add_field(
+            name="⚔️ Combat Stats",
+            value=f"Damage: +{dmg}\n"
+                  f"Magic Damage: +{magic_dmg}\n"
+                  f"Defense: +{defense}\n"
+                  f"Magic Defense: +{magic_def}\n"
+                  f"Crit Chance: +{crit * 100:.1f}%",
+            inline=False
+        )
+        
+        await ctx.send(embed=embed)
 
 async def setup(bot):
     await bot.add_cog(InventoryCommands(bot))

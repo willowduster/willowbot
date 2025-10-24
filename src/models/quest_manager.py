@@ -1,11 +1,14 @@
 import yaml
 from pathlib import Path
 import json
+import logging
 from typing import List, Dict, Optional, Tuple
 from ..models.quest import (
     Quest, QuestChain, QuestObjective, QuestReward,
     PlayerQuest, QuestItem, Title, QuestType, ObjectiveType
 )
+
+logger = logging.getLogger('willowbot.quest_manager')
 
 class QuestManager:
     def __init__(self, bot):
@@ -97,26 +100,56 @@ class QuestManager:
         """Get all quests available to the player"""
         available_quests = []
         
-        # Get player's level and completed quests
-        async with self.bot.db.execute(
-            'SELECT level FROM players WHERE id = ?', 
-            (player_id,)
-        ) as cursor:
-            player_level = (await cursor.fetchone())[0]
+        # Get player's level and create player if they don't exist
+        async with await self.bot.db_connect() as db:
+            async with db.execute(
+                'SELECT level FROM players WHERE id = ?', 
+                (player_id,)
+            ) as cursor:
+                result = await cursor.fetchone()
+                if result is None:
+                    # Get player's name from Discord
+                    guild = self.bot.guilds[0]  # Get first guild bot is in
+                    member = await guild.fetch_member(player_id)
+                    name = member.display_name if member else str(player_id)
 
-        # Get completed quest chains
-        async with self.bot.db.execute(
-            'SELECT chain_id FROM completed_quest_chains WHERE player_id = ?',
-            (player_id,)
-        ) as cursor:
-            completed_chains = set(row[0] for row in await cursor.fetchall())
+                    # Create new player
+                    await db.execute('''
+                        INSERT INTO players (id, name, level, xp, health, max_health, mana, max_mana)
+                        VALUES (?, ?, 1, 0, 100, 100, 100, 100)
+                    ''', (player_id, name))
+                    await db.commit()
+                    player_level = 1
+                else:
+                    player_level = result[0]
+                
+            # Get completed quest chains
+            async with db.execute(
+                'SELECT chain_id FROM completed_quest_chains WHERE player_id = ?',
+                (player_id,)
+            ) as cursor:
+                completed_chains = set(row[0] for row in await cursor.fetchall())
 
-        # Get active and completed quests
-        async with self.bot.db.execute(
-            'SELECT quest_id, completed FROM active_quests WHERE player_id = ?',
-            (player_id,)
-        ) as cursor:
-            quest_status = {row[0]: row[1] for row in await cursor.fetchall()}
+            # Get active and completed quests
+            async with db.execute(
+                'SELECT quest_id, completed FROM active_quests WHERE player_id = ?',
+                (player_id,)
+            ) as cursor:
+                quest_status = {row[0]: row[1] for row in await cursor.fetchall()}            # Get completed quest chains
+            async with db.execute(
+                'SELECT chain_id FROM completed_quest_chains WHERE player_id = ?',
+                (player_id,)
+            ) as cursor:
+                completed_chains = set(row[0] for row in await cursor.fetchall())
+
+            # Get active and completed quests
+            async with db.execute(
+                'SELECT quest_id, completed FROM active_quests WHERE player_id = ?',
+                (player_id,)
+            ) as cursor:
+                quest_status = {row[0]: row[1] for row in await cursor.fetchall()}
+
+
 
         for chain in self.quest_chains.values():
             # Check chain requirements
@@ -156,22 +189,25 @@ class QuestManager:
             return None
 
         # Check if quest is already active
-        async with self.bot.db.execute(
-            'SELECT quest_id FROM active_quests WHERE player_id = ? AND quest_id = ?',
-            (player_id, quest_id)
-        ) as cursor:
-            if await cursor.fetchone():
-                return None
+        async with await self.bot.db_connect() as db:
+            async with db.execute(
+                'SELECT objectives_progress FROM active_quests WHERE player_id = ? AND quest_id = ?',
+                (player_id, quest_id)
+            ) as cursor:
+                if row := await cursor.fetchone():
+                    # Quest is already active
+                    quest.objectives_progress = json.loads(row[0])
+                    return quest
 
-        # Initialize quest progress
-        objectives_progress = json.dumps([0] * len(quest.objectives))
-        await self.bot.db.execute('''
-            INSERT INTO active_quests (player_id, quest_id, objectives_progress)
-            VALUES (?, ?, ?)
-        ''', (player_id, quest_id, objectives_progress))
-        await self.bot.db.commit()
+            # Initialize quest progress
+            objectives_progress = json.dumps([0] * len(quest.objectives))
+            await db.execute('''
+                INSERT INTO active_quests (player_id, quest_id, objectives_progress)
+                VALUES (?, ?, ?)
+            ''', (player_id, quest_id, objectives_progress))
+            await db.commit()
 
-        return quest
+            return quest
 
     async def update_quest_progress(
         self, player_id: int, 
@@ -184,13 +220,14 @@ class QuestManager:
         results = []
         
         # Get all active quests
-        async with self.bot.db.execute(
-            '''SELECT quest_id, objectives_progress 
-               FROM active_quests 
-               WHERE player_id = ? AND completed = FALSE''',
-            (player_id,)
-        ) as cursor:
-            active_quests = await cursor.fetchall()
+        async with await self.bot.db_connect() as db:
+            async with db.execute(
+                '''SELECT quest_id, objectives_progress 
+                   FROM active_quests 
+                   WHERE player_id = ? AND completed = FALSE''',
+                (player_id,)
+            ) as cursor:
+                active_quests = await cursor.fetchall()
 
         for quest_id, objectives_progress in active_quests:
             quest = self.quests[quest_id]
@@ -225,71 +262,119 @@ class QuestManager:
                 is_complete = all(progress[i] >= obj.count for i, obj in enumerate(quest.objectives))
                 
                 # Update database
-                await self.bot.db.execute('''
-                    UPDATE active_quests 
-                    SET objectives_progress = ?, completed = ?
-                    WHERE player_id = ? AND quest_id = ?
-                ''', (json.dumps(progress), is_complete, player_id, quest_id))
+                async with await self.bot.db_connect() as db:
+                    await db.execute('''
+                        UPDATE active_quests 
+                        SET objectives_progress = ?, completed = ?
+                        WHERE player_id = ? AND quest_id = ?
+                    ''', (json.dumps(progress), is_complete, player_id, quest_id))
+                    await db.commit()
                 
                 results.append((quest, is_complete))
                 was_completed = is_complete
 
             if was_completed:
                 # If this completes a chain, record it
-                for chain in self.quest_chains.values():
-                    if quest_id == chain.quests[-1].id:
-                        await self.bot.db.execute('''
-                            INSERT OR IGNORE INTO completed_quest_chains (player_id, chain_id)
-                            VALUES (?, ?)
-                        ''', (player_id, chain.id))
+                async with await self.bot.db_connect() as db:
+                    for chain in self.quest_chains.values():
+                        if quest_id == chain.quests[-1].id:
+                            await db.execute('''
+                                INSERT OR IGNORE INTO completed_quest_chains (player_id, chain_id)
+                                VALUES (?, ?)
+                            ''', (player_id, chain.id))
+                    await db.commit()
+                
+                # Auto-start next quest in chain if it exists
+                if quest.next_quest:
+                    next_quest_id = quest.next_quest
+                    # Check if the next quest is available and not already active
+                    async with await self.bot.db_connect() as db:
+                        async with db.execute(
+                            'SELECT 1 FROM active_quests WHERE player_id = ? AND quest_id = ?',
+                            (player_id, next_quest_id)
+                        ) as cursor:
+                            already_active = await cursor.fetchone()
+                        
+                        if not already_active and next_quest_id in self.quests:
+                            next_quest = self.quests[next_quest_id]
+                            
+                            # Get player level for requirement checking
+                            async with db.execute(
+                                'SELECT level FROM players WHERE id = ?',
+                                (player_id,)
+                            ) as cursor:
+                                player_row = await cursor.fetchone()
+                                player_level = player_row[0] if player_row else 1
+                            
+                            # Check if player meets requirements
+                            can_start = True
+                            if next_quest.requirements:
+                                if next_quest.requirements.get('level', 0) > player_level:
+                                    can_start = False
+                                if next_quest.requirements.get('previous_quest'):
+                                    prev_quest = next_quest.requirements['previous_quest']
+                                    # The current quest should be the previous quest, which is now complete
+                                    if prev_quest != quest_id:
+                                        async with db.execute(
+                                            'SELECT completed FROM active_quests WHERE player_id = ? AND quest_id = ?',
+                                            (player_id, prev_quest)
+                                        ) as cursor:
+                                            prev_row = await cursor.fetchone()
+                                            if not prev_row or not prev_row[0]:
+                                                can_start = False
+                            
+                            if can_start:
+                                # Start the next quest automatically
+                                await self.start_quest(player_id, next_quest_id)
+                                logger.info(f"Auto-started next quest {next_quest_id} for player {player_id}")
 
-        await self.bot.db.commit()
         return results
 
     async def claim_quest_rewards(self, player_id: int, quest_id: str) -> Optional[QuestReward]:
         """Claim rewards for a completed quest"""
         # Check if quest is completed and rewards aren't claimed
-        async with self.bot.db.execute(
-            '''SELECT completed, rewards_claimed 
-               FROM active_quests 
-               WHERE player_id = ? AND quest_id = ?''',
-            (player_id, quest_id)
-        ) as cursor:
-            result = await cursor.fetchone()
-            if not result or not result[0] or result[1]:
-                return None
+        async with await self.bot.db_connect() as db:
+            async with db.execute(
+                '''SELECT completed, rewards_claimed 
+                   FROM active_quests 
+                   WHERE player_id = ? AND quest_id = ?''',
+                (player_id, quest_id)
+            ) as cursor:
+                result = await cursor.fetchone()
+                if not result or not result[0] or result[1]:
+                    return None
 
-        quest = self.quests[quest_id]
-        
-        # Update player stats
-        await self.bot.db.execute('''
-            UPDATE players 
-            SET xp = xp + ?, gold = gold + ?
-            WHERE id = ?
-        ''', (quest.rewards.xp, quest.rewards.gold, player_id))
+            quest = self.quests[quest_id]
+            
+            # Update player stats
+            await db.execute('''
+                UPDATE players 
+                SET xp = xp + ?, gold = gold + ?
+                WHERE id = ?
+            ''', (quest.rewards.xp, quest.rewards.gold, player_id))
 
-        # Add items to inventory
-        for item in quest.rewards.items:
-            await self.bot.db.execute('''
-                INSERT INTO inventory (player_id, item_id, count)
-                VALUES (?, ?, ?)
-                ON CONFLICT(player_id, item_id) DO UPDATE SET
-                count = count + ?
-            ''', (player_id, item['id'], item['count'], item['count']))
+            # Add items to inventory
+            for item in quest.rewards.items:
+                await db.execute('''
+                    INSERT INTO inventory (player_id, item_id, count)
+                    VALUES (?, ?, ?)
+                    ON CONFLICT(player_id, item_id) DO UPDATE SET
+                    count = count + ?
+                ''', (player_id, item['id'], item['count'], item['count']))
 
-        # Add title if any
-        if quest.rewards.title:
-            await self.bot.db.execute('''
-                INSERT OR IGNORE INTO player_titles (player_id, title_id)
-                VALUES (?, ?)
-            ''', (player_id, quest.rewards.title))
+            # Add title if any
+            if quest.rewards.title:
+                await db.execute('''
+                    INSERT OR IGNORE INTO player_titles (player_id, title_id)
+                    VALUES (?, ?)
+                ''', (player_id, quest.rewards.title))
 
-        # Mark rewards as claimed
-        await self.bot.db.execute('''
-            UPDATE active_quests 
-            SET rewards_claimed = TRUE
-            WHERE player_id = ? AND quest_id = ?
-        ''', (player_id, quest_id))
+            # Mark rewards as claimed
+            await db.execute('''
+                UPDATE active_quests 
+                SET rewards_claimed = TRUE
+                WHERE player_id = ? AND quest_id = ?
+            ''', (player_id, quest_id))
 
-        await self.bot.db.commit()
-        return quest.rewards
+            await db.commit()
+            return quest.rewards

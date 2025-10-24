@@ -176,6 +176,35 @@ items:
     value: 400
     stackable: false
 
+  # Consumables
+  health_potion:
+    id: health_potion
+    name: "Health Potion"
+    description: "A small vial of healing liquid that restores 50 HP"
+    type: consumable
+    rarity: common
+    level_requirement: 1
+    effects:
+      - type: heal
+        value: 50
+    value: 25
+    stackable: true
+    max_stack: 20
+
+  mana_potion:
+    id: mana_potion
+    name: "Mana Potion"
+    description: "A small vial of magical essence that restores 50 mana"
+    type: consumable
+    rarity: common
+    level_requirement: 1
+    effects:
+      - type: mana_restore
+        value: 50
+    value: 30
+    stackable: true
+    max_stack: 20
+
   # High-level Items
   greater_health_potion:
     id: greater_health_potion

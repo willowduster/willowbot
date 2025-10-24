@@ -1,17 +1,15 @@
 import discord
 from discord.ext import commands
-from models.player import Player
+from src.models.player import Player
 import aiosqlite
 import os
 
 class PlayerCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.db_path = 'players.db'
-        self.bot.loop.create_task(self.setup_database())
     
     async def setup_database(self):
-        async with aiosqlite.connect(self.db_path) as db:
+        async with await self.bot.db_connect() as db:
             # Players table
             await db.execute('''
                 CREATE TABLE IF NOT EXISTS players (
@@ -78,10 +76,28 @@ class PlayerCommands(commands.Cog):
 
             await db.commit()
     
-    async def get_player(self, user_id: int) -> Player:
-        async with aiosqlite.connect(self.db_path) as db:
+    async def get_player(self, user_id: int, ctx=None) -> Player:
+        """Get a player by ID, creating them if they don't exist"""
+        async with await self.bot.db_connect() as db:
             async with db.execute('SELECT * FROM players WHERE id = ?', (user_id,)) as cursor:
-                if row := await cursor.fetchone():
+                row = await cursor.fetchone()
+                if row is None and ctx:
+                    # Create new player
+                    name = ctx.author.display_name
+                    await db.execute('''
+                        INSERT INTO players (id, name, level, xp, health, max_health, mana, max_mana)
+                        VALUES (?, ?, 1, 0, 100, 100, 100, 100)
+                    ''', (user_id, name))
+                    
+                    # Give starting items: 3 mana potions
+                    await db.execute('''
+                        INSERT INTO inventory (player_id, item_id, count)
+                        VALUES (?, 'mana_potion', 3)
+                    ''', (user_id,))
+                    
+                    await db.commit()
+                    return await self.get_player(user_id)
+                elif row:
                     return Player(
                         id=row[0],
                         name=row[1],
@@ -137,10 +153,10 @@ class PlayerCommands(commands.Cog):
         
         await ctx.send(embed=embed)
 
-    @commands.command(name='stats')
+    @commands.command(name='stats', aliases=['s'])
     async def stats(self, ctx):
         """View your character stats"""
-        if player := await self.get_player(ctx.author.id):
+        if player := await self.get_player(ctx.author.id, ctx):
             embed = discord.Embed(
                 title=f"{player.name}'s Stats",
                 color=discord.Color.blue()
@@ -151,7 +167,7 @@ class PlayerCommands(commands.Cog):
             embed.add_field(name="XP", value=f"{player.xp}/{player.xp_needed_for_next_level()}")
             await ctx.send(embed=embed)
         else:
-            await ctx.send("You haven't started your adventure yet! Use `!wb start` to begin!")
+            await ctx.send("You haven't started your adventure yet! Use `!w start` to begin!")
 
 async def setup(bot):
     await bot.add_cog(PlayerCommands(bot))
