@@ -855,6 +855,222 @@ class CombatCommands(commands.Cog):
         combat_data['message_id'] = combat_msg.id
         combat_data['turn_history'] = turn_history
     
+    async def handle_enemy_turn(self, channel, user_id: int):
+        """Handle just the enemy's turn (used after item usage)"""
+        combat_data = self.active_combats.get(user_id)
+        if not combat_data:
+            return
+            
+        player = combat_data['player']
+        enemy = combat_data['enemy']
+        message_id = combat_data['message_id']
+        turn_history = combat_data.get('turn_history', [])
+        
+        # Get the combat message to edit
+        try:
+            combat_msg = await channel.fetch_message(message_id)
+        except:
+            await channel.send("Combat message not found!")
+            return
+        
+        # Enemy's turn - AI decision making
+        await asyncio.sleep(0.5)
+        
+        # Determine enemy action based on health percentage
+        health_percent = enemy.health / enemy.max_health
+        action_roll = random.random()
+        
+        if health_percent < 0.3:
+            # Low health: 60% heal, 30% attack, 10% flee
+            if action_roll < 0.6:
+                action = "heal"
+            elif action_roll < 0.9:
+                action = "attack"
+            else:
+                action = "flee"
+        elif health_percent < 0.6:
+            # Medium health: 70% attack, 20% heal, 10% flee
+            if action_roll < 0.7:
+                action = "attack"
+            elif action_roll < 0.9:
+                action = "heal"
+            else:
+                action = "flee"
+        else:
+            # High health: 85% attack, 10% heal, 5% flee
+            if action_roll < 0.85:
+                action = "attack"
+            elif action_roll < 0.95:
+                action = "heal"
+            else:
+                action = "flee"
+        
+        # Enemy regenerates mana to sustain the fight
+        if enemy.mana < enemy.max_mana:
+            mana_regen = int(enemy.max_mana * 0.3)  # 30% mana regeneration per turn
+            enemy.mana = min(enemy.max_mana, enemy.mana + mana_regen)
+        
+        if action == "flee":
+            # Enemy attempts to flee (handled same as in handle_combat_round)
+            flee_chance = 0.15
+            if random.random() < flee_chance:
+                turn_history.append(f"🏃 {enemy.name} fled from battle!")
+                history_display = "\n".join(turn_history[-10:])
+                
+                enemy_embed = discord.Embed(
+                    title="Enemy Fled!",
+                    description=f"**Combat History:**\n{history_display}",
+                    color=discord.Color.orange()
+                )
+                await combat_msg.edit(embed=enemy_embed)
+                enemy.health = 0
+                # Victory sequence would be handled by checking enemy.health
+                del self.active_combats[user_id]
+                return
+            else:
+                turn_history.append(f"🏃 {enemy.name} tried to flee but failed!")
+                action = "attack"
+        
+        if action == "heal":
+            heal_amount = random.randint(20, 40)
+            old_health = enemy.health
+            enemy.health = min(enemy.max_health, enemy.health + heal_amount)
+            actual_heal = enemy.health - old_health
+            turn_history.append(f"💚 {enemy.name} healed for {actual_heal} HP!")
+        elif action == "attack":
+            enemy_attack = random.choice(enemy.attacks)
+            enemy_result = enemy_attack.execute(enemy, player)
+            if enemy_result['success']:
+                turn_history.append(f"🔴 {enemy.name} used {enemy_attack.name} - {enemy_result['damage']} damage to you!")
+            else:
+                turn_history.append(f"🔴 {enemy.name} tried {enemy_attack.name} - {enemy_result['message']}")
+        
+        # Build history display
+        history_display = "\n".join(turn_history[-10:])
+        
+        enemy_embed = discord.Embed(
+            title="⚔️ Combat - Enemy's Turn",
+            description=f"**Combat History:**\n{history_display}",
+            color=discord.Color.red()
+        )
+        enemy_embed.add_field(name="Your Stats", value=f"HP: {player.health}/{player.max_health}\nMana: {player.mana}/{player.max_mana}", inline=True)
+        enemy_embed.add_field(name="Enemy Stats", value=f"HP: {enemy.health}/{enemy.max_health}\nMana: {enemy.mana}/{enemy.max_mana}", inline=True)
+        await combat_msg.edit(embed=enemy_embed)
+        
+        # Update stats in database
+        async with await self.bot.db_connect() as db:
+            await db.execute('''
+                UPDATE players 
+                SET health = ?, mana = ?
+                WHERE id = ?
+            ''', (player.health, player.mana, player.id))
+            await db.commit()
+        
+        # Check if player is defeated
+        if not player.is_alive():
+            # Record death and handle defeat (same as handle_combat_round)
+            async with await self.bot.db_connect() as db:
+                await db.execute('''
+                    INSERT INTO death_history (
+                        player_id, enemy_name, enemy_level, 
+                        player_level, player_health, player_max_health,
+                        player_mana, player_max_mana
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (user_id, enemy.name, enemy.level, 
+                      player.level, 0, player.max_health,
+                      player.mana, player.max_mana))
+                await db.commit()
+            
+            # Get current stats for display
+            async with await self.bot.db_connect() as db:
+                cursor = await db.execute('SELECT deaths FROM players WHERE id = ?', (user_id,))
+                deaths_row = await cursor.fetchone()
+                deaths = deaths_row[0] if deaths_row else 0
+                
+                cursor = await db.execute('SELECT COUNT(*) FROM player_kills WHERE player_id = ?', (user_id,))
+                kills_row = await cursor.fetchone()
+                kills = kills_row[0] if kills_row else 0
+            
+            defeat_embed = discord.Embed(
+                title="💀 Defeat",
+                description=f"You have died. Would you like to rest and play again?\n\n**Stats:**\n💀 Deaths: {deaths}\n⚔️ Kills: {kills}",
+                color=discord.Color.red()
+            )
+            defeat_embed.add_field(
+                name="Options",
+                value=f"{self.RESTART_EMOJI} Rest and restart (penalty: 10% gold & XP)\n{self.LEAVE_EMOJI} Leave battle and view your status",
+                inline=False
+            )
+            defeat_msg = await channel.send(embed=defeat_embed)
+            
+            for emoji in self.defeat_emojis:
+                await defeat_msg.add_reaction(emoji)
+            
+            self.victory_messages[user_id] = {
+                'message_id': defeat_msg.id,
+                'type': 'defeat',
+                'player': player
+            }
+            
+            player.health = player.max_health // 2
+            player.mana = player.max_mana
+            
+            async with await self.bot.db_connect() as db:
+                await db.execute('''
+                    UPDATE players 
+                    SET health = ?, mana = ?, in_combat = FALSE, current_enemy = NULL, deaths = deaths + 1
+                    WHERE id = ?
+                ''', (player.health, player.mana, player.id))
+                await db.commit()
+            
+            del self.active_combats[user_id]
+            return
+        
+        # Wait before showing next turn
+        await asyncio.sleep(0.5)
+        
+        # Get healing item count
+        healing_item_count = await self.get_healing_consumable_count(player.id)
+        
+        # Update message with combat status and options for next round
+        actions_text = f"{self.MELEE_EMOJI} Melee Attack\n{self.MAGIC_EMOJI} Magic Attack\n{self.ITEM_EMOJI} Use Item"
+        if healing_item_count > 0:
+            actions_text += f" ({healing_item_count} healing items)"
+        actions_text += f"\n{self.FLEE_EMOJI} Flee"
+        
+        # Build history display
+        history_display = "\n".join(turn_history[-10:])
+        
+        options_embed = discord.Embed(
+            title="⚔️ Combat - Your Turn",
+            description=f"**Combat History:**\n{history_display}",
+            color=discord.Color.blue()
+        )
+        options_embed.add_field(
+            name="Your Stats",
+            value=f"HP: {player.health}/{player.max_health}\nMana: {player.mana}/{player.max_mana}",
+            inline=True
+        )
+        options_embed.add_field(
+            name="Enemy Stats",
+            value=f"HP: {enemy.health}/{enemy.max_health}\nMana: {enemy.mana}/{enemy.max_mana}",
+            inline=True
+        )
+        options_embed.add_field(
+            name="Actions",
+            value=actions_text,
+            inline=False
+        )
+        await combat_msg.edit(embed=options_embed)
+        
+        # Add fresh reactions
+        for emoji in self.combat_emojis:
+            await combat_msg.add_reaction(emoji)
+        
+        # Update stored combat data
+        combat_data['message_id'] = combat_msg.id
+        combat_data['turn_history'] = turn_history
+    
     async def get_healing_consumable_count(self, user_id: int) -> int:
         """Get the count of healing consumables in player's inventory"""
         async with await self.bot.db_connect() as db:
@@ -988,18 +1204,53 @@ class CombatCommands(commands.Cog):
             self.active_combats[user.id]['player'] = player
             self.active_combats[user.id]['enemy'] = enemy
             
-            await item_msg.delete()
-            await channel.send(f"✅ {user.mention} used **{selected_item.name}**! " + ", ".join(effects_applied))
+            # Add item usage to turn history
+            turn_history = combat_data.get('turn_history', [])
+            turn_history.append(f"🧪 You used {selected_item.name} - " + ", ".join(effects_applied))
+            self.active_combats[user.id]['turn_history'] = turn_history
             
-            # Continue combat - enemy's turn
-            if enemy.health > 0:
-                await asyncio.sleep(1)
-                await self.handle_combat_round(channel, user.id, None)  # None = enemy turn only
-            else:
-                # Enemy defeated!
-                await channel.send(f"💀 {enemy.name} was defeated by the item!")
-                # Trigger victory
-                await self.handle_combat_round(channel, user.id, "victory_check")
+            await item_msg.delete()
+            
+            # Check if enemy is defeated
+            if enemy.health <= 0:
+                # Enemy defeated by item! Trigger the normal victory sequence
+                # We need to call handle_combat_round with a fake attack to trigger victory
+                await channel.send(f"💀 {enemy.name} was defeated by the {selected_item.name}!")
+                # The victory logic is in handle_combat_round, but we need enemy.health to be 0
+                # Just delete combat and return - the next check will handle it
+                message_id = combat_data['message_id']
+                try:
+                    combat_msg = await channel.fetch_message(message_id)
+                    # Continue with the victory check by triggering handle_combat_round with melee
+                    # This will see enemy is dead and trigger victory
+                    await self.handle_combat_round(channel, user.id, "melee")
+                except:
+                    pass
+                return
+            
+            # Update the combat message to show item was used
+            message_id = combat_data['message_id']
+            try:
+                combat_msg = await channel.fetch_message(message_id)
+                
+                # Build history display
+                history_display = "\n".join(turn_history[-10:])
+                
+                item_embed = discord.Embed(
+                    title="🧪 Item Used",
+                    description=f"**Combat History:**\n{history_display}",
+                    color=discord.Color.green()
+                )
+                item_embed.add_field(name="Your Stats", value=f"HP: {player.health}/{player.max_health}\nMana: {player.mana}/{player.max_mana}", inline=True)
+                item_embed.add_field(name="Enemy Stats", value=f"HP: {enemy.health}/{enemy.max_health}\nMana: {enemy.mana}/{enemy.max_mana}", inline=True)
+                await combat_msg.edit(embed=item_embed)
+                await combat_msg.clear_reactions()
+            except:
+                pass
+            
+            # Enemy's turn now - call the enemy turn logic
+            await asyncio.sleep(1)
+            await self.handle_enemy_turn(channel, user.id)
                 
         except asyncio.TimeoutError:
             await item_msg.delete()
