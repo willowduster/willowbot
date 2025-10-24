@@ -27,24 +27,26 @@ class QuestManager:
         self.items = {}
         self.titles = {}
 
-        # Load items
-        for item_id, item_data in data['quest_items'].items():
-            self.items[item_id] = QuestItem(
-                id=item_id,
-                name=item_data['name'],
-                description=item_data['description'],
+        # Load items (optional - may not exist in all quest configs)
+        if 'quest_items' in data:
+            for item_id, item_data in data['quest_items'].items():
+                self.items[item_id] = QuestItem(
+                    id=item_id,
+                    name=item_data['name'],
+                    description=item_data['description'],
                 effect=item_data['effect'],
                 value=item_data['value']
             )
 
-        # Load titles
-        for title_id, title_data in data['titles'].items():
-            self.titles[title_id] = Title(
-                id=title_id,
-                name=title_data['name'],
-                description=title_data['description'],
-                bonuses=title_data['bonuses']
-            )
+        # Load titles (optional section)
+        if 'titles' in data:
+            for title_id, title_data in data['titles'].items():
+                self.titles[title_id] = Title(
+                    id=title_id,
+                    name=title_data['name'],
+                    description=title_data['description'],
+                    bonuses=title_data['bonuses']
+                )
 
         # Load quest chains and quests
         for chain_data in data['quest_chains']:
@@ -232,6 +234,11 @@ class QuestManager:
                 active_quests = await cursor.fetchall()
 
         for quest_id, objectives_progress in active_quests:
+            # Check if quest still exists in config
+            if quest_id not in self.quests:
+                logger.warning(f"Quest {quest_id} not found in config, skipping. Consider cleaning up database.")
+                continue
+                
             quest = self.quests[quest_id]
             progress = json.loads(objectives_progress)
             was_completed = False

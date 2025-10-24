@@ -5,6 +5,8 @@ from enum import Enum
 class QuestType(Enum):
     COMBAT = "combat"
     BOSS_COMBAT = "boss_combat"
+    EXPLORATION = "exploration"
+    COLLECTION = "collection"
 
 class ObjectiveType(Enum):
     COMBAT = "combat"

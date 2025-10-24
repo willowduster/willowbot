@@ -4,6 +4,7 @@ import logging
 import asyncio
 from discord.ext import commands
 from ..models.quest_manager import QuestManager
+from ..models.inventory_manager import InventoryManager
 from ..models.enemy import EnemyGenerator
 from ..models.quest import QuestType
 
@@ -13,6 +14,7 @@ class QuestCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.quest_manager = QuestManager(bot)
+        self.inventory_manager = InventoryManager(bot)
         self.enemy_generator = EnemyGenerator()
         self.quest_pages = {}
 
@@ -31,7 +33,7 @@ class QuestCommands(commands.Cog):
         rewards_text = f"Rewards:\n- {quest.rewards.xp} XP\n- {quest.rewards.gold} Gold"
         if quest.rewards.items:
             rewards_text += "\n" + "\n".join([
-                f"- {item['count']}x {self.quest_manager.items[item['id']].name}"
+                f"- {item['count']}x {self.inventory_manager.items[item['id']].name}"
                 for item in quest.rewards.items
             ])
         if quest.rewards.title:
@@ -153,50 +155,43 @@ class QuestCommands(commands.Cog):
             except Exception as e:
                 logger.warning(f"Could not update quest message: {str(e)}")
 
-            # Start or resume combat if it's a combat quest
+            # Start or resume combat if the quest has combat objectives
             logger.info(f"Quest type: {started_quest.type}")
-            logger.info("=== LINE 158 DEBUG ===")
-            logger.info("=== LINE 159 DEBUG ===")
-            logger.info(f"Comparison result: {started_quest.type == QuestType.COMBAT}")
-            logger.info(f"Type of started_quest.type: {type(started_quest.type)}")
-            logger.info(f"QuestType.COMBAT: {QuestType.COMBAT}")
-            logger.info("=== ABOUT TO CHECK IF STATEMENT ===")
-            if started_quest.type == QuestType.COMBAT or started_quest.type == QuestType.BOSS_COMBAT:
-                logger.info("=== INSIDE COMBAT IF STATEMENT ===")
-                first_objective = started_quest.objectives[0]
-                current_progress = progress[0] if progress else 0
-                logger.info(f"First objective type: {first_objective.type.value}, progress: {current_progress}, count: {first_objective.count}")
+            first_objective = started_quest.objectives[0]
+            current_progress = progress[0] if progress else 0
+            logger.info(f"First objective type: {first_objective.type.value}, progress: {current_progress}, count: {first_objective.count}")
+            
+            # Check if this objective requires combat (regardless of quest type)
+            if first_objective.type.value.startswith('combat') and current_progress < first_objective.count:
+                logger.info(f"Combat conditions met, starting combat")
+                # Get combat cog
+                combat_cog = self.bot.get_cog('CombatCommands')
+                if not combat_cog:
+                    logger.error("Combat cog not found!")
+                    await message.channel.send("There was an error initializing combat. Please try again.")
+                    return
                 
-                if first_objective.type.value.startswith('combat') and current_progress < first_objective.count:
-                    logger.info(f"Combat conditions met, starting combat")
-                    # Get combat cog
-                    combat_cog = self.bot.get_cog('CombatCommands')
-                    if not combat_cog:
-                        logger.error("Combat cog not found!")
-                        await message.channel.send("There was an error initializing combat. Please try again.")
-                        return
-                    
-                    # If we managed to keep the old message, delete it after sending the new one
-                    if old_msg:
-                        try:
-                            await old_msg.delete()
-                        except Exception as e:
-                            logger.warning(f"Could not delete old quest message: {str(e)}")
-                        
+                # If we managed to keep the old message, delete it after sending the new one
+                if old_msg:
                     try:
-                        # Start combat directly - no need for intermediate message
-                        logger.info(f"Starting combat for user {user.id}")
-                        combat_msg = await combat_cog.start_quest_combat(message.channel, user.id)
-                        if combat_msg:
-                            logger.info(f"Combat started successfully for user {user.id}")
-                        else:
-                            logger.error(f"Failed to start combat for user {user.id}")
-                            await message.channel.send("There was an error starting combat. Please try again.")
+                        await old_msg.delete()
                     except Exception as e:
-                        logger.error(f"Error starting combat: {str(e)}", exc_info=True)
+                        logger.warning(f"Could not delete old quest message: {str(e)}")
+                    
+                try:
+                    # Start combat directly - no need for intermediate message
+                    logger.info(f"Starting combat for user {user.id}")
+                    combat_msg = await combat_cog.start_quest_combat(message.channel, user.id)
+                    if combat_msg:
+                        logger.info(f"Combat started successfully for user {user.id}")
+                    else:
+                        logger.error(f"Failed to start combat for user {user.id}")
                         await message.channel.send("There was an error starting combat. Please try again.")
+                except Exception as e:
+                    logger.error(f"Error starting combat: {str(e)}", exc_info=True)
+                    await message.channel.send("There was an error starting combat. Please try again.")
             else:
-                # For non-combat quests, just send the quest info
+                # For objectives that don't require combat, just send the quest info
                 quest_embed = discord.Embed(
                     title="Quest Started!",
                     description=f"**{quest.title}**\n{quest.description}",
@@ -309,7 +304,7 @@ class QuestCommands(commands.Cog):
 
         if rewards.items:
             for item in rewards.items:
-                item_name = self.quest_manager.items[item['id']].name
+                item_name = self.inventory_manager.items[item['id']].name
                 rewards_text.append(f"• {item['count']}x {item_name}")
 
         if rewards.title:
