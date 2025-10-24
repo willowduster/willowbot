@@ -1,187 +1,861 @@
 quest_chains:
-  - id: "tutorial"
-    name: "New Adventurer's Path"
-    description: "Begin your journey as an adventurer"
-    quests:
-      - id: "tutorial_1"
-        title: "First Steps"
-        description: "Learn the basics of combat"
-        type: "combat"
-        requirements:
-          level: 1
-        objectives:
-          - type: "combat"
-            count: 1
-            description: "Defeat your first enemy"
-        rewards:
-          xp: 100
-          gold: 50
-          items:
-            - id: "health_potion"
-              count: 2
-        next_quest: "tutorial_2"
-
-      - id: "tutorial_2"
-        title: "Magic and Might"
-        description: "Learn to use both melee and magic attacks"
-        type: "combat"
-        requirements:
-          level: 1
-          previous_quest: "tutorial_1"
-        objectives:
-          - type: "combat_with_attack"
-            attack_type: "melee"
-            count: 1
-            description: "Win a battle using melee attack"
-          - type: "combat_with_attack"
-            attack_type: "magic"
-            count: 1
-            description: "Win a battle using magic attack"
-        rewards:
-          xp: 150
-          gold: 75
-          items:
-            - id: "mana_potion"
-              count: 2
-        next_quest: "tutorial_3"
-
-      - id: "tutorial_3"
-        title: "Facing the Alpha"
-        description: "Prove your worth against a stronger foe"
-        type: "boss_combat"
-        requirements:
-          level: 2
-          previous_quest: "tutorial_2"
-        objectives:
-          - type: "combat"
-            enemy_type: "Beast"
-            enemy_prefix: "Ancient"
-            count: 1
-            description: "Defeat the Ancient Wolf Alpha"
-        rewards:
-          xp: 300
-          gold: 200
-          items:
-            - id: "novice_sword"
-              count: 1
-          title: "Wolf Hunter"
-
-  - id: "undead_menace"
-    name: "The Undead Menace"
-    description: "Investigate and combat the rising undead threat"
+- id: chain_1
+  name: Quest Chain 1
+  description: A series of epic quests
+  quests:
+  - id: quest_1_1
+    title: 'Quest 1: The Beginning'
+    description: Complete objective 1 of chain 1
+    type: exploration
+    requirements:
+      level: 1
+    objectives:
+    - type: combat
+      count: 1
+      description: Defeat 2 Beast enemies
+    rewards:
+      xp: 150
+      gold: 75
+      items:
+      - id: consumable_9
+        count: 1
+    next_quest: quest_1_2
+  - id: quest_1_2
+    title: 'Quest 2: Final Confrontation'
+    description: Complete objective 2 of chain 1
+    type: collection
+    requirements:
+      level: 2
+      previous_quest: quest_1_1
+    objectives:
+    - type: combat
+      count: 3
+      description: Defeat 2 Undead enemies
+    rewards:
+      xp: 200
+      gold: 100
+    next_quest: quest_1_3
+  - id: quest_1_3
+    title: 'Quest 3: Victory'
+    description: Complete objective 3 of chain 1
+    type: collection
+    requirements:
+      level: 2
+      previous_quest: quest_1_2
+    objectives:
+    - type: combat
+      count: 1
+      description: Defeat 1 Elemental enemies
+    rewards:
+      xp: 250
+      gold: 125
+      items:
+      - id: consumable_5
+        count: 1
+    next_quest: quest_1_4
+  - id: quest_1_4
+    title: 'Quest 4: The Beginning'
+    description: Complete objective 4 of chain 1
+    type: exploration
     requirements:
       level: 3
-      previous_chain: "tutorial"
-    quests:
-      - id: "undead_1"
-        title: "Strange Reports"
-        description: "Investigate reports of undead sightings"
-        type: "combat"
-        objectives:
-          - type: "combat"
-            enemy_type: "Undead"
-            count: 2
-            description: "Defeat undead scouts"
-        rewards:
-          xp: 250
-          gold: 100
-        next_quest: "undead_2"
-
-      - id: "undead_2"
-        title: "Dark Magic"
-        description: "Face more powerful undead enemies"
-        type: "combat"
-        requirements:
-          previous_quest: "undead_1"
-        objectives:
-          - type: "combat"
-            enemy_type: "Undead"
-            enemy_prefix: "Magical"
-            count: 2
-            description: "Defeat magically enhanced undead"
-        rewards:
-          xp: 350
-          gold: 150
-          items:
-            - id: "holy_water"
-              count: 3
-        next_quest: "undead_3"
-
-      - id: "undead_3"
-        title: "The Necromancer"
-        description: "Confront the source of the undead"
-        type: "boss_combat"
-        requirements:
-          level: 5
-          previous_quest: "undead_2"
-        objectives:
-          - type: "combat"
-            enemy_type: "Undead"
-            enemy_prefix: "Ancient"
-            enemy_suffix: "of Darkness"
-            count: 1
-            description: "Defeat the Necromancer"
-        rewards:
-          xp: 800
-          gold: 500
-          items:
-            - id: "necromancer_staff"
-              count: 1
-          title: "Undead Slayer"
-
-quest_items:
-  health_potion:
-    name: "Health Potion"
-    description: "Restores 50 HP"
-    effect:
-      type: "heal"
-      amount: 50
-    value: 25
-
-  mana_potion:
-    name: "Mana Potion"
-    description: "Restores 50 Mana"
-    effect:
-      type: "mana"
-      amount: 50
-    value: 25
-
-  holy_water:
-    name: "Holy Water"
-    description: "Deals extra damage to undead"
-    effect:
-      type: "damage_bonus"
-      target_type: "Undead"
-      amount: 25
-    value: 40
-
-  novice_sword:
-    name: "Novice Sword"
-    description: "A basic but reliable sword"
-    effect:
-      type: "weapon"
-      damage_bonus: 10
-    value: 100
-
-  necromancer_staff:
-    name: "Necromancer's Staff"
-    description: "A powerful staff imbued with dark magic"
-    effect:
-      type: "weapon"
-      damage_bonus: 25
-      magic_damage_bonus: 40
-    value: 500
-
-titles:
-  wolf_hunter:
-    name: "Wolf Hunter"
-    description: "Completed the New Adventurer's Path"
-    bonuses:
-      damage_vs_beasts: 1.1
-
-  undead_slayer:
-    name: "Undead Slayer"
-    description: "Defeated the Necromancer"
-    bonuses:
-      damage_vs_undead: 1.2
-      magic_resistance: 1.1
+      previous_quest: quest_1_3
+    objectives:
+    - type: combat
+      count: 2
+      description: Defeat 1 Elemental enemies
+    rewards:
+      xp: 300
+      gold: 150
+    next_quest: quest_1_5
+  - id: quest_1_5
+    title: 'Quest 5: Rising Threat'
+    description: Complete objective 5 of chain 1
+    type: combat
+    requirements:
+      level: 3
+      previous_quest: quest_1_4
+    objectives:
+    - type: combat
+      count: 1
+      description: Defeat 2 Elemental enemies
+    rewards:
+      xp: 350
+      gold: 175
+      items:
+      - id: consumable_4
+        count: 2
+- id: chain_2
+  name: Quest Chain 2
+  description: A series of legendary quests
+  quests:
+  - id: quest_2_1
+    title: 'Quest 6: Rising Threat'
+    description: Complete objective 1 of chain 2
+    type: exploration
+    requirements:
+      level: 4
+    objectives:
+    - type: combat
+      count: 3
+      description: Defeat 1 Elemental enemies
+    rewards:
+      xp: 400
+      gold: 200
+      items:
+      - id: consumable_2
+        count: 1
+    next_quest: quest_2_2
+  - id: quest_2_2
+    title: 'Quest 7: Final Confrontation'
+    description: Complete objective 2 of chain 2
+    type: boss_combat
+    requirements:
+      level: 4
+      previous_quest: quest_2_1
+    objectives:
+    - type: combat
+      count: 3
+      description: Defeat 1 Elemental enemies
+    rewards:
+      xp: 450
+      gold: 225
+    next_quest: quest_2_3
+  - id: quest_2_3
+    title: 'Quest 8: Rising Threat'
+    description: Complete objective 3 of chain 2
+    type: combat
+    requirements:
+      level: 5
+      previous_quest: quest_2_2
+    objectives:
+    - type: combat
+      count: 2
+      description: Defeat 3 Dragon enemies
+    rewards:
+      xp: 500
+      gold: 250
+      items:
+      - id: consumable_10
+        count: 3
+    next_quest: quest_2_4
+  - id: quest_2_4
+    title: 'Quest 9: The Beginning'
+    description: Complete objective 4 of chain 2
+    type: collection
+    requirements:
+      level: 5
+      previous_quest: quest_2_3
+    objectives:
+    - type: combat
+      count: 1
+      description: Defeat 1 Beast enemies
+    rewards:
+      xp: 550
+      gold: 275
+    next_quest: quest_2_5
+  - id: quest_2_5
+    title: 'Quest 10: Final Confrontation'
+    description: Complete objective 5 of chain 2
+    type: collection
+    requirements:
+      level: 6
+      previous_quest: quest_2_4
+    objectives:
+    - type: combat
+      count: 2
+      description: Defeat 3 Elemental enemies
+    rewards:
+      xp: 600
+      gold: 300
+      items:
+      - id: consumable_2
+        count: 1
+- id: chain_3
+  name: Quest Chain 3
+  description: A series of mysterious quests
+  quests:
+  - id: quest_3_1
+    title: 'Quest 11: Final Confrontation'
+    description: Complete objective 1 of chain 3
+    type: collection
+    requirements:
+      level: 6
+    objectives:
+    - type: combat
+      count: 3
+      description: Defeat 1 Elemental enemies
+    rewards:
+      xp: 650
+      gold: 325
+      items:
+      - id: consumable_8
+        count: 3
+    next_quest: quest_3_2
+  - id: quest_3_2
+    title: 'Quest 12: The Beginning'
+    description: Complete objective 2 of chain 3
+    type: combat
+    requirements:
+      level: 7
+      previous_quest: quest_3_1
+    objectives:
+    - type: combat
+      count: 3
+      description: Defeat 2 Undead enemies
+    rewards:
+      xp: 700
+      gold: 350
+    next_quest: quest_3_3
+  - id: quest_3_3
+    title: 'Quest 13: Dark Times'
+    description: Complete objective 3 of chain 3
+    type: combat
+    requirements:
+      level: 7
+      previous_quest: quest_3_2
+    objectives:
+    - type: combat
+      count: 3
+      description: Defeat 2 Undead enemies
+    rewards:
+      xp: 750
+      gold: 375
+      items:
+      - id: consumable_7
+        count: 1
+    next_quest: quest_3_4
+  - id: quest_3_4
+    title: 'Quest 14: Victory'
+    description: Complete objective 4 of chain 3
+    type: exploration
+    requirements:
+      level: 8
+      previous_quest: quest_3_3
+    objectives:
+    - type: combat
+      count: 2
+      description: Defeat 5 Elemental enemies
+    rewards:
+      xp: 800
+      gold: 400
+    next_quest: quest_3_5
+  - id: quest_3_5
+    title: 'Quest 15: Dark Times'
+    description: Complete objective 5 of chain 3
+    type: exploration
+    requirements:
+      level: 8
+      previous_quest: quest_3_4
+    objectives:
+    - type: combat
+      count: 1
+      description: Defeat 1 Dragon enemies
+    rewards:
+      xp: 850
+      gold: 425
+      items:
+      - id: consumable_7
+        count: 2
+- id: chain_4
+  name: Quest Chain 4
+  description: A series of legendary quests
+  quests:
+  - id: quest_4_1
+    title: 'Quest 16: Final Confrontation'
+    description: Complete objective 1 of chain 4
+    type: combat
+    requirements:
+      level: 9
+    objectives:
+    - type: combat
+      count: 3
+      description: Defeat 5 Dragon enemies
+    rewards:
+      xp: 900
+      gold: 450
+      items:
+      - id: consumable_9
+        count: 1
+    next_quest: quest_4_2
+  - id: quest_4_2
+    title: 'Quest 17: Rising Threat'
+    description: Complete objective 2 of chain 4
+    type: exploration
+    requirements:
+      level: 9
+      previous_quest: quest_4_1
+    objectives:
+    - type: combat
+      count: 2
+      description: Defeat 5 Demon enemies
+    rewards:
+      xp: 950
+      gold: 475
+    next_quest: quest_4_3
+  - id: quest_4_3
+    title: 'Quest 18: Final Confrontation'
+    description: Complete objective 3 of chain 4
+    type: exploration
+    requirements:
+      level: 10
+      previous_quest: quest_4_2
+    objectives:
+    - type: combat
+      count: 1
+      description: Defeat 1 Elemental enemies
+    rewards:
+      xp: 1000
+      gold: 500
+      items:
+      - id: consumable_9
+        count: 1
+    next_quest: quest_4_4
+  - id: quest_4_4
+    title: 'Quest 19: Victory'
+    description: Complete objective 4 of chain 4
+    type: boss_combat
+    requirements:
+      level: 10
+      previous_quest: quest_4_3
+    objectives:
+    - type: combat
+      count: 2
+      description: Defeat 2 Demon enemies
+    rewards:
+      xp: 1050
+      gold: 525
+    next_quest: quest_4_5
+  - id: quest_4_5
+    title: 'Quest 20: The Beginning'
+    description: Complete objective 5 of chain 4
+    type: collection
+    requirements:
+      level: 11
+      previous_quest: quest_4_4
+    objectives:
+    - type: combat
+      count: 2
+      description: Defeat 2 Beast enemies
+    rewards:
+      xp: 1100
+      gold: 550
+      items:
+      - id: consumable_5
+        count: 2
+- id: chain_5
+  name: Quest Chain 5
+  description: A series of challenging quests
+  quests:
+  - id: quest_5_1
+    title: 'Quest 21: The Beginning'
+    description: Complete objective 1 of chain 5
+    type: boss_combat
+    requirements:
+      level: 11
+    objectives:
+    - type: combat
+      count: 1
+      description: Defeat 1 Demon enemies
+    rewards:
+      xp: 1150
+      gold: 575
+      items:
+      - id: consumable_2
+        count: 3
+    next_quest: quest_5_2
+  - id: quest_5_2
+    title: 'Quest 22: Victory'
+    description: Complete objective 2 of chain 5
+    type: collection
+    requirements:
+      level: 12
+      previous_quest: quest_5_1
+    objectives:
+    - type: combat
+      count: 3
+      description: Defeat 4 Elemental enemies
+    rewards:
+      xp: 1200
+      gold: 600
+    next_quest: quest_5_3
+  - id: quest_5_3
+    title: 'Quest 23: Final Confrontation'
+    description: Complete objective 3 of chain 5
+    type: exploration
+    requirements:
+      level: 12
+      previous_quest: quest_5_2
+    objectives:
+    - type: combat
+      count: 1
+      description: Defeat 4 Dragon enemies
+    rewards:
+      xp: 1250
+      gold: 625
+      items:
+      - id: consumable_9
+        count: 2
+    next_quest: quest_5_4
+  - id: quest_5_4
+    title: 'Quest 24: The Beginning'
+    description: Complete objective 4 of chain 5
+    type: collection
+    requirements:
+      level: 13
+      previous_quest: quest_5_3
+    objectives:
+    - type: combat
+      count: 3
+      description: Defeat 5 Demon enemies
+    rewards:
+      xp: 1300
+      gold: 650
+    next_quest: quest_5_5
+  - id: quest_5_5
+    title: 'Quest 25: Final Confrontation'
+    description: Complete objective 5 of chain 5
+    type: boss_combat
+    requirements:
+      level: 13
+      previous_quest: quest_5_4
+    objectives:
+    - type: combat
+      count: 3
+      description: Defeat 2 Beast enemies
+    rewards:
+      xp: 1350
+      gold: 675
+      items:
+      - id: consumable_3
+        count: 3
+- id: chain_6
+  name: Quest Chain 6
+  description: A series of challenging quests
+  quests:
+  - id: quest_6_1
+    title: 'Quest 26: Final Confrontation'
+    description: Complete objective 1 of chain 6
+    type: combat
+    requirements:
+      level: 14
+    objectives:
+    - type: combat
+      count: 3
+      description: Defeat 1 Elemental enemies
+    rewards:
+      xp: 1400
+      gold: 700
+      items:
+      - id: consumable_7
+        count: 1
+    next_quest: quest_6_2
+  - id: quest_6_2
+    title: 'Quest 27: The Beginning'
+    description: Complete objective 2 of chain 6
+    type: collection
+    requirements:
+      level: 14
+      previous_quest: quest_6_1
+    objectives:
+    - type: combat
+      count: 3
+      description: Defeat 4 Demon enemies
+    rewards:
+      xp: 1450
+      gold: 725
+    next_quest: quest_6_3
+  - id: quest_6_3
+    title: 'Quest 28: Dark Times'
+    description: Complete objective 3 of chain 6
+    type: boss_combat
+    requirements:
+      level: 15
+      previous_quest: quest_6_2
+    objectives:
+    - type: combat
+      count: 2
+      description: Defeat 2 Beast enemies
+    rewards:
+      xp: 1500
+      gold: 750
+      items:
+      - id: consumable_9
+        count: 1
+    next_quest: quest_6_4
+  - id: quest_6_4
+    title: 'Quest 29: Final Confrontation'
+    description: Complete objective 4 of chain 6
+    type: exploration
+    requirements:
+      level: 15
+      previous_quest: quest_6_3
+    objectives:
+    - type: combat
+      count: 1
+      description: Defeat 4 Demon enemies
+    rewards:
+      xp: 1550
+      gold: 775
+    next_quest: quest_6_5
+  - id: quest_6_5
+    title: 'Quest 30: Rising Threat'
+    description: Complete objective 5 of chain 6
+    type: boss_combat
+    requirements:
+      level: 16
+      previous_quest: quest_6_4
+    objectives:
+    - type: combat
+      count: 1
+      description: Defeat 4 Demon enemies
+    rewards:
+      xp: 1600
+      gold: 800
+      items:
+      - id: consumable_5
+        count: 1
+- id: chain_7
+  name: Quest Chain 7
+  description: A series of legendary quests
+  quests:
+  - id: quest_7_1
+    title: 'Quest 31: Rising Threat'
+    description: Complete objective 1 of chain 7
+    type: boss_combat
+    requirements:
+      level: 16
+    objectives:
+    - type: combat
+      count: 2
+      description: Defeat 5 Undead enemies
+    rewards:
+      xp: 1650
+      gold: 825
+      items:
+      - id: consumable_4
+        count: 3
+    next_quest: quest_7_2
+  - id: quest_7_2
+    title: 'Quest 32: Dark Times'
+    description: Complete objective 2 of chain 7
+    type: collection
+    requirements:
+      level: 17
+      previous_quest: quest_7_1
+    objectives:
+    - type: combat
+      count: 2
+      description: Defeat 3 Elemental enemies
+    rewards:
+      xp: 1700
+      gold: 850
+    next_quest: quest_7_3
+  - id: quest_7_3
+    title: 'Quest 33: The Beginning'
+    description: Complete objective 3 of chain 7
+    type: exploration
+    requirements:
+      level: 17
+      previous_quest: quest_7_2
+    objectives:
+    - type: combat
+      count: 3
+      description: Defeat 5 Undead enemies
+    rewards:
+      xp: 1750
+      gold: 875
+      items:
+      - id: consumable_6
+        count: 3
+    next_quest: quest_7_4
+  - id: quest_7_4
+    title: 'Quest 34: Victory'
+    description: Complete objective 4 of chain 7
+    type: combat
+    requirements:
+      level: 18
+      previous_quest: quest_7_3
+    objectives:
+    - type: combat
+      count: 3
+      description: Defeat 4 Dragon enemies
+    rewards:
+      xp: 1800
+      gold: 900
+    next_quest: quest_7_5
+  - id: quest_7_5
+    title: 'Quest 35: Final Confrontation'
+    description: Complete objective 5 of chain 7
+    type: combat
+    requirements:
+      level: 18
+      previous_quest: quest_7_4
+    objectives:
+    - type: combat
+      count: 2
+      description: Defeat 2 Undead enemies
+    rewards:
+      xp: 1850
+      gold: 925
+      items:
+      - id: consumable_10
+        count: 1
+- id: chain_8
+  name: Quest Chain 8
+  description: A series of legendary quests
+  quests:
+  - id: quest_8_1
+    title: 'Quest 36: Dark Times'
+    description: Complete objective 1 of chain 8
+    type: boss_combat
+    requirements:
+      level: 19
+    objectives:
+    - type: combat
+      count: 2
+      description: Defeat 1 Demon enemies
+    rewards:
+      xp: 1900
+      gold: 950
+      items:
+      - id: consumable_8
+        count: 2
+    next_quest: quest_8_2
+  - id: quest_8_2
+    title: 'Quest 37: Dark Times'
+    description: Complete objective 2 of chain 8
+    type: combat
+    requirements:
+      level: 19
+      previous_quest: quest_8_1
+    objectives:
+    - type: combat
+      count: 3
+      description: Defeat 5 Undead enemies
+    rewards:
+      xp: 1950
+      gold: 975
+    next_quest: quest_8_3
+  - id: quest_8_3
+    title: 'Quest 38: The Beginning'
+    description: Complete objective 3 of chain 8
+    type: combat
+    requirements:
+      level: 20
+      previous_quest: quest_8_2
+    objectives:
+    - type: combat
+      count: 1
+      description: Defeat 5 Undead enemies
+    rewards:
+      xp: 2000
+      gold: 1000
+      items:
+      - id: consumable_9
+        count: 3
+    next_quest: quest_8_4
+  - id: quest_8_4
+    title: 'Quest 39: Dark Times'
+    description: Complete objective 4 of chain 8
+    type: collection
+    requirements:
+      level: 20
+      previous_quest: quest_8_3
+    objectives:
+    - type: combat
+      count: 2
+      description: Defeat 5 Beast enemies
+    rewards:
+      xp: 2050
+      gold: 1025
+    next_quest: quest_8_5
+  - id: quest_8_5
+    title: 'Quest 40: Victory'
+    description: Complete objective 5 of chain 8
+    type: combat
+    requirements:
+      level: 21
+      previous_quest: quest_8_4
+    objectives:
+    - type: combat
+      count: 1
+      description: Defeat 2 Demon enemies
+    rewards:
+      xp: 2100
+      gold: 1050
+      items:
+      - id: consumable_2
+        count: 1
+- id: chain_9
+  name: Quest Chain 9
+  description: A series of mysterious quests
+  quests:
+  - id: quest_9_1
+    title: 'Quest 41: Victory'
+    description: Complete objective 1 of chain 9
+    type: collection
+    requirements:
+      level: 21
+    objectives:
+    - type: combat
+      count: 1
+      description: Defeat 3 Undead enemies
+    rewards:
+      xp: 2150
+      gold: 1075
+      items:
+      - id: consumable_6
+        count: 2
+    next_quest: quest_9_2
+  - id: quest_9_2
+    title: 'Quest 42: Rising Threat'
+    description: Complete objective 2 of chain 9
+    type: boss_combat
+    requirements:
+      level: 22
+      previous_quest: quest_9_1
+    objectives:
+    - type: combat
+      count: 3
+      description: Defeat 3 Demon enemies
+    rewards:
+      xp: 2200
+      gold: 1100
+    next_quest: quest_9_3
+  - id: quest_9_3
+    title: 'Quest 43: Final Confrontation'
+    description: Complete objective 3 of chain 9
+    type: collection
+    requirements:
+      level: 22
+      previous_quest: quest_9_2
+    objectives:
+    - type: combat
+      count: 2
+      description: Defeat 3 Elemental enemies
+    rewards:
+      xp: 2250
+      gold: 1125
+      items:
+      - id: consumable_1
+        count: 1
+    next_quest: quest_9_4
+  - id: quest_9_4
+    title: 'Quest 44: Victory'
+    description: Complete objective 4 of chain 9
+    type: collection
+    requirements:
+      level: 23
+      previous_quest: quest_9_3
+    objectives:
+    - type: combat
+      count: 2
+      description: Defeat 5 Beast enemies
+    rewards:
+      xp: 2300
+      gold: 1150
+    next_quest: quest_9_5
+  - id: quest_9_5
+    title: 'Quest 45: Final Confrontation'
+    description: Complete objective 5 of chain 9
+    type: boss_combat
+    requirements:
+      level: 23
+      previous_quest: quest_9_4
+    objectives:
+    - type: combat
+      count: 2
+      description: Defeat 2 Undead enemies
+    rewards:
+      xp: 2350
+      gold: 1175
+      items:
+      - id: consumable_6
+        count: 1
+- id: chain_10
+  name: Quest Chain 10
+  description: A series of epic quests
+  quests:
+  - id: quest_10_1
+    title: 'Quest 46: Dark Times'
+    description: Complete objective 1 of chain 10
+    type: exploration
+    requirements:
+      level: 24
+    objectives:
+    - type: combat
+      count: 2
+      description: Defeat 1 Elemental enemies
+    rewards:
+      xp: 2400
+      gold: 1200
+      items:
+      - id: consumable_9
+        count: 2
+    next_quest: quest_10_2
+  - id: quest_10_2
+    title: 'Quest 47: Victory'
+    description: Complete objective 2 of chain 10
+    type: boss_combat
+    requirements:
+      level: 24
+      previous_quest: quest_10_1
+    objectives:
+    - type: combat
+      count: 1
+      description: Defeat 1 Beast enemies
+    rewards:
+      xp: 2450
+      gold: 1225
+    next_quest: quest_10_3
+  - id: quest_10_3
+    title: 'Quest 48: Victory'
+    description: Complete objective 3 of chain 10
+    type: combat
+    requirements:
+      level: 25
+      previous_quest: quest_10_2
+    objectives:
+    - type: combat
+      count: 2
+      description: Defeat 5 Undead enemies
+    rewards:
+      xp: 2500
+      gold: 1250
+      items:
+      - id: consumable_3
+        count: 3
+    next_quest: quest_10_4
+  - id: quest_10_4
+    title: 'Quest 49: Dark Times'
+    description: Complete objective 4 of chain 10
+    type: collection
+    requirements:
+      level: 25
+      previous_quest: quest_10_3
+    objectives:
+    - type: combat
+      count: 1
+      description: Defeat 5 Undead enemies
+    rewards:
+      xp: 2550
+      gold: 1275
+    next_quest: quest_10_5
+  - id: quest_10_5
+    title: 'Quest 50: Final Confrontation'
+    description: Complete objective 5 of chain 10
+    type: combat
+    requirements:
+      level: 26
+      previous_quest: quest_10_4
+    objectives:
+    - type: combat
+      count: 3
+      description: Defeat 4 Elemental enemies
+    rewards:
+      xp: 2600
+      gold: 1300
+      items:
+      - id: consumable_10
+        count: 2

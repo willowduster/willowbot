@@ -1,457 +1,1255 @@
 items:
-  # Weapons
-  rusty_sword:
-    id: rusty_sword
-    name: "Rusty Sword"
-    description: "A basic sword showing signs of wear"
+  weapon_1:
+    id: weapon_1
+    name: Rusty Sword
+    description: A basic sword showing signs of wear
     type: weapon
     rarity: common
     level_requirement: 1
-    value: 10
-    stackable: false
-    effects:
-      - type: damage
-        value: 5
-
-  steel_sword:
-    id: steel_sword
-    name: "Steel Sword"
-    description: "A well-crafted steel sword"
-    type: weapon
-    rarity: uncommon
-    level_requirement: 5
     value: 50
     stackable: false
     effects:
-      - type: damage
-        value: 12
-      - type: crit_chance
-        value: 5
-
-  flame_blade:
-    id: flame_blade
-    name: "Flame Blade"
-    description: "A magical sword imbued with fire"
+    - type: damage
+      value: 5
+    - type: crit_chance
+      value: 5
+  weapon_2:
+    id: weapon_2
+    name: Steel Sword
+    description: A well-crafted steel sword
     type: weapon
-    rarity: rare
-    level_requirement: 15
-    value: 200
-    stackable: false
-    effects:
-      - type: damage
-        value: 20
-      - type: magic_damage
-        value: 10
-      - type: crit_chance
-        value: 8
-
-  # Helmets
-  leather_cap:
-    id: leather_cap
-    name: "Leather Cap"
-    description: "Basic head protection"
-    type: helmet
     rarity: common
     level_requirement: 1
-    value: 15
-    stackable: false
-    effects:
-      - type: defense
-        value: 3
-
-  iron_helmet:
-    id: iron_helmet
-    name: "Iron Helmet"
-    description: "Sturdy iron helmet"
-    type: helmet
-    rarity: uncommon
-    level_requirement: 5
-    value: 45
-    stackable: false
-    effects:
-      - type: defense
-        value: 8
-      - type: magic_defense
-        value: 2
-
-  mage_hood:
-    id: mage_hood
-    name: "Mage's Hood"
-    description: "Enchanted hood that enhances magical abilities"
-    type: helmet
-    rarity: rare
-    level_requirement: 12
-    value: 180
-    stackable: false
-    effects:
-      - type: magic_defense
-        value: 12
-      - type: mana_bonus
-        value: 20
-
-  # Armor
-  cloth_robe:
-    id: cloth_robe
-    name: "Cloth Robe"
-    description: "Basic cloth protection"
-    type: armor
-    rarity: common
-    level_requirement: 1
-    value: 20
-    stackable: false
-    effects:
-      - type: defense
-        value: 5
-
-  chainmail:
-    id: chainmail
-    name: "Chainmail"
-    description: "Flexible armor made of interlocking rings"
-    type: armor
-    rarity: uncommon
-    level_requirement: 8
-    value: 85
-    stackable: false
-    effects:
-      - type: defense
-        value: 15
-      - type: flee_chance
-        value: 5
-
-  # Undead-related Items
-  bone_dust:
-    id: bone_dust
-    name: "Bone Dust"
-    description: "Powdered bones from undead creatures"
-    type: material
-    rarity: common
-    level_requirement: 1
-    effects: []
-    value: 20
-    stackable: true
-    max_stack: 50
-
-  holy_mace:
-    id: holy_mace
-    name: "Holy Mace"
-    description: "A mace blessed with holy power, effective against undead"
-    type: weapon
-    rarity: rare
-    level_requirement: 5
-    effects:
-      - type: damage
-        value: 25
-      - type: undead_damage
-        value: 40
-        target_type: Undead
-    value: 300
-    stackable: false
-
-  # Elemental-related Items
-  elemental_essence:
-    id: elemental_essence
-    name: "Elemental Essence"
-    description: "Pure magical essence from elemental creatures"
-    type: material
-    rarity: uncommon
-    level_requirement: 1
-    effects: []
-    value: 35
-    stackable: true
-    max_stack: 50
-
-  elemental_staff:
-    id: elemental_staff
-    name: "Elemental Staff"
-    description: "A staff infused with elemental power"
-    type: weapon
-    rarity: rare
-    level_requirement: 7
-    effects:
-      - type: magic_damage
-        value: 35
-      - type: elemental_damage
-        value: 30
-        target_type: Elemental
-    value: 400
-    stackable: false
-
-  # Consumables
-  health_potion:
-    id: health_potion
-    name: "Health Potion"
-    description: "A small vial of healing liquid that restores 50 HP"
-    type: consumable
-    rarity: common
-    level_requirement: 1
-    effects:
-      - type: heal
-        value: 50
-    value: 25
-    stackable: true
-    max_stack: 20
-
-  mana_potion:
-    id: mana_potion
-    name: "Mana Potion"
-    description: "A small vial of magical essence that restores 50 mana"
-    type: consumable
-    rarity: common
-    level_requirement: 1
-    effects:
-      - type: mana_restore
-        value: 50
-    value: 30
-    stackable: true
-    max_stack: 20
-
-  # High-level Items
-  greater_health_potion:
-    id: greater_health_potion
-    name: "Greater Health Potion"
-    description: "A large vial of potent healing liquid"
-    type: consumable
-    rarity: rare
-    level_requirement: 10
-    effects:
-      - type: heal
-        value: 150
-    value: 100
-    stackable: true
-    max_stack: 20
-
-  legendary_beast_slayer:
-    id: legendary_beast_slayer
-    name: "Legendary Beast Slayer"
-    description: "A legendary sword said to have slain thousands of beasts"
-    type: weapon
-    rarity: legendary
-    level_requirement: 15
-    effects:
-      - type: damage
-        value: 50
-      - type: beast_damage
-        value: 75
-        target_type: Beast
-      - type: crit_chance
-        value: 15
-    value: 1000
-    stackable: false
-
-  # Boss Drop Items
-  ancient_wolf_pelt:
-    id: ancient_wolf_pelt
-    name: "Ancient Wolf Pelt"
-    description: "A magnificent pelt from an ancient wolf"
-    type: material
-    rarity: epic
-    level_requirement: 1
-    effects: []
-    value: 500
-    stackable: true
-    max_stack: 5
-
-  necromancer_robes:
-    id: necromancer_robes
-    name: "Necromancer's Robes"
-    description: "Dark robes that enhance magical power"
-    type: armor
-    rarity: epic
-    level_requirement: 10
-    effects:
-      - type: magic_damage
-        value: 40
-      - type: max_mana
-        value: 100
-    value: 800
-    stackable: false
-
-  # Pants
-  leather_pants:
-    id: leather_pants
-    name: "Leather Pants"
-    description: "Basic leg protection"
-    type: pants
-    rarity: common
-    level_requirement: 1
-    value: 15
-    stackable: false
-    effects:
-      - type: defense
-        value: 4
-      - type: flee_chance
-        value: 0.02
-
-  chainmail_leggings:
-    id: chainmail_leggings
-    name: "Chainmail Leggings"
-    description: "Flexible leg protection"
-    type: pants
-    rarity: uncommon
-    level_requirement: 5
-    value: 45
-    stackable: false
-    effects:
-      - type: defense
-        value: 8
-      - type: flee_chance
-        value: 0.03
-
-  platemail_leggings:
-    id: platemail_leggings
-    name: "Platemail Leggings"
-    description: "Heavy but protective leg armor"
-    type: pants
-    rarity: rare
-    level_requirement: 10
     value: 120
     stackable: false
     effects:
-      - type: defense
-        value: 15
-      - type: magic_defense
-        value: 5
-
-  # Boots
-  leather_boots:
-    id: leather_boots
-    name: "Leather Boots"
-    description: "Basic footwear"
-    type: boots
+    - type: damage
+      value: 12
+  weapon_3:
+    id: weapon_3
+    name: Iron Axe
+    description: A heavy battle axe
+    type: weapon
     rarity: common
-    level_requirement: 1
-    value: 12
-    stackable: false
-    effects:
-      - type: defense
-        value: 2
-      - type: flee_chance
-        value: 0.05
-
-  swift_boots:
-    id: swift_boots
-    name: "Swift Boots"
-    description: "Enchanted boots for increased agility"
-    type: boots
-    rarity: uncommon
-    level_requirement: 5
-    value: 65
-    stackable: false
-    effects:
-      - type: defense
-        value: 4
-      - type: flee_chance
-        value: 0.10
-      - type: crit_chance
-        value: 0.03
-
-  boots_of_the_mage:
-    id: boots_of_the_mage
-    name: "Boots of the Mage"
-    description: "Boots imbued with magical energy"
-    type: boots
-    rarity: rare
-    level_requirement: 10
+    level_requirement: 2
     value: 150
     stackable: false
     effects:
-      - type: magic_defense
-        value: 8
-      - type: magic_damage
-        value: 5
-      - type: flee_chance
-        value: 0.07
-
-  # Rings
-  copper_ring:
-    id: copper_ring
-    name: "Copper Ring"
-    description: "A simple copper ring"
-    type: ring
+    - type: damage
+      value: 15
+  weapon_4:
+    id: weapon_4
+    name: Flame Blade
+    description: A magical sword imbued with fire
+    type: weapon
     rarity: common
-    level_requirement: 1
-    value: 25
+    level_requirement: 2
+    value: 200
     stackable: false
     effects:
-      - type: max_health
-        value: 10
-
-  ring_of_protection:
-    id: ring_of_protection
-    name: "Ring of Protection"
-    description: "Magical ring that enhances defenses"
-    type: ring
+    - type: damage
+      value: 20
+    - type: crit_chance
+      value: 6
+  weapon_5:
+    id: weapon_5
+    name: Crystal Wand
+    description: A wand made of pure crystal
+    type: weapon
     rarity: uncommon
-    level_requirement: 5
-    value: 100
+    level_requirement: 3
+    value: 180
     stackable: false
     effects:
-      - type: defense
-        value: 5
-      - type: magic_defense
-        value: 5
-
-  ring_of_power:
-    id: ring_of_power
-    name: "Ring of Power"
-    description: "Enhances all forms of damage"
-    type: ring
-    rarity: rare
-    level_requirement: 10
+    - type: damage
+      value: 18
+  weapon_6:
+    id: weapon_6
+    name: Shadow Dagger
+    description: A dagger that strikes from the shadows
+    type: weapon
+    rarity: uncommon
+    level_requirement: 3
+    value: 220
+    stackable: false
+    effects:
+    - type: damage
+      value: 22
+  weapon_7:
+    id: weapon_7
+    name: Holy Mace
+    description: A mace blessed with holy power
+    type: weapon
+    rarity: uncommon
+    level_requirement: 4
     value: 250
     stackable: false
     effects:
-      - type: damage
-        value: 8
-      - type: magic_damage
-        value: 8
-      - type: crit_chance
-        value: 0.05
-
-  # Amulets
-  lucky_charm:
-    id: lucky_charm
-    name: "Lucky Charm"
-    description: "A simple charm that brings good fortune"
-    type: amulet
+    - type: damage
+      value: 25
+    - type: crit_chance
+      value: 8
+  weapon_8:
+    id: weapon_8
+    name: Thunderbolt Spear
+    description: A spear crackling with lightning
+    type: weapon
+    rarity: uncommon
+    level_requirement: 4
+    value: 400
+    stackable: false
+    effects:
+    - type: damage
+      value: 40
+  weapon_9:
+    id: weapon_9
+    name: Dragon Slayer
+    description: Forged from dragon scales
+    type: weapon
+    rarity: rare
+    level_requirement: 5
+    value: 850
+    stackable: false
+    effects:
+    - type: damage
+      value: 85
+  weapon_10:
+    id: weapon_10
+    name: Wooden Bow
+    description: A simple hunting bow
+    type: weapon
+    rarity: rare
+    level_requirement: 5
+    value: 80
+    stackable: false
+    effects:
+    - type: damage
+      value: 8
+    - type: crit_chance
+      value: 9
+  weapon_11:
+    id: weapon_11
+    name: Composite Bow
+    description: A well-crafted composite bow
+    type: weapon
+    rarity: rare
+    level_requirement: 6
+    value: 200
+    stackable: false
+    effects:
+    - type: damage
+      value: 20
+  weapon_12:
+    id: weapon_12
+    name: Frost Hammer
+    description: A massive hammer imbued with frost
+    type: weapon
+    rarity: rare
+    level_requirement: 6
+    value: 350
+    stackable: false
+    effects:
+    - type: damage
+      value: 35
+  weapon_13:
+    id: weapon_13
+    name: Poison Blade
+    description: A blade coated with deadly poison
+    type: weapon
+    rarity: epic
+    level_requirement: 7
+    value: 180
+    stackable: false
+    effects:
+    - type: damage
+      value: 18
+    - type: crit_chance
+      value: 11
+  weapon_14:
+    id: weapon_14
+    name: War Scythe
+    description: A deadly curved blade on a long pole
+    type: weapon
+    rarity: epic
+    level_requirement: 7
+    value: 320
+    stackable: false
+    effects:
+    - type: damage
+      value: 32
+  weapon_15:
+    id: weapon_15
+    name: Void Staff
+    description: A staff channeling void power
+    type: weapon
+    rarity: epic
+    level_requirement: 8
+    value: 600
+    stackable: false
+    effects:
+    - type: damage
+      value: 60
+  weapon_16:
+    id: weapon_16
+    name: Arcane Blade
+    description: A sword forged with arcane energy
+    type: weapon
+    rarity: epic
+    level_requirement: 8
+    value: 450
+    stackable: false
+    effects:
+    - type: damage
+      value: 45
+    - type: crit_chance
+      value: 12
+  weapon_17:
+    id: weapon_17
+    name: Soul Reaper
+    description: A cursed weapon that drains life
+    type: weapon
+    rarity: legendary
+    level_requirement: 9
+    value: 700
+    stackable: false
+    effects:
+    - type: damage
+      value: 70
+  weapon_18:
+    id: weapon_18
+    name: Celestial Bow
+    description: A bow blessed by the stars
+    type: weapon
+    rarity: legendary
+    level_requirement: 9
+    value: 650
+    stackable: false
+    effects:
+    - type: damage
+      value: 65
+  weapon_19:
+    id: weapon_19
+    name: Demon Claw
+    description: Gauntlets with demonic claws
+    type: weapon
+    rarity: legendary
+    level_requirement: 10
+    value: 550
+    stackable: false
+    effects:
+    - type: damage
+      value: 55
+    - type: crit_chance
+      value: 14
+  weapon_20:
+    id: weapon_20
+    name: Lightning Rod
+    description: A staff that calls lightning
+    type: weapon
+    rarity: legendary
+    level_requirement: 10
+    value: 500
+    stackable: false
+    effects:
+    - type: damage
+      value: 50
+  helmet_1:
+    id: helmet_1
+    name: Leather Cap
+    description: Quality helmet protection
+    type: helmet
     rarity: common
     level_requirement: 1
-    value: 35
+    value: 50
     stackable: false
     effects:
-      - type: crit_chance
-        value: 0.03
-      - type: flee_chance
-        value: 0.03
-
-  elemental_pendant:
-    id: elemental_pendant
-    name: "Elemental Pendant"
-    description: "Pendant infused with elemental energy"
-    type: amulet
+    - type: defense
+      value: 5
+    - type: magic_defense
+      value: 2
+  helmet_2:
+    id: helmet_2
+    name: Iron Helmet
+    description: Quality helmet protection
+    type: helmet
+    rarity: common
+    level_requirement: 3
+    value: 80
+    stackable: false
+    effects:
+    - type: defense
+      value: 8
+  helmet_3:
+    id: helmet_3
+    name: Steel Hood
+    description: Quality helmet protection
+    type: helmet
     rarity: uncommon
     level_requirement: 5
-    value: 120
+    value: 110
     stackable: false
     effects:
-      - type: magic_damage
-        value: 12
-      - type: max_mana
-        value: 25
-
-  amulet_of_the_warrior:
-    id: amulet_of_the_warrior
-    name: "Amulet of the Warrior"
-    description: "Ancient amulet enhancing combat prowess"
-    type: amulet
+    - type: defense
+      value: 11
+    - type: magic_defense
+      value: 5
+  helmet_4:
+    id: helmet_4
+    name: Mage's Crown
+    description: Quality helmet protection
+    type: helmet
+    rarity: uncommon
+    level_requirement: 7
+    value: 140
+    stackable: false
+    effects:
+    - type: defense
+      value: 14
+  helmet_5:
+    id: helmet_5
+    name: Dragon Helm
+    description: Quality helmet protection
+    type: helmet
     rarity: rare
-    level_requirement: 10
+    level_requirement: 9
+    value: 170
+    stackable: false
+    effects:
+    - type: defense
+      value: 17
+    - type: magic_defense
+      value: 8
+  helmet_6:
+    id: helmet_6
+    name: Shadow Cowl
+    description: Quality helmet protection
+    type: helmet
+    rarity: rare
+    level_requirement: 11
+    value: 200
+    stackable: false
+    effects:
+    - type: defense
+      value: 20
+  helmet_7:
+    id: helmet_7
+    name: Crystal Circlet
+    description: Quality helmet protection
+    type: helmet
+    rarity: epic
+    level_requirement: 13
+    value: 230
+    stackable: false
+    effects:
+    - type: defense
+      value: 23
+    - type: magic_defense
+      value: 11
+  helmet_8:
+    id: helmet_8
+    name: Void Hat
+    description: Quality helmet protection
+    type: helmet
+    rarity: epic
+    level_requirement: 15
+    value: 260
+    stackable: false
+    effects:
+    - type: defense
+      value: 26
+  helmet_9:
+    id: helmet_9
+    name: Holy Mask
+    description: Quality helmet protection
+    type: helmet
+    rarity: legendary
+    level_requirement: 17
+    value: 290
+    stackable: false
+    effects:
+    - type: defense
+      value: 29
+    - type: magic_defense
+      value: 14
+  helmet_10:
+    id: helmet_10
+    name: Demon Visor
+    description: Quality helmet protection
+    type: helmet
+    rarity: legendary
+    level_requirement: 19
+    value: 320
+    stackable: false
+    effects:
+    - type: defense
+      value: 32
+  armor_1:
+    id: armor_1
+    name: Leather Robe
+    description: Quality armor protection
+    type: armor
+    rarity: common
+    level_requirement: 1
+    value: 50
+    stackable: false
+    effects:
+    - type: defense
+      value: 5
+    - type: magic_defense
+      value: 2
+  armor_2:
+    id: armor_2
+    name: Iron Mail
+    description: Quality armor protection
+    type: armor
+    rarity: common
+    level_requirement: 3
+    value: 80
+    stackable: false
+    effects:
+    - type: defense
+      value: 8
+  armor_3:
+    id: armor_3
+    name: Steel Plate
+    description: Quality armor protection
+    type: armor
+    rarity: uncommon
+    level_requirement: 5
+    value: 110
+    stackable: false
+    effects:
+    - type: defense
+      value: 11
+    - type: magic_defense
+      value: 5
+  armor_4:
+    id: armor_4
+    name: Mage's Tunic
+    description: Quality armor protection
+    type: armor
+    rarity: uncommon
+    level_requirement: 7
+    value: 140
+    stackable: false
+    effects:
+    - type: defense
+      value: 14
+  armor_5:
+    id: armor_5
+    name: Dragon Vest
+    description: Quality armor protection
+    type: armor
+    rarity: rare
+    level_requirement: 9
+    value: 170
+    stackable: false
+    effects:
+    - type: defense
+      value: 17
+    - type: magic_defense
+      value: 8
+  armor_6:
+    id: armor_6
+    name: Shadow Cuirass
+    description: Quality armor protection
+    type: armor
+    rarity: rare
+    level_requirement: 11
+    value: 200
+    stackable: false
+    effects:
+    - type: defense
+      value: 20
+  armor_7:
+    id: armor_7
+    name: Crystal Harness
+    description: Quality armor protection
+    type: armor
+    rarity: epic
+    level_requirement: 13
+    value: 230
+    stackable: false
+    effects:
+    - type: defense
+      value: 23
+    - type: magic_defense
+      value: 11
+  armor_8:
+    id: armor_8
+    name: Void Suit
+    description: Quality armor protection
+    type: armor
+    rarity: epic
+    level_requirement: 15
+    value: 260
+    stackable: false
+    effects:
+    - type: defense
+      value: 26
+  armor_9:
+    id: armor_9
+    name: Holy Garb
+    description: Quality armor protection
+    type: armor
+    rarity: legendary
+    level_requirement: 17
+    value: 290
+    stackable: false
+    effects:
+    - type: defense
+      value: 29
+    - type: magic_defense
+      value: 14
+  armor_10:
+    id: armor_10
+    name: Demon Vestments
+    description: Quality armor protection
+    type: armor
+    rarity: legendary
+    level_requirement: 19
+    value: 320
+    stackable: false
+    effects:
+    - type: defense
+      value: 32
+  pants_1:
+    id: pants_1
+    name: Leather Pants
+    description: Quality pants protection
+    type: pants
+    rarity: common
+    level_requirement: 1
+    value: 50
+    stackable: false
+    effects:
+    - type: defense
+      value: 5
+    - type: magic_defense
+      value: 2
+  pants_2:
+    id: pants_2
+    name: Iron Leggings
+    description: Quality pants protection
+    type: pants
+    rarity: common
+    level_requirement: 3
+    value: 80
+    stackable: false
+    effects:
+    - type: defense
+      value: 8
+  pants_3:
+    id: pants_3
+    name: Steel Greaves
+    description: Quality pants protection
+    type: pants
+    rarity: uncommon
+    level_requirement: 5
+    value: 110
+    stackable: false
+    effects:
+    - type: defense
+      value: 11
+    - type: magic_defense
+      value: 5
+  pants_4:
+    id: pants_4
+    name: Mage's Trousers
+    description: Quality pants protection
+    type: pants
+    rarity: uncommon
+    level_requirement: 7
+    value: 140
+    stackable: false
+    effects:
+    - type: defense
+      value: 14
+  pants_5:
+    id: pants_5
+    name: Dragon Breeches
+    description: Quality pants protection
+    type: pants
+    rarity: rare
+    level_requirement: 9
+    value: 170
+    stackable: false
+    effects:
+    - type: defense
+      value: 17
+    - type: magic_defense
+      value: 8
+  pants_6:
+    id: pants_6
+    name: Shadow Chaps
+    description: Quality pants protection
+    type: pants
+    rarity: rare
+    level_requirement: 11
+    value: 200
+    stackable: false
+    effects:
+    - type: defense
+      value: 20
+  pants_7:
+    id: pants_7
+    name: Crystal Leg Guards
+    description: Quality pants protection
+    type: pants
+    rarity: epic
+    level_requirement: 13
+    value: 230
+    stackable: false
+    effects:
+    - type: defense
+      value: 23
+    - type: magic_defense
+      value: 11
+  pants_8:
+    id: pants_8
+    name: Void Cuisses
+    description: Quality pants protection
+    type: pants
+    rarity: epic
+    level_requirement: 15
+    value: 260
+    stackable: false
+    effects:
+    - type: defense
+      value: 26
+  pants_9:
+    id: pants_9
+    name: Holy Leg Plates
+    description: Quality pants protection
+    type: pants
+    rarity: legendary
+    level_requirement: 17
+    value: 290
+    stackable: false
+    effects:
+    - type: defense
+      value: 29
+    - type: magic_defense
+      value: 14
+  pants_10:
+    id: pants_10
+    name: Demon Sabatons
+    description: Quality pants protection
+    type: pants
+    rarity: legendary
+    level_requirement: 19
+    value: 320
+    stackable: false
+    effects:
+    - type: defense
+      value: 32
+  boots_1:
+    id: boots_1
+    name: Leather Boots
+    description: Quality boots protection
+    type: boots
+    rarity: common
+    level_requirement: 1
+    value: 50
+    stackable: false
+    effects:
+    - type: defense
+      value: 5
+    - type: magic_defense
+      value: 2
+  boots_2:
+    id: boots_2
+    name: Iron Shoes
+    description: Quality boots protection
+    type: boots
+    rarity: common
+    level_requirement: 3
+    value: 80
+    stackable: false
+    effects:
+    - type: defense
+      value: 8
+  boots_3:
+    id: boots_3
+    name: Steel Sandals
+    description: Quality boots protection
+    type: boots
+    rarity: uncommon
+    level_requirement: 5
+    value: 110
+    stackable: false
+    effects:
+    - type: defense
+      value: 11
+    - type: magic_defense
+      value: 5
+  boots_4:
+    id: boots_4
+    name: Mage's Greaves
+    description: Quality boots protection
+    type: boots
+    rarity: uncommon
+    level_requirement: 7
+    value: 140
+    stackable: false
+    effects:
+    - type: defense
+      value: 14
+  boots_5:
+    id: boots_5
+    name: Dragon Sabatons
+    description: Quality boots protection
+    type: boots
+    rarity: rare
+    level_requirement: 9
+    value: 170
+    stackable: false
+    effects:
+    - type: defense
+      value: 17
+    - type: magic_defense
+      value: 8
+  boots_6:
+    id: boots_6
+    name: Shadow Treads
+    description: Quality boots protection
+    type: boots
+    rarity: rare
+    level_requirement: 11
+    value: 200
+    stackable: false
+    effects:
+    - type: defense
+      value: 20
+  boots_7:
+    id: boots_7
+    name: Crystal Footwear
+    description: Quality boots protection
+    type: boots
+    rarity: epic
+    level_requirement: 13
+    value: 230
+    stackable: false
+    effects:
+    - type: defense
+      value: 23
+    - type: magic_defense
+      value: 11
+  boots_8:
+    id: boots_8
+    name: Void Slippers
+    description: Quality boots protection
+    type: boots
+    rarity: epic
+    level_requirement: 15
+    value: 260
+    stackable: false
+    effects:
+    - type: defense
+      value: 26
+  boots_9:
+    id: boots_9
+    name: Holy Walkers
+    description: Quality boots protection
+    type: boots
+    rarity: legendary
+    level_requirement: 17
+    value: 290
+    stackable: false
+    effects:
+    - type: defense
+      value: 29
+    - type: magic_defense
+      value: 14
+  boots_10:
+    id: boots_10
+    name: Demon Striders
+    description: Quality boots protection
+    type: boots
+    rarity: legendary
+    level_requirement: 19
+    value: 320
+    stackable: false
+    effects:
+    - type: defense
+      value: 32
+  ring_1:
+    id: ring_1
+    name: Copper Ring
+    description: A common ring
+    type: ring
+    rarity: common
+    level_requirement: 1
+    value: 50
+    stackable: false
+    effects:
+    - type: max_health
+      value: 20
+  ring_2:
+    id: ring_2
+    name: Silver Ring
+    description: A common ring
+    type: ring
+    rarity: common
+    level_requirement: 3
+    value: 100
+    stackable: false
+    effects:
+    - type: magic_damage
+      value: 7
+  ring_3:
+    id: ring_3
+    name: Gold Ring
+    description: A uncommon ring
+    type: ring
+    rarity: uncommon
+    level_requirement: 5
+    value: 150
+    stackable: false
+    effects:
+    - type: crit_chance
+      value: 5
+  ring_4:
+    id: ring_4
+    name: Platinum Ring
+    description: A uncommon ring
+    type: ring
+    rarity: uncommon
+    level_requirement: 7
+    value: 200
+    stackable: false
+    effects:
+    - type: max_health
+      value: 50
+  ring_5:
+    id: ring_5
+    name: Diamond Ring
+    description: A rare ring
+    type: ring
+    rarity: rare
+    level_requirement: 9
+    value: 250
+    stackable: false
+    effects:
+    - type: magic_damage
+      value: 13
+  ring_6:
+    id: ring_6
+    name: Ruby Ring
+    description: A rare ring
+    type: ring
+    rarity: rare
+    level_requirement: 11
     value: 300
     stackable: false
     effects:
-      - type: damage
-        value: 15
-      - type: defense
-        value: 10
-      - type: crit_chance
-        value: 0.08
+    - type: crit_chance
+      value: 8
+  ring_7:
+    id: ring_7
+    name: Sapphire Ring
+    description: A epic ring
+    type: ring
+    rarity: epic
+    level_requirement: 13
+    value: 350
+    stackable: false
+    effects:
+    - type: max_health
+      value: 80
+  ring_8:
+    id: ring_8
+    name: Emerald Ring
+    description: A epic ring
+    type: ring
+    rarity: epic
+    level_requirement: 15
+    value: 400
+    stackable: false
+    effects:
+    - type: magic_damage
+      value: 19
+  ring_9:
+    id: ring_9
+    name: Dragon Ring
+    description: A legendary ring
+    type: ring
+    rarity: legendary
+    level_requirement: 17
+    value: 450
+    stackable: false
+    effects:
+    - type: crit_chance
+      value: 11
+  ring_10:
+    id: ring_10
+    name: Void Ring
+    description: A legendary ring
+    type: ring
+    rarity: legendary
+    level_requirement: 19
+    value: 500
+    stackable: false
+    effects:
+    - type: max_health
+      value: 110
+  amulet_1:
+    id: amulet_1
+    name: Copper Amulet
+    description: A common amulet
+    type: amulet
+    rarity: common
+    level_requirement: 1
+    value: 50
+    stackable: false
+    effects:
+    - type: max_health
+      value: 20
+  amulet_2:
+    id: amulet_2
+    name: Silver Amulet
+    description: A common amulet
+    type: amulet
+    rarity: common
+    level_requirement: 3
+    value: 100
+    stackable: false
+    effects:
+    - type: magic_damage
+      value: 7
+  amulet_3:
+    id: amulet_3
+    name: Gold Amulet
+    description: A uncommon amulet
+    type: amulet
+    rarity: uncommon
+    level_requirement: 5
+    value: 150
+    stackable: false
+    effects:
+    - type: crit_chance
+      value: 5
+  amulet_4:
+    id: amulet_4
+    name: Platinum Amulet
+    description: A uncommon amulet
+    type: amulet
+    rarity: uncommon
+    level_requirement: 7
+    value: 200
+    stackable: false
+    effects:
+    - type: max_health
+      value: 50
+  amulet_5:
+    id: amulet_5
+    name: Diamond Amulet
+    description: A rare amulet
+    type: amulet
+    rarity: rare
+    level_requirement: 9
+    value: 250
+    stackable: false
+    effects:
+    - type: magic_damage
+      value: 13
+  amulet_6:
+    id: amulet_6
+    name: Ruby Amulet
+    description: A rare amulet
+    type: amulet
+    rarity: rare
+    level_requirement: 11
+    value: 300
+    stackable: false
+    effects:
+    - type: crit_chance
+      value: 8
+  amulet_7:
+    id: amulet_7
+    name: Sapphire Amulet
+    description: A epic amulet
+    type: amulet
+    rarity: epic
+    level_requirement: 13
+    value: 350
+    stackable: false
+    effects:
+    - type: max_health
+      value: 80
+  amulet_8:
+    id: amulet_8
+    name: Emerald Amulet
+    description: A epic amulet
+    type: amulet
+    rarity: epic
+    level_requirement: 15
+    value: 400
+    stackable: false
+    effects:
+    - type: magic_damage
+      value: 19
+  amulet_9:
+    id: amulet_9
+    name: Dragon Amulet
+    description: A legendary amulet
+    type: amulet
+    rarity: legendary
+    level_requirement: 17
+    value: 450
+    stackable: false
+    effects:
+    - type: crit_chance
+      value: 11
+  amulet_10:
+    id: amulet_10
+    name: Void Amulet
+    description: A legendary amulet
+    type: amulet
+    rarity: legendary
+    level_requirement: 19
+    value: 500
+    stackable: false
+    effects:
+    - type: max_health
+      value: 110
+  consumable_1:
+    id: consumable_1
+    name: Health Potion
+    description: Restores 50 HP
+    type: consumable
+    rarity: common
+    level_requirement: 1
+    value: 25
+    stackable: true
+    max_stack: 20
+    effects:
+    - type: heal
+      value: 50
+  consumable_2:
+    id: consumable_2
+    name: Mana Potion
+    description: Restores 50 mana
+    type: consumable
+    rarity: common
+    level_requirement: 3
+    value: 75
+    stackable: true
+    max_stack: 20
+    effects:
+    - type: mana_restore
+      value: 50
+  consumable_3:
+    id: consumable_3
+    name: Greater Health Potion
+    description: Restores 150 HP
+    type: consumable
+    rarity: uncommon
+    level_requirement: 5
+    value: 125
+    stackable: true
+    max_stack: 20
+    effects:
+    - type: heal
+      value: 150
+  consumable_4:
+    id: consumable_4
+    name: Greater Mana Potion
+    description: Restores 150 mana
+    type: consumable
+    rarity: uncommon
+    level_requirement: 7
+    value: 175
+    stackable: true
+    max_stack: 20
+    effects:
+    - type: mana_restore
+      value: 150
+  consumable_5:
+    id: consumable_5
+    name: Superior Health Potion
+    description: Restores 300 HP
+    type: consumable
+    rarity: rare
+    level_requirement: 9
+    value: 225
+    stackable: true
+    max_stack: 20
+    effects:
+    - type: heal
+      value: 300
+  consumable_6:
+    id: consumable_6
+    name: Superior Mana Potion
+    description: Restores 300 mana
+    type: consumable
+    rarity: rare
+    level_requirement: 11
+    value: 275
+    stackable: true
+    max_stack: 20
+    effects:
+    - type: mana_restore
+      value: 300
+  consumable_7:
+    id: consumable_7
+    name: Elixir of Strength
+    description: Increases damage by 25%
+    type: consumable
+    rarity: epic
+    level_requirement: 13
+    value: 325
+    stackable: true
+    max_stack: 20
+    effects:
+    - type: damage_buff
+      value: 25
+  consumable_8:
+    id: consumable_8
+    name: Elixir of Wisdom
+    description: Increases magic damage by 25%
+    type: consumable
+    rarity: epic
+    level_requirement: 15
+    value: 375
+    stackable: true
+    max_stack: 20
+    effects:
+    - type: magic_damage_buff
+      value: 25
+  consumable_9:
+    id: consumable_9
+    name: Phoenix Down
+    description: Revives from defeat
+    type: consumable
+    rarity: legendary
+    level_requirement: 17
+    value: 425
+    stackable: true
+    max_stack: 20
+    effects:
+    - type: revive
+      value: 50
+  consumable_10:
+    id: consumable_10
+    name: XP Boost Potion
+    description: Doubles XP gain
+    type: consumable
+    rarity: legendary
+    level_requirement: 19
+    value: 475
+    stackable: true
+    max_stack: 20
+    effects:
+    - type: exp_buff
+      value: 100
+  material_1:
+    id: material_1
+    name: Bone Dust
+    description: Powdered bones from undead
+    type: material
+    rarity: common
+    level_requirement: 1
+    value: 20
+    stackable: true
+    max_stack: 50
+    effects: []
+  material_2:
+    id: material_2
+    name: Elemental Essence
+    description: Pure magical essence
+    type: material
+    rarity: common
+    level_requirement: 1
+    value: 120
+    stackable: true
+    max_stack: 50
+    effects: []
+  material_3:
+    id: material_3
+    name: Ancient Wolf Pelt
+    description: Magnificent pelt from an ancient wolf
+    type: material
+    rarity: uncommon
+    level_requirement: 1
+    value: 220
+    stackable: true
+    max_stack: 50
+    effects: []
+  material_4:
+    id: material_4
+    name: Dragon Scale
+    description: A scale from a mighty dragon
+    type: material
+    rarity: uncommon
+    level_requirement: 1
+    value: 320
+    stackable: true
+    max_stack: 50
+    effects: []
+  material_5:
+    id: material_5
+    name: Shadow Shard
+    description: Solidified shadow fragment
+    type: material
+    rarity: rare
+    level_requirement: 1
+    value: 420
+    stackable: true
+    max_stack: 50
+    effects: []
+  material_6:
+    id: material_6
+    name: Crystal Fragment
+    description: Piece of magical crystal
+    type: material
+    rarity: rare
+    level_requirement: 1
+    value: 520
+    stackable: true
+    max_stack: 50
+    effects: []
+  material_7:
+    id: material_7
+    name: Void Essence
+    description: Pure void realm essence
+    type: material
+    rarity: epic
+    level_requirement: 1
+    value: 620
+    stackable: true
+    max_stack: 50
+    effects: []
+  material_8:
+    id: material_8
+    name: Demon Horn
+    description: Horn from a defeated demon
+    type: material
+    rarity: epic
+    level_requirement: 1
+    value: 720
+    stackable: true
+    max_stack: 50
+    effects: []
+  material_9:
+    id: material_9
+    name: Holy Relic
+    description: Ancient blessed artifact
+    type: material
+    rarity: legendary
+    level_requirement: 1
+    value: 820
+    stackable: true
+    max_stack: 50
+    effects: []
+  material_10:
+    id: material_10
+    name: Beast Fang
+    description: Sharp fang from a wild beast
+    type: material
+    rarity: legendary
+    level_requirement: 1
+    value: 920
+    stackable: true
+    max_stack: 50
+    effects: []

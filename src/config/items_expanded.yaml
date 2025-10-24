@@ -1,0 +1,96 @@
+items:
+  # === WEAPONS (20 items) ===
+  rusty_sword:
+    id: rusty_sword
+    name: "Rusty Sword"
+    description: "A basic sword showing signs of wear"
+    type: weapon
+    rarity: common
+    level_requirement: 1
+    value: 10
+    stackable: false
+    effects:
+      - type: damage
+        value: 5
+
+  steel_sword:
+    id: steel_sword
+    name: "Steel Sword"
+    description: "A well-crafted steel sword"
+    type: weapon
+    rarity: uncommon
+    level_requirement: 5
+    value: 50
+    stackable: false
+    effects:
+      - type: damage
+        value: 12
+      - type: crit_chance
+        value: 5
+
+  flame_blade:
+    id: flame_blade
+    name: "Flame Blade"
+    description: "A magical sword imbued with fire"
+    type: weapon
+    rarity: rare
+    level_requirement: 15
+    value: 200
+    stackable: false
+    effects:
+      - type: damage
+        value: 20
+      - type: magic_damage
+        value: 10
+      - type: crit_chance
+        value: 8
+
+  holy_mace:
+    id: holy_mace
+    name: "Holy Mace"
+    description: "A mace blessed with holy power, effective against undead"
+    type: weapon
+    rarity: rare
+    level_requirement: 5
+    value: 300
+    stackable: false
+    effects:
+      - type: damage
+        value: 25
+      - type: undead_damage
+        value: 40
+        target_type: Undead
+
+  elemental_staff:
+    id: elemental_staff
+    name: "Elemental Staff"
+    description: "A staff infused with elemental power"
+    type: weapon
+    rarity: rare
+    level_requirement: 7
+    value: 400
+    stackable: false
+    effects:
+      - type: magic_damage
+        value: 35
+      - type: elemental_damage
+        value: 30
+        target_type: Elemental
+
+  legendary_beast_slayer:
+    id: legendary_beast_slayer
+    name: "Legendary Beast Slayer"
+    description: "A legendary sword said to have slain thousands of beasts"
+    type: weapon
+    rarity: legendary
+    level_requirement: 15
+    value: 1000
+    stackable: false
+    effects:
+      - type: damage
+        value: 50
+      - type: beast_damage
+        value: 75
+        target_type: Beast
+      - type: crit_chance
+        value: 15
