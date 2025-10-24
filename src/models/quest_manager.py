@@ -170,11 +170,17 @@ class QuestManager:
                 else:
                     # Quest exists in active_quests - check if it's still in progress
                     completed, rewards_claimed = quest_status[quest.id]
-                    if not completed or not rewards_claimed:
-                        # Quest is incomplete or rewards not claimed yet - it's available
+                    if completed and rewards_claimed:
+                        # Quest is fully completed - skip to next quest in chain
+                        continue
+                    elif completed and not rewards_claimed:
+                        # Quest is completed but rewards not claimed - skip it for now
+                        # (they should use another command to claim rewards)
+                        continue
+                    else:
+                        # Quest is incomplete - it's available to continue
                         available_quests.append(quest)
                         break
-                    # If completed and rewards claimed, skip to next quest in chain
 
         return available_quests
 
@@ -270,6 +276,10 @@ class QuestManager:
                 was_completed = is_complete
 
             if was_completed:
+                # Auto-claim rewards when quest is completed
+                await self.claim_quest_rewards(player_id, quest_id)
+                logger.info(f"Auto-claimed rewards for quest {quest_id} for player {player_id}")
+                
                 # If this completes a chain, record it
                 async with await self.bot.db_connect() as db:
                     for chain in self.quest_chains.values():
