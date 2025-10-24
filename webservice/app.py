@@ -85,17 +85,15 @@ def get_player_details(player_id):
     player = db.execute('SELECT * FROM players WHERE id = ?', [player_id]).fetchone()
     
     inventory = db.execute('''
-        SELECT i.*, items.name, items.description 
-        FROM inventory i
-        JOIN items ON i.item_id = items.id
-        WHERE i.player_id = ?
+        SELECT item_id, count
+        FROM inventory
+        WHERE player_id = ? AND count > 0
     ''', [player_id]).fetchall()
     
     quests = db.execute('''
-        SELECT q.*, aq.objectives_progress, aq.completed, aq.rewards_claimed
-        FROM active_quests aq
-        JOIN quests q ON aq.quest_id = q.id
-        WHERE aq.player_id = ?
+        SELECT quest_id, objectives_progress, completed, rewards_claimed
+        FROM active_quests
+        WHERE player_id = ?
     ''', [player_id]).fetchall()
     
     kills = db.execute('''
@@ -121,21 +119,21 @@ def get_player_details(player_id):
 
 @app.route('/api/items')
 def get_items():
-    db = get_db()
-    items = db.execute('SELECT * FROM items').fetchall()
-    return render_template('items.html', items=items)
+    # Items are stored in YAML config, not database
+    # For now, return empty list or load from config if needed
+    return render_template('items.html', items=[])
 
 @app.route('/api/quests')
 def get_quests():
     db = get_db()
+    # Quests are stored in YAML config, just show active quest stats
     quests = db.execute('''
-        SELECT q.*, 
-               COUNT(DISTINCT aq.player_id) as active_players,
-               COUNT(DISTINCT cq.player_id) as completed_players
-        FROM quests q
-        LEFT JOIN active_quests aq ON q.id = aq.quest_id AND aq.completed = 0
-        LEFT JOIN active_quests cq ON q.id = cq.quest_id AND cq.completed = 1
-        GROUP BY q.id
+        SELECT quest_id,
+               COUNT(*) as total_players,
+               SUM(CASE WHEN completed = 0 THEN 1 ELSE 0 END) as active_players,
+               SUM(CASE WHEN completed = 1 THEN 1 ELSE 0 END) as completed_players
+        FROM active_quests
+        GROUP BY quest_id
     ''').fetchall()
     return render_template('quests.html', quests=quests)
 

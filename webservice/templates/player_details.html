@@ -57,22 +57,26 @@
                         <h5 class="card-title mb-0">Inventory</h5>
                     </div>
                     <div class="card-body">
+                        {% if inventory %}
                         <table class="table table-sm">
                             <thead>
                                 <tr>
-                                    <th>Item</th>
+                                    <th>Item ID</th>
                                     <th>Count</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for item in inventory %}
                                 <tr>
-                                    <td>{{ item.name }}</td>
+                                    <td>{{ item.item_id }}</td>
                                     <td>{{ item.count }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
+                        {% else %}
+                        <p class="text-muted">No items in inventory.</p>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -85,19 +89,19 @@
                         <h5 class="card-title mb-0">Quests</h5>
                     </div>
                     <div class="card-body">
+                        {% if quests %}
                         <table class="table">
                             <thead>
                                 <tr>
-                                    <th>Quest</th>
+                                    <th>Quest ID</th>
                                     <th>Progress</th>
                                     <th>Status</th>
-                                    <th>Rewards</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for quest in quests %}
                                 <tr>
-                                    <td>{{ quest.title }}</td>
+                                    <td>{{ quest.quest_id }}</td>
                                     <td>{{ quest.objectives_progress }}</td>
                                     <td>
                                         {% if quest.completed %}
@@ -110,11 +114,13 @@
                                             <span class="badge bg-primary">In Progress</span>
                                         {% endif %}
                                     </td>
-                                    <td>XP: {{ quest.xp }}, Gold: {{ quest.gold }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
+                        {% else %}
+                        <p class="text-muted">No active quests.</p>
+                        {% endif %}
                     </div>
                 </div>
             </div>
