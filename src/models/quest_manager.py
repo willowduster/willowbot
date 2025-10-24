@@ -312,22 +312,11 @@ class QuestManager:
                                 player_row = await cursor.fetchone()
                                 player_level = player_row[0] if player_row else 1
                             
-                            # Check if player meets requirements
+                            # Check if player meets requirements (level only - previous quest is already complete)
                             can_start = True
                             if next_quest.requirements:
                                 if next_quest.requirements.get('level', 0) > player_level:
                                     can_start = False
-                                if next_quest.requirements.get('previous_quest'):
-                                    prev_quest = next_quest.requirements['previous_quest']
-                                    # The current quest should be the previous quest, which is now complete
-                                    if prev_quest != quest_id:
-                                        async with db.execute(
-                                            'SELECT completed FROM active_quests WHERE player_id = ? AND quest_id = ?',
-                                            (player_id, prev_quest)
-                                        ) as cursor:
-                                            prev_row = await cursor.fetchone()
-                                            if not prev_row or not prev_row[0]:
-                                                can_start = False
                             
                             if can_start:
                                 # Start the next quest automatically
