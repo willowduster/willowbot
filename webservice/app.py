@@ -178,11 +178,14 @@ def get_items():
 def get_quests():
     # Load quests from YAML config
     quests_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'src', 'config', 'quests.yaml')
+    
     try:
         with open(quests_path, 'r', encoding='utf-8') as f:
             quests_data = yaml.safe_load(f)
-    except FileNotFoundError:
-        quests_data = {'quests': []}
+    except FileNotFoundError as e:
+        quests_data = {}
+    except Exception as e:
+        quests_data = {}
     
     # Get active quest stats from database
     db = get_db()
@@ -201,23 +204,26 @@ def get_quests():
             'completed_players': row[2] or 0
         }
     
-    # Enrich quests with stats
+    # Extract quests from quest_chains structure
     quests_list = []
-    for quest in quests_data.get('quests', []):
-        quest_id = quest.get('id', '')
-        stats = quest_stats.get(quest_id, {'active_players': 0, 'completed_players': 0})
-        quests_list.append({
-            'id': quest_id,
-            'title': quest.get('title', ''),
-            'description': quest.get('description', ''),
-            'type': quest.get('type', ''),
-            'objectives': quest.get('objectives', []),
-            'rewards': quest.get('rewards', {}),
-            'requirements': quest.get('requirements', {}),
-            'next_quest': quest.get('next_quest', ''),
-            'active_players': stats['active_players'],
-            'completed_players': stats['completed_players']
-        })
+    quest_chains = quests_data.get('quest_chains', [])
+    
+    for chain in quest_chains:
+        for quest in chain.get('quests', []):
+            quest_id = quest.get('id', '')
+            stats = quest_stats.get(quest_id, {'active_players': 0, 'completed_players': 0})
+            quests_list.append({
+                'id': quest_id,
+                'title': quest.get('title', ''),
+                'description': quest.get('description', ''),
+                'type': quest.get('type', ''),
+                'objectives': quest.get('objectives', []),
+                'rewards': quest.get('rewards', {}),
+                'requirements': quest.get('requirements', {}),
+                'next_quest': quest.get('next_quest', ''),
+                'active_players': stats['active_players'],
+                'completed_players': stats['completed_players']
+            })
     
     return render_template('quests.html', quests=quests_list)
 

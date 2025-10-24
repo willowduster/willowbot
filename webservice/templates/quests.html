@@ -55,8 +55,8 @@
                             {% if quest.rewards.gold %}
                             <li>💰 {{ quest.rewards.gold }} Gold</li>
                             {% endif %}
-                            {% if quest.rewards.items %}
-                                {% for item in quest.rewards.items %}
+                            {% if quest.rewards.get('items') %}
+                                {% for item in quest.rewards.get('items') %}
                                 <li>🎒 {{ item.id }} x{{ item.count }}</li>
                                 {% endfor %}
                             {% endif %}
