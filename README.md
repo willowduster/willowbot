@@ -46,6 +46,8 @@ Quests:
 
 ## Setup
 
+### Standard Setup
+
 1. Clone this repository
 2. Create a `.env` file based on `example.env` with your:
    - Discord bot token (`DISCORD_TOKEN`)
@@ -63,6 +65,36 @@ Quests:
    ```bash
    python src/bot.py
    ```
+
+### Docker Setup
+
+1. Clone this repository
+2. Create a `.env` file as described above
+3. Build and start the containers:
+   ```bash
+   docker-compose up -d
+   ```
+   This will:
+   - Build the Docker image
+   - Initialize the database
+   - Start the bot and web interface
+   - Mount the database file in the `data` directory
+4. Access the web interface at http://localhost:5000
+
+## Web Interface
+
+The web interface provides a dashboard to:
+- Start and stop the bot
+- View all players and their stats
+- View player inventories and quest progress
+- Browse all available items and their properties
+- Monitor quest completion statistics
+
+The interface runs on port 5000 by default and includes:
+- Dashboard: Bot control and quick stats
+- Players: List of all players with detailed views
+- Items: Complete item database with stats and descriptions
+- Quests: Quest chains with progress tracking
 
 ## Requirements
 
@@ -115,11 +147,22 @@ willowbot/
 │       ├── inventory.py # Inventory management
 │       ├── equipment.py # Equipment management
 │       └── quest.py     # Quest system
-├── .env                 # Configuration (not in repo)
-├── example.env          # Example configuration
-├── requirements.txt     # Python dependencies
-├── setup.py            # Database initialization script
-└── README.md           # This file
+├── webservice/         # Web interface
+│   ├── app.py          # Flask application
+│   └── templates/      # HTML templates
+│       ├── index.html      # Dashboard
+│       ├── players.html    # Player list
+│       ├── items.html      # Item list
+│       └── quests.html     # Quest list
+├── data/              # Persistent data directory
+│   └── willowbot.db   # SQLite database
+├── .env               # Configuration (not in repo)
+├── example.env        # Example configuration
+├── requirements.txt   # Python dependencies
+├── setup.py          # Database initialization script
+├── Dockerfile        # Docker configuration
+├── docker-compose.yml # Docker Compose configuration
+└── README.md         # This file
 ```
 
 ## Contributing

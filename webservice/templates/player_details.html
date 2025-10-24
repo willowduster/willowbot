@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player Details - WillowBot Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">WillowBot Dashboard</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/api/players">Players</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/api/items">Items</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/api/quests">Quests</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h2>Player Details: {{ player.name }}</h2>
+        
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Stats</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>Level: {{ player.level }}</p>
+                        <p>XP: {{ player.xp }}</p>
+                        <p>Health: {{ player.health }}/{{ player.max_health }}</p>
+                        <p>Mana: {{ player.mana }}/{{ player.max_mana }}</p>
+                        <p>Damage Bonus: {{ player.damage_bonus }}</p>
+                        <p>Magic Damage Bonus: {{ player.magic_damage_bonus }}</p>
+                        <p>Defense: {{ player.defense }}</p>
+                        <p>Magic Defense: {{ player.magic_defense }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Inventory</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in inventory %}
+                                <tr>
+                                    <td>{{ item.name }}</td>
+                                    <td>{{ item.count }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Quests</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Quest</th>
+                                    <th>Progress</th>
+                                    <th>Status</th>
+                                    <th>Rewards</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for quest in quests %}
+                                <tr>
+                                    <td>{{ quest.title }}</td>
+                                    <td>{{ quest.objectives_progress }}</td>
+                                    <td>
+                                        {% if quest.completed %}
+                                            {% if quest.rewards_claimed %}
+                                                <span class="badge bg-success">Completed</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">Rewards Available</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge bg-primary">In Progress</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>XP: {{ quest.xp }}, Gold: {{ quest.gold }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
