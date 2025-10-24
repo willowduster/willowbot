@@ -4,45 +4,72 @@ A Discord RPG bot that allows users to create and manage characters with stats, 
 
 ## Features
 
-- Character creation and management
-- Stats system including:
-  - Health and Mana
+- **Character Creation and Management**
+  - Create unique characters with custom stats
+  - Track death and kill statistics
+  - Death history with timestamps and causes
+  - 10% gold/XP penalty on death
+
+- **Stats System**
+  - Health and Mana with regeneration
   - Experience (XP) and Leveling
   - Automatic level-up system with stat increases
-- Equipment and Inventory
+  - Comprehensive stat tracking (deaths, kills, quests completed)
+
+- **Equipment and Inventory**
   - Various item types (weapons, armor, consumables)
-  - Item rarity system
+  - Item rarity system (Common, Uncommon, Rare, Epic, Legendary)
   - Equipment slots with stat bonuses
-- Combat System
+  - Use consumables for healing and buffs
+
+- **Combat System**
   - Turn-based combat with enemies
-  - Melee and magic attacks
+  - Melee and magic attacks with emoji reactions
   - Critical hits and miss chances
   - Enemy affixes and special abilities
-- Quest System
-  - Multiple quest chains
-  - Various objective types
+  - Defeat system with heal/restart or leave options
+  - Death tracking and penalties
+
+- **Quest System**
+  - Multiple quest chains with progressive difficulty
+  - Various objective types (combat, exploration, collection)
   - Rewards including items, XP, gold, and titles
+  - Automatic quest chain progression
+  - Quest completion tracking
+
+- **Web Dashboard**
+  - Dark mode interface with GitHub-inspired theme
+  - Real-time bot status monitoring
+  - Player statistics and leaderboards
+  - Complete item catalog with filtering
+  - Quest progress tracking
+  - Death history viewer
 
 ## Commands
 
-Character Management:
+**Character Management:**
 - `!w start` - Create your character and begin your adventure
-- `!w stats` (or `!w s`) - View your character's current stats
+- `!w stats` or `!w s` - View your character's current stats including deaths and kills
 
-Equipment & Inventory:
+**Equipment & Inventory:**
 - `!w inventory` - View your inventory
 - `!w equip <item>` - Equip an item
 - `!w unequip <slot>` - Unequip an item from a slot
+- `!w use <item>` - Use a consumable item
 
-Combat:
-- `!w attack <type>` - Use a melee or magic attack
-- `!w flee` - Attempt to flee from combat
+**Combat:**
+- `⚔️` - Use a melee attack (reaction emoji)
+- `🔮` - Use a magic attack (reaction emoji)
+- `🧪` - Use a potion during combat (reaction emoji)
+- `🏃` - Attempt to flee from combat (reaction emoji)
+- Interactive defeat system with options to heal or leave
 
-Quests:
-- `!w quests` (or `!w q`) - List available quests
+**Quests:**
+- `!w quests` or `!w q` - List available quests
 - `!w start_quest <quest_id>` - Start a specific quest
 - `!w quest_progress` - Check your current quest progress
-- `!w claim_rewards <quest_id>` - Claim rewards for a completed quest
+- Automatic quest chain progression
+- Automatic reward claiming on completion
 
 ## Setup
 
@@ -83,18 +110,34 @@ Quests:
 
 ## Web Interface
 
-The web interface provides a dashboard to:
-- Start and stop the bot
-- View all players and their stats
-- View player inventories and quest progress
-- Browse all available items and their properties
-- Monitor quest completion statistics
+The web interface provides a modern dark mode dashboard to monitor and manage your bot:
 
-The interface runs on port 5000 by default and includes:
-- Dashboard: Bot control and quick stats
-- Players: List of all players with detailed views
-- Items: Complete item database with stats and descriptions
-- Quests: Quest chains with progress tracking
+**Features:**
+- **Dashboard** (`/`) - Bot control panel with start/stop functionality and quick stats
+- **Players** (`/api/players`) - Complete player list with detailed stats including:
+  - Level, XP, HP, Mana
+  - Gold and inventory items
+  - Death and kill statistics
+  - Active quests and completion records
+- **Items** (`/api/items`) - Comprehensive item catalog with:
+  - Rarity-based color coding
+  - Detailed stats and effects
+  - Item type filtering
+  - Dark mode card layout
+- **Quests** (`/api/quests`) - Quest database showing:
+  - All available quest chains
+  - Quest objectives and rewards
+  - Player participation statistics
+  - Active and completed quest counts
+
+**Design:**
+- GitHub-inspired dark theme
+- Bootstrap 5.3.0 with native dark mode
+- Responsive card-based layout
+- Unified navigation across all pages
+- Color-coded rarity system for items
+
+The interface runs on **port 5000** by default. Access it at `http://localhost:5000` after starting the bot.
 
 ## Requirements
 
@@ -105,14 +148,17 @@ The interface runs on port 5000 by default and includes:
 
 ## Database
 
-The bot uses SQLite for data storage. The database file (`players.db`) will be created automatically when the bot starts. The database schema includes:
+The bot uses SQLite for data storage. The database file (`willowbot.db`) will be created automatically when the bot starts. The database schema includes:
 
-- Player data (stats, level, XP)
-- Inventory system
-- Equipment loadouts
-- Active quests and progress
-- Quest completion records
-- Combat state tracking
+- **Players table** - Character data (stats, level, XP, deaths, kills)
+- **Inventory table** - Player item storage
+- **Equipment table** - Equipped items per player
+- **Active quests table** - Current quest progress
+- **Completed quests table** - Quest completion history
+- **Combat state table** - Active combat tracking
+- **Death history table** - Timestamped death records with causes
+
+All data persists in the `data/` directory and survives container restarts.
 
 ## Invite Link
 
@@ -150,10 +196,11 @@ willowbot/
 ├── webservice/         # Web interface
 │   ├── app.py          # Flask application
 │   └── templates/      # HTML templates
+│       ├── base.html       # Dark mode base template
 │       ├── index.html      # Dashboard
 │       ├── players.html    # Player list
-│       ├── items.html      # Item list
-│       └── quests.html     # Quest list
+│       ├── items.html      # Item catalog
+│       └── quests.html     # Quest database
 ├── data/              # Persistent data directory
 │   └── willowbot.db   # SQLite database
 ├── .env               # Configuration (not in repo)
