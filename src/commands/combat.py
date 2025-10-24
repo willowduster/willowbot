@@ -1059,25 +1059,19 @@ class CombatCommands(commands.Cog):
                         next_quest_in_chain = completed_quest.next_quest
                         break
             
-            # If there's an incomplete quest that's NOT part of the completed quest chain, block
-            if active_incomplete and not next_quest_in_chain:
-                quest = self.quest_manager.quests.get(active_incomplete[0])
-                if quest:
-                    await channel.send(f"{user.mention} You already have an active quest: **{quest.title}**\nComplete it first!")
-                else:
-                    await channel.send(f"{user.mention} You already have an active quest. Complete it first!")
-                return
+            # If there's an active incomplete quest, use it as the quest to continue
+            current_quest_id = next_quest_in_chain if next_quest_in_chain else (active_incomplete[0] if active_incomplete else None)
             
-            # If the next quest in chain is already active, start combat for it if it's a combat quest
-            if next_quest_in_chain:
-                quest = self.quest_manager.quests.get(next_quest_in_chain)
+            # If we have an active quest, start combat for it if it's a combat quest
+            if current_quest_id:
+                quest = self.quest_manager.quests.get(current_quest_id)
                 
                 # If it's a combat quest, start combat automatically
-                if quest.type == QuestType.COMBAT:
+                if quest and quest.type == QuestType.COMBAT:
                     await channel.send(f"⚔️ {user.mention} Continuing quest: **{quest.title}**")
                     # Start combat for the quest
                     await self.start_quest_combat(channel, user.id)
-                else:
+                elif quest:
                     await channel.send(f"📜 {user.mention} Continue your quest: **{quest.title}**\n{quest.description}")
                 return
             
