@@ -1214,7 +1214,6 @@ class CombatCommands(commands.Cog):
             cursor = await db.execute('''
                 SELECT quest_id FROM active_quests 
                 WHERE player_id = ? AND completed = FALSE
-                ORDER BY started_at DESC
                 LIMIT 1
             ''', (user.id,))
             quest_data = await cursor.fetchone()
@@ -1249,34 +1248,36 @@ class CombatCommands(commands.Cog):
         # Show current quest progress
         async with await self.bot.db_connect() as db:
             cursor = await db.execute('''
-                SELECT quest_id, progress FROM active_quests 
+                SELECT quest_id, objectives_progress FROM active_quests 
                 WHERE player_id = ? AND completed = FALSE
-                ORDER BY started_at DESC
                 LIMIT 1
             ''', (user.id,))
             quest_data = await cursor.fetchone()
             
             if quest_data:
-                quest_id, progress = quest_data
+                quest_id, objectives_progress_json = quest_data
                 quest = self.quest_manager.quests.get(quest_id)
                 
                 if quest:
+                    import json
+                    objectives_progress = json.loads(objectives_progress_json)
+                    
                     embed = discord.Embed(
                         title="📜 Current Quest",
                         description=f"**{quest.title}**\n{quest.description}",
                         color=discord.Color.gold()
                     )
                     
-                    embed.add_field(
-                        name="Progress",
-                        value=f"{progress}/{quest.objective_count}",
-                        inline=True
-                    )
+                    # Show progress for each objective
+                    progress_text = []
+                    for i, obj in enumerate(quest.objectives):
+                        current = objectives_progress[i] if i < len(objectives_progress) else 0
+                        progress_text.append(f"{obj.description}: {current}/{obj.count}")
                     
                     embed.add_field(
-                        name="Type",
-                        value=quest.objective_type.value,
-                        inline=True
+                        name="Progress",
+                        value="\n".join(progress_text),
+                        inline=False
                     )
                     
                     await channel.send(embed=embed)
