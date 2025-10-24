@@ -446,6 +446,7 @@ class CombatCommands(commands.Cog):
             victory_msg = await channel.send(embed=victory_embed)
             
             # Add reaction options
+            await victory_msg.add_reaction("🛏️")  # Rest to restore HP/Mana
             await victory_msg.add_reaction("▶️")  # Next quest
             await victory_msg.add_reaction("🎒")  # Inventory
             await victory_msg.add_reaction("📊")  # Stats
@@ -1276,7 +1277,9 @@ class CombatCommands(commands.Cog):
             return
         
         # Victory reactions
-        if emoji == "▶️":  # Next Quest
+        if emoji == "🛏️":  # Rest to restore HP/Mana
+            await self.handle_rest(reaction.message.channel, user)
+        elif emoji == "▶️":  # Next Quest
             await self.handle_next_quest(reaction.message.channel, user)
         elif emoji == "🎒":  # Show Inventory
             await self.handle_show_inventory(reaction.message.channel, user)
@@ -1485,6 +1488,71 @@ class CombatCommands(commands.Cog):
             )
             
             await channel.send(embed=embed)
+    
+    async def handle_rest(self, channel, user):
+        """Allow the player to rest and restore HP and Mana"""
+        async with await self.bot.db_connect() as db:
+            # Get player data
+            cursor = await db.execute('''
+                SELECT name, health, max_health, mana, max_mana FROM players WHERE id = ?
+            ''', (user.id,))
+            player_data = await cursor.fetchone()
+            
+            if not player_data:
+                await channel.send(f"{user.mention} No player data found!")
+                return
+            
+            name, current_hp, max_hp, current_mana, max_mana = player_data
+            
+            # Calculate HP and Mana restored
+            hp_restored = max_hp - current_hp
+            mana_restored = max_mana - current_mana
+            
+            # Update player to full HP and Mana
+            await db.execute('''
+                UPDATE players
+                SET health = max_health, mana = max_mana
+                WHERE id = ?
+            ''', (user.id,))
+            await db.commit()
+            
+            # Create rest message
+            embed = discord.Embed(
+                title="🛏️ Rest",
+                description=f"{name} takes a moment to rest and recover...",
+                color=discord.Color.blue()
+            )
+            
+            if hp_restored > 0 or mana_restored > 0:
+                recovery_text = []
+                if hp_restored > 0:
+                    recovery_text.append(f"❤️ HP: {current_hp} → {max_hp} (+{hp_restored})")
+                if mana_restored > 0:
+                    recovery_text.append(f"💙 Mana: {current_mana} → {max_mana} (+{mana_restored})")
+                
+                embed.add_field(
+                    name="Recovery",
+                    value="\n".join(recovery_text),
+                    inline=False
+                )
+            else:
+                embed.add_field(
+                    name="Status",
+                    value="You're already at full health and mana!",
+                    inline=False
+                )
+            
+            embed.add_field(
+                name="Ready for Battle",
+                value="You feel refreshed and ready to continue your adventure!",
+                inline=False
+            )
+            
+            await channel.send(embed=embed)
+            
+            # Clean up victory message tracking
+            if user.id in self.victory_messages:
+                del self.victory_messages[user.id]
     
     async def handle_defeat_restart(self, channel, user):
         """Handle defeat restart - heal fully, apply penalties, and restart quest"""
