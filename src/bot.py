@@ -138,6 +138,14 @@ class WillowBot(commands.Bot):
                 logger.info("Adding gold column to players table")
                 await db.execute('ALTER TABLE players ADD COLUMN gold INTEGER DEFAULT 0')
                 await db.commit()
+            
+            # Migration: Add deaths column if it doesn't exist
+            try:
+                await db.execute('SELECT deaths FROM players LIMIT 1')
+            except:
+                logger.info("Adding deaths column to players table")
+                await db.execute('ALTER TABLE players ADD COLUMN deaths INTEGER DEFAULT 0')
+                await db.commit()
 
             # Active quests table
             await db.execute('''
