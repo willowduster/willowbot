@@ -29,6 +29,10 @@ class CombatCommands(commands.Cog):
         self.FLEE_EMOJI = "🏃"
         self.ITEM_EMOJI = "🧪"
         self.combat_emojis = [self.MELEE_EMOJI, self.MAGIC_EMOJI, self.ITEM_EMOJI, self.FLEE_EMOJI]
+        # Defeat reaction emojis
+        self.RESTART_EMOJI = "🔄"  # Heal and restart quest
+        self.LEAVE_EMOJI = "🚪"    # Leave battle and view status
+        self.defeat_emojis = [self.RESTART_EMOJI, self.LEAVE_EMOJI]
         logger.info("Combat Commands initialized with emojis: %s", self.combat_emojis)
     
     def generate_loot(self, enemy: CombatEntity) -> list:
@@ -717,13 +721,29 @@ class CombatCommands(commands.Cog):
                 description="You have been defeated! Your health has been restored to 50%.",
                 color=discord.Color.red()
             )
-            await channel.send(embed=defeat_embed)
+            defeat_embed.add_field(
+                name="Options",
+                value=f"{self.RESTART_EMOJI} Heal HP and Mana, then restart quest\n{self.LEAVE_EMOJI} Leave battle and view your status",
+                inline=False
+            )
+            defeat_msg = await channel.send(embed=defeat_embed)
             
-            # Restore 50% health and reset combat
+            # Add reaction options
+            for emoji in self.defeat_emojis:
+                await defeat_msg.add_reaction(emoji)
+            
+            # Store defeat message for reaction handling
+            self.victory_messages[user_id] = {
+                'message_id': defeat_msg.id,
+                'type': 'defeat',
+                'player': player
+            }
+            
+            # Restore 50% health
             player.health = player.max_health // 2
             player.mana = player.max_mana
             
-            # Update database
+            # Update database - keep quest active for potential restart
             async with await self.bot.db_connect() as db:
                 await db.execute('''
                     UPDATE players 
@@ -932,7 +952,7 @@ class CombatCommands(commands.Cog):
             await channel.send(f"{user.mention} Item selection timed out.")
     
     async def handle_victory_action(self, reaction, user):
-        """Handle post-combat victory actions"""
+        """Handle post-combat victory and defeat actions"""
         emoji = str(reaction.emoji)
         
         try:
@@ -941,6 +961,16 @@ class CombatCommands(commands.Cog):
         except (discord.Forbidden, discord.NotFound, discord.HTTPException) as e:
             logger.warning(f"Could not remove reaction: {str(e)}")
         
+        # Check if this is a defeat reaction
+        victory_data = self.victory_messages.get(user.id)
+        if victory_data and victory_data.get('type') == 'defeat':
+            if emoji == self.RESTART_EMOJI:  # Heal and restart quest
+                await self.handle_defeat_restart(reaction.message.channel, user)
+            elif emoji == self.LEAVE_EMOJI:  # Leave battle and view status
+                await self.handle_defeat_leave(reaction.message.channel, user)
+            return
+        
+        # Victory reactions
         if emoji == "▶️":  # Next Quest
             await self.handle_next_quest(reaction.message.channel, user)
         elif emoji == "🎒":  # Show Inventory
@@ -1156,6 +1186,102 @@ class CombatCommands(commands.Cog):
             )
             
             await channel.send(embed=embed)
+    
+    async def handle_defeat_restart(self, channel, user):
+        """Handle defeat restart - heal fully and restart quest"""
+        async with await self.bot.db_connect() as db:
+            # Heal player to full HP and Mana
+            cursor = await db.execute('''
+                SELECT max_health, max_mana FROM players WHERE id = ?
+            ''', (user.id,))
+            player_data = await cursor.fetchone()
+            
+            if not player_data:
+                await channel.send(f"{user.mention} No player data found!")
+                return
+            
+            max_hp, max_mana = player_data
+            
+            # Update to full health and mana
+            await db.execute('''
+                UPDATE players 
+                SET health = ?, mana = ?
+                WHERE id = ?
+            ''', (max_hp, max_mana, user.id))
+            await db.commit()
+            
+            # Get current quest
+            cursor = await db.execute('''
+                SELECT quest_id FROM active_quests 
+                WHERE player_id = ? AND completed = FALSE
+                ORDER BY started_at DESC
+                LIMIT 1
+            ''', (user.id,))
+            quest_data = await cursor.fetchone()
+            
+            if quest_data:
+                quest_id = quest_data[0]
+                quest = self.quest_manager.quests.get(quest_id)
+                
+                await channel.send(
+                    f"✨ {user.mention} You have been fully healed!\n"
+                    f"**HP:** {max_hp}/{max_hp} | **Mana:** {max_mana}/{max_mana}\n"
+                    f"Restarting quest: **{quest.title}**"
+                )
+                
+                # Start quest combat
+                await self.start_quest_combat(channel, user.id)
+            else:
+                await channel.send(
+                    f"✨ {user.mention} You have been fully healed!\n"
+                    f"**HP:** {max_hp}/{max_hp} | **Mana:** {max_mana}/{max_mana}\n"
+                    f"No active quest to restart. Use `!w quests` to view available quests."
+                )
+    
+    async def handle_defeat_leave(self, channel, user):
+        """Handle defeat leave - show stats, inventory, and current quest"""
+        # Show player stats
+        await self.handle_show_stats(channel, user)
+        
+        # Show inventory
+        await self.handle_show_inventory(channel, user)
+        
+        # Show current quest progress
+        async with await self.bot.db_connect() as db:
+            cursor = await db.execute('''
+                SELECT quest_id, progress FROM active_quests 
+                WHERE player_id = ? AND completed = FALSE
+                ORDER BY started_at DESC
+                LIMIT 1
+            ''', (user.id,))
+            quest_data = await cursor.fetchone()
+            
+            if quest_data:
+                quest_id, progress = quest_data
+                quest = self.quest_manager.quests.get(quest_id)
+                
+                if quest:
+                    embed = discord.Embed(
+                        title="📜 Current Quest",
+                        description=f"**{quest.title}**\n{quest.description}",
+                        color=discord.Color.gold()
+                    )
+                    
+                    embed.add_field(
+                        name="Progress",
+                        value=f"{progress}/{quest.objective_count}",
+                        inline=True
+                    )
+                    
+                    embed.add_field(
+                        name="Type",
+                        value=quest.objective_type.value,
+                        inline=True
+                    )
+                    
+                    await channel.send(embed=embed)
+            else:
+                await channel.send(f"{user.mention} You don't have an active quest. Use `!w quests` to view available quests.")
             
     async def process_combat_round(self, player, enemy, player_attack):
         """Process a round of combat and return the embed"""
@@ -1253,7 +1379,9 @@ class CombatCommands(commands.Cog):
         if not player.is_alive():
             embed.add_field(
                 name="Defeat!",
-                value="You have been defeated! Your health has been restored to 50%.",
+                value=f"You have been defeated! Your health has been restored to 50%.\n\n"
+                      f"{self.RESTART_EMOJI} Heal HP and Mana, then restart quest\n"
+                      f"{self.LEAVE_EMOJI} Leave battle and view your status",
                 inline=False
             )
             
@@ -1268,6 +1396,10 @@ class CombatCommands(commands.Cog):
                 WHERE id = ?
             ''', (player.health, player.mana, player.id)) as cursor:
                 await self.bot.db.commit()
+            
+            # Return embed with defeat reactions flag
+            embed.defeat_reactions = True
+            return embed
 
         else:
             # Update database with current combat state
@@ -1758,7 +1890,9 @@ class CombatCommands(commands.Cog):
             if not player.is_alive():
                 embed.add_field(
                     name="Defeat!",
-                    value="You have been defeated! Your health has been restored to 50%.",
+                    value=f"You have been defeated! Your health has been restored to 50%.\n\n"
+                          f"{self.RESTART_EMOJI} Heal HP and Mana, then restart quest\n"
+                          f"{self.LEAVE_EMOJI} Leave battle and view your status",
                     inline=False
                 )
                 
@@ -1783,7 +1917,19 @@ class CombatCommands(commands.Cog):
                 ))
                 await db.commit()
 
-            await reaction.message.channel.send(embed=embed)
+            defeat_msg = await reaction.message.channel.send(embed=embed)
+            
+            # Add defeat reactions if player was defeated
+            if not player.is_alive() or player.health <= player.max_health // 2:
+                for emoji in self.defeat_emojis:
+                    await defeat_msg.add_reaction(emoji)
+                
+                # Store defeat message for reaction handling
+                self.victory_messages[user.id] = {
+                    'message_id': defeat_msg.id,
+                    'type': 'defeat',
+                    'player': player
+                }
 
 async def setup(bot):
     await bot.add_cog(CombatCommands(bot))
