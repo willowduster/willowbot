@@ -208,10 +208,17 @@ def get_quests():
     quests_list = []
     quest_chains = quests_data.get('quest_chains', [])
     
+    # Build a mapping of quest IDs to titles for next_quest lookups
+    quest_id_to_title = {}
+    for chain in quest_chains:
+        for quest in chain.get('quests', []):
+            quest_id_to_title[quest.get('id', '')] = quest.get('title', '')
+    
     for chain in quest_chains:
         for quest in chain.get('quests', []):
             quest_id = quest.get('id', '')
             stats = quest_stats.get(quest_id, {'active_players': 0, 'completed_players': 0})
+            next_quest_id = quest.get('next_quest', '')
             quests_list.append({
                 'id': quest_id,
                 'title': quest.get('title', ''),
@@ -221,6 +228,7 @@ def get_quests():
                 'rewards': quest.get('rewards', {}),
                 'requirements': quest.get('requirements', {}),
                 'next_quest': quest.get('next_quest', ''),
+                'next_quest_title': quest_id_to_title.get(next_quest_id, next_quest_id) if next_quest_id else '',
                 'active_players': stats['active_players'],
                 'completed_players': stats['completed_players']
             })
