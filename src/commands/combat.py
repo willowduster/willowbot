@@ -467,6 +467,11 @@ class CombatCommands(commands.Cog):
             else:
                 action = "flee"
         
+        # Enemy regenerates mana to sustain the fight
+        if enemy.mana < enemy.max_mana:
+            mana_regen = int(enemy.max_mana * 0.3)  # 30% mana regeneration per turn
+            enemy.mana = min(enemy.max_mana, enemy.mana + mana_regen)
+        
         enemy_embed = discord.Embed(
             title="Enemy's Turn",
             color=discord.Color.red()
@@ -1388,6 +1393,12 @@ class CombatCommands(commands.Cog):
 
         # Enemy's turn
         player.regenerate_mana(0.2)  # Regenerate 20% mana
+        
+        # Enemy regenerates mana to sustain the fight
+        if enemy.mana < enemy.max_mana:
+            mana_regen = int(enemy.max_mana * 0.3)  # 30% mana regeneration per turn
+            enemy.mana = min(enemy.max_mana, enemy.mana + mana_regen)
+        
         enemy_attack = random.choice(enemy.attacks)
         enemy_result = enemy_attack.execute(enemy, player)
 
@@ -1899,6 +1910,12 @@ class CombatCommands(commands.Cog):
 
             # Enemy's turn
             player.regenerate_mana(0.2)  # Regenerate 20% mana
+            
+            # Enemy regenerates mana to sustain the fight
+            if player.current_enemy.mana < player.current_enemy.max_mana:
+                mana_regen = int(player.current_enemy.max_mana * 0.3)  # 30% mana regeneration per turn
+                player.current_enemy.mana = min(player.current_enemy.max_mana, player.current_enemy.mana + mana_regen)
+            
             enemy_attack = random.choice(player.current_enemy.attacks)
             enemy_result = enemy_attack.execute(player.current_enemy, player)
 
