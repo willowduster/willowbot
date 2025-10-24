@@ -57,7 +57,7 @@
                             {% endif %}
                             {% if quest.rewards.get('items') %}
                                 {% for item in quest.rewards.get('items') %}
-                                <li>🎒 {{ item.id }} x{{ item.count }}</li>
+                                <li>🎒 {{ item.name }} x{{ item.count }}</li>
                                 {% endfor %}
                             {% endif %}
                             {% if quest.rewards.title %}

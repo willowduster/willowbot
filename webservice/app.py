@@ -187,6 +187,15 @@ def get_quests():
     except Exception as e:
         quests_data = {}
     
+    # Load items for name lookups
+    items_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'src', 'config', 'items.yaml')
+    try:
+        with open(items_path, 'r', encoding='utf-8') as f:
+            items_data = yaml.safe_load(f)
+            items_dict = items_data.get('items', {})
+    except:
+        items_dict = {}
+    
     # Get active quest stats from database
     db = get_db()
     quest_stats = {}
@@ -219,13 +228,29 @@ def get_quests():
             quest_id = quest.get('id', '')
             stats = quest_stats.get(quest_id, {'active_players': 0, 'completed_players': 0})
             next_quest_id = quest.get('next_quest', '')
+            
+            # Enrich item rewards with names
+            rewards = quest.get('rewards', {})
+            if 'items' in rewards:
+                enriched_items = []
+                for item in rewards['items']:
+                    item_id = item.get('id', '')
+                    item_data = items_dict.get(item_id, {})
+                    enriched_items.append({
+                        'id': item_id,
+                        'name': item_data.get('name', item_id),
+                        'count': item.get('count', 1)
+                    })
+                rewards = dict(rewards)  # Make a copy
+                rewards['items'] = enriched_items
+            
             quests_list.append({
                 'id': quest_id,
                 'title': quest.get('title', ''),
                 'description': quest.get('description', ''),
                 'type': quest.get('type', ''),
                 'objectives': quest.get('objectives', []),
-                'rewards': quest.get('rewards', {}),
+                'rewards': rewards,
                 'requirements': quest.get('requirements', {}),
                 'next_quest': quest.get('next_quest', ''),
                 'next_quest_title': quest_id_to_title.get(next_quest_id, next_quest_id) if next_quest_id else '',
