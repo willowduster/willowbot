@@ -154,23 +154,72 @@ def get_player_details(player_id):
 
 @app.route('/api/items')
 def get_items():
-    # Items are stored in YAML config, not database
-    # For now, return empty list or load from config if needed
-    return render_template('items.html', items=[])
+    # Load items from YAML config
+    items_list = []
+    for item_id, item_data in ITEMS_DATA.items():
+        items_list.append({
+            'id': item_id,
+            'name': item_data.get('name', item_id),
+            'type': item_data.get('type', 'unknown'),
+            'rarity': item_data.get('rarity', 'common'),
+            'level_requirement': item_data.get('level_requirement', 1),
+            'value': item_data.get('value', 0),
+            'description': item_data.get('description', ''),
+            'effects': item_data.get('effects', [])
+        })
+    
+    # Sort by rarity (legendary > rare > uncommon > common) then by level
+    rarity_order = {'legendary': 0, 'rare': 1, 'uncommon': 2, 'common': 3}
+    items_list.sort(key=lambda x: (rarity_order.get(x['rarity'], 4), x['level_requirement']))
+    
+    return render_template('items.html', items=items_list)
 
 @app.route('/api/quests')
 def get_quests():
+    # Load quests from YAML config
+    quests_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'src', 'config', 'quests.yaml')
+    try:
+        with open(quests_path, 'r', encoding='utf-8') as f:
+            quests_data = yaml.safe_load(f)
+    except FileNotFoundError:
+        quests_data = {'quests': []}
+    
+    # Get active quest stats from database
     db = get_db()
-    # Quests are stored in YAML config, just show active quest stats
-    quests = db.execute('''
+    quest_stats = {}
+    stats_rows = db.execute('''
         SELECT quest_id,
-               COUNT(*) as total_players,
                SUM(CASE WHEN completed = 0 THEN 1 ELSE 0 END) as active_players,
                SUM(CASE WHEN completed = 1 THEN 1 ELSE 0 END) as completed_players
         FROM active_quests
         GROUP BY quest_id
     ''').fetchall()
-    return render_template('quests.html', quests=quests)
+    
+    for row in stats_rows:
+        quest_stats[row[0]] = {
+            'active_players': row[1] or 0,
+            'completed_players': row[2] or 0
+        }
+    
+    # Enrich quests with stats
+    quests_list = []
+    for quest in quests_data.get('quests', []):
+        quest_id = quest.get('id', '')
+        stats = quest_stats.get(quest_id, {'active_players': 0, 'completed_players': 0})
+        quests_list.append({
+            'id': quest_id,
+            'title': quest.get('title', ''),
+            'description': quest.get('description', ''),
+            'type': quest.get('type', ''),
+            'objectives': quest.get('objectives', []),
+            'rewards': quest.get('rewards', {}),
+            'requirements': quest.get('requirements', {}),
+            'next_quest': quest.get('next_quest', ''),
+            'active_players': stats['active_players'],
+            'completed_players': stats['completed_players']
+        })
+    
+    return render_template('quests.html', quests=quests_list)
 
 @app.route('/api/players/reset', methods=['POST'])
 def reset_all_players():

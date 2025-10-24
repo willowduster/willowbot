@@ -1,65 +1,93 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Items - WillowBot Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="/">WillowBot Dashboard</a>
-            <div class="collapse navbar-collapse">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/api/players">Players</a>
+{% extends "base.html" %}
+
+{% block title %}Items - WillowBot Dashboard{% endblock %}
+{% block nav_items %}active{% endblock %}
+
+{% block content %}
+<h2>🎒 Items Catalog</h2>
+
+<div class="row mt-4">
+    {% for item in items %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    {{ item.name }}
+                    {% if item.rarity == 'legendary' %}
+                        <span class="badge bg-warning text-dark">⭐ Legendary</span>
+                    {% elif item.rarity == 'rare' %}
+                        <span class="badge bg-primary">💎 Rare</span>
+                    {% elif item.rarity == 'uncommon' %}
+                        <span class="badge bg-success">✨ Uncommon</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Common</span>
+                    {% endif %}
+                </h5>
+                <small class="text-muted">{{ item.type|title }}</small>
+            </div>
+            <div class="card-body">
+                <p class="card-text">{{ item.description }}</p>
+                
+                <hr>
+                
+                <div class="row">
+                    <div class="col-6">
+                        <strong>Level Required:</strong>
+                    </div>
+                    <div class="col-6">
+                        {{ item.level_requirement }}
+                    </div>
+                </div>
+                
+                <div class="row mt-2">
+                    <div class="col-6">
+                        <strong>Value:</strong>
+                    </div>
+                    <div class="col-6">
+                        {{ item.value }} 💰
+                    </div>
+                </div>
+                
+                {% if item.effects %}
+                <hr>
+                <strong>Effects:</strong>
+                <ul class="mt-2">
+                    {% for effect in item.effects %}
+                    <li>
+                        {% if effect.type == 'damage' %}
+                            ⚔️ +{{ effect.value }} Damage
+                        {% elif effect.type == 'magic_damage' %}
+                            ✨ +{{ effect.value }} Magic Damage
+                        {% elif effect.type == 'defense' %}
+                            🛡️ +{{ effect.value }} Defense
+                        {% elif effect.type == 'magic_defense' %}
+                            🔮 +{{ effect.value }} Magic Defense
+                        {% elif effect.type == 'crit_chance' %}
+                            🎯 +{{ effect.value }}% Critical Chance
+                        {% elif effect.type == 'health' or effect.type == 'health_bonus' %}
+                            ❤️ +{{ effect.value }} Health
+                        {% elif effect.type == 'mana' or effect.type == 'mana_bonus' %}
+                            💧 +{{ effect.value }} Mana
+                        {% elif effect.type == 'restore_health' or effect.type == 'heal' %}
+                            ❤️ Restores {{ effect.value }} HP
+                        {% elif effect.type == 'restore_mana' or effect.type == 'mana_restore' %}
+                            💧 Restores {{ effect.value }} Mana
+                        {% else %}
+                            {{ effect.type|title }}: +{{ effect.value }}
+                        {% endif %}
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="/api/items">Items</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/api/quests">Quests</a>
-                    </li>
+                    {% endfor %}
                 </ul>
+                {% endif %}
             </div>
         </div>
-    </nav>
-
-    <div class="container mt-4">
-        <h2>Items</h2>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th>Rarity</th>
-                    <th>Level Req</th>
-                    <th>Value</th>
-                    <th>Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in items %}
-                <tr>
-                    <td>{{ item.id }}</td>
-                    <td>{{ item.name }}</td>
-                    <td>{{ item.type }}</td>
-                    <td>
-                        <span class="badge" style="background-color: {{ item.rarity_color }}">
-                            {{ item.rarity }}
-                        </span>
-                    </td>
-                    <td>{{ item.level_requirement }}</td>
-                    <td>{{ item.value }}</td>
-                    <td>{{ item.description }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
     </div>
+    {% endfor %}
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+{% if not items %}
+<div class="alert alert-info">
+    No items found in the catalog.
+</div>
+{% endif %}
+{% endblock %}
