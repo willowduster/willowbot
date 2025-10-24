@@ -4,12 +4,25 @@ from flask import Flask, render_template, jsonify, request
 import sqlite3
 from threading import Thread
 import sys
+import yaml
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.bot import WillowBot
 
 app = Flask(__name__)
 bot_instance = None
 bot_thread = None
+
+# Load items data
+def load_items():
+    items_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'src', 'config', 'items.yaml')
+    try:
+        with open(items_path, 'r', encoding='utf-8') as f:
+            data = yaml.safe_load(f)
+            return data.get('items', {})
+    except FileNotFoundError:
+        return {}
+
+ITEMS_DATA = load_items()
 
 def start_bot_if_not_running():
     global bot_instance, bot_thread
@@ -116,10 +129,23 @@ def get_player_details(player_id):
         ORDER BY died_at DESC
     ''', [player_id]).fetchall()
     
+    # Enrich inventory with item details
+    inventory_with_details = []
+    for inv_item in inventory:
+        item_data = ITEMS_DATA.get(inv_item['item_id'], {})
+        inventory_with_details.append({
+            'item_id': inv_item['item_id'],
+            'count': inv_item['count'],
+            'name': item_data.get('name', inv_item['item_id']),
+            'type': item_data.get('type', 'unknown'),
+            'rarity': item_data.get('rarity', 'common'),
+            'effects': item_data.get('effects', [])
+        })
+    
     return render_template(
         'player_details.html',
         player=player,
-        inventory=inventory,
+        inventory=inventory_with_details,
         quests=quests,
         kills=kills,
         total_kills=total_kills['total'] if total_kills else 0,

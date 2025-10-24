@@ -48,26 +48,68 @@
     </nav>
 
     <div class="container mt-4">
-        <h2>Player Details: {{ player.name }}</h2>
+        <h2>👤 Player Details: {{ player.name }}</h2>
         
         <div class="row mt-4">
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="card-title mb-0">Stats</h5>
+                        <h5 class="card-title mb-0">📊 Stats</h5>
                     </div>
                     <div class="card-body">
-                        <p>Level: {{ player.level }}</p>
-                        <p>XP: {{ player.xp }}</p>
-                        <p>Health: {{ player.health }}/{{ player.max_health }}</p>
-                        <p>Mana: {{ player.mana }}/{{ player.max_mana }}</p>
-                        <p>Damage Bonus: {{ player.damage_bonus }}</p>
-                        <p>Magic Damage Bonus: {{ player.magic_damage_bonus }}</p>
-                        <p>Defense: {{ player.defense }}</p>
-                        <p>Magic Defense: {{ player.magic_defense }}</p>
+                        <p><strong>Level:</strong> {{ player.level }}</p>
+                        
+                        <div class="mb-3">
+                            <strong>XP:</strong> {{ player.xp }}
+                            <div class="progress" style="height: 20px;">
+                                {% set xp_for_next = player.level * 100 %}
+                                {% set xp_progress = ((player.xp % xp_for_next) / xp_for_next * 100) | int %}
+                                <div class="progress-bar bg-warning" role="progressbar" 
+                                     style="width: {{ xp_progress }}%;" 
+                                     aria-valuenow="{{ xp_progress }}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                    {{ xp_progress }}%
+                                </div>
+                            </div>
+                            <small class="text-muted">{{ player.xp % xp_for_next }}/{{ xp_for_next }} to level {{ player.level + 1 }}</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <strong>❤️ Health:</strong> {{ player.health }}/{{ player.max_health }}
+                            <div class="progress" style="height: 20px;">
+                                {% set health_pct = (player.health / player.max_health * 100) | int %}
+                                <div class="progress-bar bg-danger" role="progressbar" 
+                                     style="width: {{ health_pct }}%;" 
+                                     aria-valuenow="{{ health_pct }}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                    {{ health_pct }}%
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <strong>💧 Mana:</strong> {{ player.mana }}/{{ player.max_mana }}
+                            <div class="progress" style="height: 20px;">
+                                {% set mana_pct = (player.mana / player.max_mana * 100) | int %}
+                                <div class="progress-bar bg-info" role="progressbar" 
+                                     style="width: {{ mana_pct }}%;" 
+                                     aria-valuenow="{{ mana_pct }}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                    {{ mana_pct }}%
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <p><strong>⚔️ Damage Bonus:</strong> {{ player.damage_bonus }}</p>
+                        <p><strong>✨ Magic Damage Bonus:</strong> {{ player.magic_damage_bonus }}</p>
+                        <p><strong>🛡️ Defense:</strong> {{ player.defense }}</p>
+                        <p><strong>🔮 Magic Defense:</strong> {{ player.magic_defense }}</p>
                         <hr>
-                        <p><strong>Deaths:</strong> {{ player.deaths or 0 }}</p>
-                        <p><strong>Total Kills:</strong> {{ total_kills }}</p>
+                        <p><strong>💀 Deaths:</strong> {{ player.deaths or 0 }}</p>
+                        <p><strong>🎯 Total Kills:</strong> {{ total_kills }}</p>
                     </div>
                 </div>
             </div>
@@ -75,21 +117,68 @@
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="card-title mb-0">Inventory</h5>
+                        <h5 class="card-title mb-0">🎒 Inventory</h5>
                     </div>
                     <div class="card-body">
                         {% if inventory %}
                         <table class="table table-sm">
                             <thead>
                                 <tr>
-                                    <th>Item ID</th>
+                                    <th>Item</th>
+                                    <th>Effects</th>
                                     <th>Count</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for item in inventory %}
                                 <tr>
-                                    <td>{{ item.item_id }}</td>
+                                    <td>
+                                        <strong>{{ item.name }}</strong>
+                                        <br>
+                                        <small class="text-muted">
+                                            {% if item.rarity == 'legendary' %}
+                                                <span class="badge bg-warning text-dark">Legendary</span>
+                                            {% elif item.rarity == 'rare' %}
+                                                <span class="badge bg-primary">Rare</span>
+                                            {% elif item.rarity == 'uncommon' %}
+                                                <span class="badge bg-success">Uncommon</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Common</span>
+                                            {% endif %}
+                                            <span class="badge bg-dark">{{ item.type }}</span>
+                                        </small>
+                                    </td>
+                                    <td>
+                                        {% if item.effects %}
+                                            {% for effect in item.effects %}
+                                                <span class="badge bg-info">
+                                                    {% if effect.type == 'damage' %}
+                                                        ⚔️ +{{ effect.value }} Damage
+                                                    {% elif effect.type == 'magic_damage' %}
+                                                        ✨ +{{ effect.value }} Magic Damage
+                                                    {% elif effect.type == 'defense' %}
+                                                        🛡️ +{{ effect.value }} Defense
+                                                    {% elif effect.type == 'magic_defense' %}
+                                                        🔮 +{{ effect.value }} Magic Defense
+                                                    {% elif effect.type == 'crit_chance' %}
+                                                        🎯 +{{ effect.value }}% Crit
+                                                    {% elif effect.type == 'health' %}
+                                                        ❤️ +{{ effect.value }} Health
+                                                    {% elif effect.type == 'mana' %}
+                                                        💧 +{{ effect.value }} Mana
+                                                    {% elif effect.type == 'restore_health' %}
+                                                        ❤️ Heal {{ effect.value }} HP
+                                                    {% elif effect.type == 'restore_mana' %}
+                                                        💧 Restore {{ effect.value }} Mana
+                                                    {% else %}
+                                                        {{ effect.type }}: +{{ effect.value }}
+                                                    {% endif %}
+                                                </span>
+                                            {% endfor %}
+                                        {% else %}
+                                            <span class="text-muted">No effects</span>
+                                        {% endif %}
+                                    </td>
                                     <td>{{ item.count }}</td>
                                 </tr>
                                 {% endfor %}
@@ -107,7 +196,7 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="card-title mb-0">Quests</h5>
+                        <h5 class="card-title mb-0">📜 Quests</h5>
                     </div>
                     <div class="card-body">
                         {% if quests %}
@@ -127,12 +216,12 @@
                                     <td>
                                         {% if quest.completed %}
                                             {% if quest.rewards_claimed %}
-                                                <span class="badge bg-success">Completed</span>
+                                                <span class="badge bg-success">✅ Completed</span>
                                             {% else %}
-                                                <span class="badge bg-warning">Rewards Available</span>
+                                                <span class="badge bg-warning">🎁 Rewards Available</span>
                                             {% endif %}
                                         {% else %}
-                                            <span class="badge bg-primary">In Progress</span>
+                                            <span class="badge bg-primary">⏳ In Progress</span>
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -151,7 +240,7 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="card-title mb-0">Kill History</h5>
+                        <h5 class="card-title mb-0">🗡️ Kill History</h5>
                     </div>
                     <div class="card-body">
                         {% if kills %}
