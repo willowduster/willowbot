@@ -119,27 +119,6 @@ class QuestCommands(commands.Cog):
                 await message.channel.send("This quest is unavailable!", delete_after=5)
                 return
             logger.info(f"Successfully started quest {quest.id} for user {user.id}")
-            
-            # Heal player at quest start
-            async with await self.bot.db_connect() as db:
-                # Get player's max health and mana
-                cursor = await db.execute('''
-                    SELECT max_health, max_mana 
-                    FROM players 
-                    WHERE id = ?
-                ''', (user.id,))
-                player_stats = await cursor.fetchone()
-                
-                if player_stats:
-                    max_health, max_mana = player_stats
-                    # Restore full health and mana
-                    await db.execute('''
-                        UPDATE players 
-                        SET health = ?, mana = ?
-                        WHERE id = ?
-                    ''', (max_health, max_mana, user.id))
-                    await db.commit()
-                    logger.info(f"Healed player {user.id} to full HP/Mana at quest start")
 
             try:
                 logger.info("=== ENTERING TRY BLOCK ===")
