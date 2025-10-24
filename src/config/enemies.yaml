@@ -1,0 +1,128 @@
+enemy_types:
+  - type: Beast
+    names:
+      - Wolf
+      - Bear
+      - Lion
+      - Tiger
+      - Boar
+    base_stats:
+      health_range: [80, 120]
+      mana_range: [50, 80]
+      level_range: [1, 5]
+    attacks:
+      melee:
+        - name: Bite
+          damage: [15, 25]
+          mana_cost: 10
+          miss_chance: 0.1
+          crit_chance: 0.15
+        - name: Claw Slash
+          damage: [20, 30]
+          mana_cost: 15
+          miss_chance: 0.15
+          crit_chance: 0.2
+
+  - type: Undead
+    names:
+      - Skeleton
+      - Zombie
+      - Ghost
+      - Wraith
+      - Ghoul
+    base_stats:
+      health_range: [60, 100]
+      mana_range: [80, 120]
+      level_range: [2, 6]
+    attacks:
+      melee:
+        - name: Bone Crush
+          damage: [15, 25]
+          mana_cost: 12
+          miss_chance: 0.12
+          crit_chance: 0.15
+      magic:
+        - name: Death Touch
+          damage: [25, 35]
+          mana_cost: 25
+          miss_chance: 0.2
+          crit_chance: 0.25
+
+  - type: Elemental
+    names:
+      - Fire Spirit
+      - Water Elemental
+      - Earth Golem
+      - Wind Wisp
+      - Lightning Spark
+    base_stats:
+      health_range: [70, 90]
+      mana_range: [100, 150]
+      level_range: [3, 7]
+    attacks:
+      magic:
+        - name: Elemental Blast
+          damage: [30, 40]
+          mana_cost: 30
+          miss_chance: 0.15
+          crit_chance: 0.2
+        - name: Nature's Fury
+          damage: [25, 35]
+          mana_cost: 25
+          miss_chance: 0.1
+          crit_chance: 0.15
+
+affixes:
+  prefixes:
+    - name: Fierce
+      stat_multipliers:
+        damage: 1.2
+        health: 1.1
+    - name: Tough
+      stat_multipliers:
+        health: 1.3
+        damage: 0.9
+    - name: Magical
+      stat_multipliers:
+        mana: 1.3
+        magic_damage: 1.2
+    - name: Swift
+      stat_multipliers:
+        miss_chance: 0.8
+        crit_chance: 1.2
+    - name: Ancient
+      stat_multipliers:
+        health: 1.4
+        mana: 1.4
+        damage: 1.2
+
+  suffixes:
+    - name: "of Darkness"
+      stat_multipliers:
+        magic_damage: 1.3
+    - name: "of the Mountain"
+      stat_multipliers:
+        health: 1.5
+    - name: "of Rage"
+      stat_multipliers:
+        damage: 1.4
+        crit_chance: 1.3
+    - name: "of Wisdom"
+      stat_multipliers:
+        mana: 1.5
+        magic_damage: 1.2
+    - name: "of Speed"
+      stat_multipliers:
+        miss_chance: 0.7
+
+# Example generated enemies:
+# 1. Fierce Wolf of Rage
+# 2. Ancient Skeleton of Darkness
+# 3. Swift Fire Spirit of Speed
+# 4. Tough Earth Golem of the Mountain
+# 5. Magical Ghost of Wisdom
+# 6. Fierce Lion of Speed
+# 7. Ancient Wraith of Darkness
+# 8. Swift Water Elemental of Wisdom
+# 9. Tough Zombie of Rage
+# 10. Magical Wind Wisp of Speed

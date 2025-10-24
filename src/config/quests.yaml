@@ -1,0 +1,188 @@
+quest_chains:
+  - id: "tutorial"
+    name: "New Adventurer's Path"
+    description: "Begin your journey as an adventurer"
+    quests:
+      - id: "tutorial_1"
+        title: "First Steps"
+        description: "Learn the basics of combat"
+        type: "combat"
+        requirements:
+          level: 1
+        objectives:
+          - type: "combat"
+            enemy_type: "Beast"
+            count: 1
+            description: "Defeat your first enemy"
+        rewards:
+          xp: 100
+          gold: 50
+          items:
+            - id: "health_potion"
+              count: 2
+        next_quest: "tutorial_2"
+
+      - id: "tutorial_2"
+        title: "Magic and Might"
+        description: "Learn to use both melee and magic attacks"
+        type: "combat"
+        requirements:
+          level: 1
+          previous_quest: "tutorial_1"
+        objectives:
+          - type: "combat_with_attack"
+            attack_type: "melee"
+            count: 1
+            description: "Win a battle using melee attack"
+          - type: "combat_with_attack"
+            attack_type: "magic"
+            count: 1
+            description: "Win a battle using magic attack"
+        rewards:
+          xp: 150
+          gold: 75
+          items:
+            - id: "mana_potion"
+              count: 2
+        next_quest: "tutorial_3"
+
+      - id: "tutorial_3"
+        title: "Facing the Alpha"
+        description: "Prove your worth against a stronger foe"
+        type: "boss_combat"
+        requirements:
+          level: 2
+          previous_quest: "tutorial_2"
+        objectives:
+          - type: "combat"
+            enemy_type: "Beast"
+            enemy_prefix: "Ancient"
+            count: 1
+            description: "Defeat the Ancient Wolf Alpha"
+        rewards:
+          xp: 300
+          gold: 200
+          items:
+            - id: "novice_sword"
+              count: 1
+          title: "Wolf Hunter"
+
+  - id: "undead_menace"
+    name: "The Undead Menace"
+    description: "Investigate and combat the rising undead threat"
+    requirements:
+      level: 3
+      previous_chain: "tutorial"
+    quests:
+      - id: "undead_1"
+        title: "Strange Reports"
+        description: "Investigate reports of undead sightings"
+        type: "combat"
+        objectives:
+          - type: "combat"
+            enemy_type: "Undead"
+            count: 2
+            description: "Defeat undead scouts"
+        rewards:
+          xp: 250
+          gold: 100
+        next_quest: "undead_2"
+
+      - id: "undead_2"
+        title: "Dark Magic"
+        description: "Face more powerful undead enemies"
+        type: "combat"
+        requirements:
+          previous_quest: "undead_1"
+        objectives:
+          - type: "combat"
+            enemy_type: "Undead"
+            enemy_prefix: "Magical"
+            count: 2
+            description: "Defeat magically enhanced undead"
+        rewards:
+          xp: 350
+          gold: 150
+          items:
+            - id: "holy_water"
+              count: 3
+        next_quest: "undead_3"
+
+      - id: "undead_3"
+        title: "The Necromancer"
+        description: "Confront the source of the undead"
+        type: "boss_combat"
+        requirements:
+          level: 5
+          previous_quest: "undead_2"
+        objectives:
+          - type: "combat"
+            enemy_type: "Undead"
+            enemy_prefix: "Ancient"
+            enemy_suffix: "of Darkness"
+            count: 1
+            description: "Defeat the Necromancer"
+        rewards:
+          xp: 800
+          gold: 500
+          items:
+            - id: "necromancer_staff"
+              count: 1
+          title: "Undead Slayer"
+
+quest_items:
+  health_potion:
+    name: "Health Potion"
+    description: "Restores 50 HP"
+    effect:
+      type: "heal"
+      amount: 50
+    value: 25
+
+  mana_potion:
+    name: "Mana Potion"
+    description: "Restores 50 Mana"
+    effect:
+      type: "mana"
+      amount: 50
+    value: 25
+
+  holy_water:
+    name: "Holy Water"
+    description: "Deals extra damage to undead"
+    effect:
+      type: "damage_bonus"
+      target_type: "Undead"
+      amount: 25
+    value: 40
+
+  novice_sword:
+    name: "Novice Sword"
+    description: "A basic but reliable sword"
+    effect:
+      type: "weapon"
+      damage_bonus: 10
+    value: 100
+
+  necromancer_staff:
+    name: "Necromancer's Staff"
+    description: "A powerful staff imbued with dark magic"
+    effect:
+      type: "weapon"
+      damage_bonus: 25
+      magic_damage_bonus: 40
+    value: 500
+
+titles:
+  wolf_hunter:
+    name: "Wolf Hunter"
+    description: "Completed the New Adventurer's Path"
+    bonuses:
+      damage_vs_beasts: 1.1
+
+  undead_slayer:
+    name: "Undead Slayer"
+    description: "Defeated the Necromancer"
+    bonuses:
+      damage_vs_undead: 1.2
+      magic_resistance: 1.1

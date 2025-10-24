@@ -1,0 +1,131 @@
+items:
+  # Weapons
+  rusty_sword:
+    id: rusty_sword
+    name: "Rusty Sword"
+    description: "A basic sword showing signs of wear"
+    type: weapon
+    rarity: common
+    level_requirement: 1
+    value: 10
+    stackable: false
+    effects:
+      - type: damage
+        value: 5
+
+  steel_sword:
+    id: steel_sword
+    name: "Steel Sword"
+    description: "A well-crafted steel sword"
+    type: weapon
+    rarity: uncommon
+    level_requirement: 5
+    value: 50
+    stackable: false
+    effects:
+      - type: damage
+        value: 12
+      - type: crit_chance
+        value: 5
+
+  # Helmets
+  leather_cap:
+    id: leather_cap
+    name: "Leather Cap"
+    description: "Basic head protection"
+    type: helmet
+    rarity: common
+    level_requirement: 1
+    value: 15
+    stackable: false
+    effects:
+      - type: defense
+        value: 3
+
+  # Armor
+  cloth_robe:
+    id: cloth_robe
+    name: "Cloth Robe"
+    description: "Basic cloth protection"
+    type: armor
+    rarity: common
+    level_requirement: 1
+    value: 20
+    stackable: false
+    effects:
+      - type: defense
+        value: 5
+
+  # Pants
+  cloth_pants:
+    id: cloth_pants
+    name: "Cloth Pants"
+    description: "Simple cloth pants"
+    type: pants
+    rarity: common
+    level_requirement: 1
+    value: 15
+    stackable: false
+    effects:
+      - type: defense
+        value: 3
+
+  # Boots
+  leather_boots:
+    id: leather_boots
+    name: "Leather Boots"
+    description: "Basic footwear"
+    type: boots
+    rarity: common
+    level_requirement: 1
+    value: 12
+    stackable: false
+    effects:
+      - type: defense
+        value: 2
+      - type: flee_chance
+        value: 2
+
+  # Rings
+  copper_ring:
+    id: copper_ring
+    name: "Copper Ring"
+    description: "A simple copper ring"
+    type: ring
+    rarity: common
+    level_requirement: 1
+    value: 25
+    stackable: false
+    effects:
+      - type: health_bonus
+        value: 10
+
+  # Amulets
+  lucky_charm:
+    id: lucky_charm
+    name: "Lucky Charm"
+    description: "A simple good luck charm"
+    type: amulet
+    rarity: common
+    level_requirement: 1
+    value: 30
+    stackable: false
+    effects:
+      - type: crit_chance
+        value: 3
+      - type: flee_chance
+        value: 3
+
+  # Consumables
+  health_potion:
+    id: health_potion
+    name: "Health Potion"
+    description: "Restores 50 health"
+    type: consumable
+    rarity: common
+    level_requirement: 1
+    value: 25
+    stackable: true
+    effects:
+      - type: heal
+        value: 50

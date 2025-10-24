@@ -19,6 +19,9 @@ async def on_ready():
 # Load command extensions
 initial_extensions = [
     'commands.player',
+    'commands.combat',
+    'commands.quests',
+    'commands.inventory',
 ]
 
 async def load_extensions():
