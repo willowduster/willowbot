@@ -181,20 +181,41 @@ class CombatCommands(commands.Cog):
             
         player = combat_data['player']
         enemy = combat_data['enemy']
+        message_id = combat_data['message_id']
+        
+        # Get the combat message to edit
+        try:
+            combat_msg = await channel.fetch_message(message_id)
+        except:
+            await channel.send("Combat message not found!")
+            return
         
         # Get the appropriate attack
         attack = next((a for a in player.basic_attacks if a.attack_type == attack_type), None)
         if not attack:
-            await channel.send(f"No {attack_type} attack available!")
+            # Update message showing error
+            error_embed = discord.Embed(
+                title="⚔️ Combat",
+                description=f"No {attack_type} attack available!",
+                color=discord.Color.red()
+            )
+            error_embed.add_field(name="Your Stats", value=f"Health: {player.health}/{player.max_health}\nMana: {player.mana}/{player.max_mana}", inline=True)
+            error_embed.add_field(name="Enemy Stats", value=f"Health: {enemy.health}/{enemy.max_health}\nMana: {enemy.mana}/{enemy.max_mana}", inline=True)
+            await combat_msg.edit(embed=error_embed)
+            # Clear and re-add reactions
+            await combat_msg.clear_reactions()
+            for emoji in self.combat_emojis:
+                await combat_msg.add_reaction(emoji)
             return
         
-        # Player's turn
+        # Show player's attack
         player_embed = discord.Embed(
             title="Your Attack",
             description=f"You use {attack.name}!",
             color=discord.Color.blue()
         )
-        attack_msg = await channel.send(embed=player_embed)
+        await combat_msg.edit(embed=player_embed)
+        await combat_msg.clear_reactions()
         await asyncio.sleep(1)
         
         # Process player's attack
@@ -216,7 +237,7 @@ class CombatCommands(commands.Cog):
                 value=result['message'],
                 inline=False
             )
-        await attack_msg.edit(embed=player_embed)
+        await combat_msg.edit(embed=player_embed)
         
         # Check if enemy is defeated
         if not enemy.is_alive():
@@ -677,7 +698,7 @@ class CombatCommands(commands.Cog):
                 return
             else:
                 enemy_embed.description = f"{enemy.name} tried to flee but failed!"
-                await channel.send(embed=enemy_embed)
+                await combat_msg.edit(embed=enemy_embed)
                 await asyncio.sleep(1)
                 # Fall back to attack
                 action = "attack"
@@ -700,13 +721,13 @@ class CombatCommands(commands.Cog):
                 inline=False
             )
             enemy_embed.color = discord.Color.green()
-            await channel.send(embed=enemy_embed)
+            await combat_msg.edit(embed=enemy_embed)
         else:
             # Enemy attacks
             enemy_attack = random.choice(enemy.attacks)
             enemy_embed.description = f"{enemy.name} prepares to attack!"
+            await combat_msg.edit(embed=enemy_embed)
         
-        enemy_msg = await channel.send(embed=enemy_embed)
         await asyncio.sleep(1)
         
         if action == "attack":
@@ -724,7 +745,7 @@ class CombatCommands(commands.Cog):
                     value=enemy_result['message'],
                     inline=False
                 )
-            await enemy_msg.edit(embed=enemy_embed)
+            await combat_msg.edit(embed=enemy_embed)
         
         # Update stats in database
         async with await self.bot.db_connect() as db:
@@ -787,43 +808,39 @@ class CombatCommands(commands.Cog):
             del self.active_combats[user_id]
             return
         
-        # Show combat status and options for next round
-        status_embed = discord.Embed(
-            title="Combat Status",
-            color=discord.Color.blue()
-        )
-        status_embed.add_field(
-            name="Your Stats",
-            value=f"Health: {player.health}/{player.max_health}\nMana: {player.mana}/{player.max_mana}",
-            inline=True
-        )
-        status_embed.add_field(
-            name=f"{enemy.name}'s Stats",
-            value=f"Health: {enemy.health}/{enemy.max_health}\nMana: {enemy.mana}/{enemy.max_mana}",
-            inline=True
-        )
-        await channel.send(embed=status_embed)
+        # Wait a moment before showing next turn
+        await asyncio.sleep(1)
         
         # Get healing item count
         healing_item_count = await self.get_healing_consumable_count(player.id)
         
-        # Send new combat options
+        # Update message with combat status and options for next round
         actions_text = f"{self.MELEE_EMOJI} Melee Attack\n{self.MAGIC_EMOJI} Magic Attack\n{self.ITEM_EMOJI} Use Item"
         if healing_item_count > 0:
             actions_text += f" ({healing_item_count} healing items)"
         actions_text += f"\n{self.FLEE_EMOJI} Flee"
         
         options_embed = discord.Embed(
-            title="Your Turn",
-            description="Choose your action:",
+            title="⚔️ Combat - Your Turn",
+            description=f"You are fighting a level {enemy.level} {enemy.name}!",
             color=discord.Color.blue()
         )
         options_embed.add_field(
-            name="Options",
+            name="Your Stats",
+            value=f"Health: {player.health}/{player.max_health}\nMana: {player.mana}/{player.max_mana}",
+            inline=True
+        )
+        options_embed.add_field(
+            name="Enemy Stats",
+            value=f"Health: {enemy.health}/{enemy.max_health}\nMana: {enemy.mana}/{enemy.max_mana}",
+            inline=True
+        )
+        options_embed.add_field(
+            name="Actions",
             value=actions_text,
             inline=False
         )
-        combat_msg = await channel.send(embed=options_embed)
+        await combat_msg.edit(embed=options_embed)
         
         # Add fresh reactions
         for emoji in self.combat_emojis:
