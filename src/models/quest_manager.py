@@ -130,24 +130,14 @@ class QuestManager:
             ) as cursor:
                 completed_chains = set(row[0] for row in await cursor.fetchall())
 
-            # Get active and completed quests
+            # Get active and completed quests with rewards claimed status
             async with db.execute(
-                'SELECT quest_id, completed FROM active_quests WHERE player_id = ?',
+                'SELECT quest_id, completed, rewards_claimed FROM active_quests WHERE player_id = ?',
                 (player_id,)
             ) as cursor:
-                quest_status = {row[0]: row[1] for row in await cursor.fetchall()}            # Get completed quest chains
-            async with db.execute(
-                'SELECT chain_id FROM completed_quest_chains WHERE player_id = ?',
-                (player_id,)
-            ) as cursor:
-                completed_chains = set(row[0] for row in await cursor.fetchall())
-
-            # Get active and completed quests
-            async with db.execute(
-                'SELECT quest_id, completed FROM active_quests WHERE player_id = ?',
-                (player_id,)
-            ) as cursor:
-                quest_status = {row[0]: row[1] for row in await cursor.fetchall()}
+                quest_data = await cursor.fetchall()
+                # Store quest status: {quest_id: (completed, rewards_claimed)}
+                quest_status = {row[0]: (row[1], row[2]) for row in quest_data}
 
 
 
@@ -163,22 +153,28 @@ class QuestManager:
             # Find the first incomplete quest in the chain
             for quest in chain.quests:
                 if quest.id not in quest_status:
-                    # Check quest requirements
+                    # Quest never started - check requirements
                     meets_requirements = True
                     if quest.requirements:
                         if quest.requirements.get('level', 0) > player_level:
                             meets_requirements = False
                         if quest.requirements.get('previous_quest'):
                             prev_quest = quest.requirements['previous_quest']
-                            if prev_quest not in quest_status or not quest_status[prev_quest]:
+                            # Previous quest must be completed with rewards claimed
+                            if prev_quest not in quest_status or not quest_status[prev_quest][0] or not quest_status[prev_quest][1]:
                                 meets_requirements = False
 
                     if meets_requirements:
                         available_quests.append(quest)
                         break
-                elif not quest_status[quest.id]:
-                    available_quests.append(quest)
-                    break
+                else:
+                    # Quest exists in active_quests - check if it's still in progress
+                    completed, rewards_claimed = quest_status[quest.id]
+                    if not completed or not rewards_claimed:
+                        # Quest is incomplete or rewards not claimed yet - it's available
+                        available_quests.append(quest)
+                        break
+                    # If completed and rewards claimed, skip to next quest in chain
 
         return available_quests
 
