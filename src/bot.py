@@ -172,6 +172,23 @@ class WillowBot(commands.Bot):
                 )
             ''')
             
+            # Player death history table
+            await db.execute('''
+                CREATE TABLE IF NOT EXISTS death_history (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    player_id INTEGER,
+                    enemy_name TEXT NOT NULL,
+                    enemy_level INTEGER NOT NULL,
+                    player_level INTEGER NOT NULL,
+                    player_health INTEGER NOT NULL,
+                    player_max_health INTEGER NOT NULL,
+                    player_mana INTEGER NOT NULL,
+                    player_max_mana INTEGER NOT NULL,
+                    died_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(player_id) REFERENCES players(id)
+                )
+            ''')
+            
             # Completed quest chains table
             await db.execute('''
                 CREATE TABLE IF NOT EXISTS completed_quest_chains (

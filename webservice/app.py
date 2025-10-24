@@ -108,13 +108,22 @@ def get_player_details(player_id):
         SELECT COUNT(*) as total FROM player_kills WHERE player_id = ?
     ''', [player_id]).fetchone()
     
+    deaths = db.execute('''
+        SELECT enemy_name, enemy_level, player_level, 
+               player_health, player_max_health, player_mana, player_max_mana, died_at
+        FROM death_history
+        WHERE player_id = ?
+        ORDER BY died_at DESC
+    ''', [player_id]).fetchall()
+    
     return render_template(
         'player_details.html',
         player=player,
         inventory=inventory,
         quests=quests,
         kills=kills,
-        total_kills=total_kills['total'] if total_kills else 0
+        total_kills=total_kills['total'] if total_kills else 0,
+        deaths=deaths
     )
 
 @app.route('/api/items')
@@ -143,6 +152,7 @@ def reset_all_players():
         db = get_db()
         
         # Delete all player-related data
+        db.execute('DELETE FROM death_history')
         db.execute('DELETE FROM player_kills')
         db.execute('DELETE FROM active_quests')
         db.execute('DELETE FROM inventory')

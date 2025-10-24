@@ -758,6 +758,19 @@ class CombatCommands(commands.Cog):
         
         # Check if player is defeated
         if not player.is_alive():
+            # Record death in history before updating player
+            async with await self.bot.db_connect() as db:
+                await db.execute('''
+                    INSERT INTO death_history (
+                        player_id, enemy_name, enemy_level, 
+                        player_level, player_health, player_max_health,
+                        player_mana, player_max_mana
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (user_id, enemy.name, enemy.level, 
+                      player.level, 0, player.max_health,
+                      player.mana, player.max_mana))
+                await db.commit()
+            
             # Get current stats for display
             async with await self.bot.db_connect() as db:
                 cursor = await db.execute('SELECT deaths FROM players WHERE id = ?', (user_id,))
