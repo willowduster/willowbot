@@ -17,7 +17,8 @@ A Discord RPG bot that allows users to create and manage characters with stats, 
   - Comprehensive stat tracking (deaths, kills, quests completed)
 
 - **Equipment and Inventory**
-  - Various item types (weapons, armor, consumables)
+  - **100 unique items** across multiple categories
+  - Various item types (weapons, armor, consumables, materials)
   - Item rarity system (Common, Uncommon, Rare, Epic, Legendary)
   - Equipment slots with stat bonuses
   - Use consumables for healing and buffs
@@ -26,23 +27,29 @@ A Discord RPG bot that allows users to create and manage characters with stats, 
   - Turn-based combat with enemies
   - Melee and magic attacks with emoji reactions
   - Critical hits and miss chances
-  - Enemy affixes and special abilities
+  - **150+ unique enemy combinations** with affixes
+  - **30 enemy types** with prefix/suffix modifiers
+  - Balanced difficulty with adjustable stats
   - Defeat system with heal/restart or leave options
+  - Victory screen with rest option to restore HP/Mana
   - Death tracking and penalties
 
 - **Quest System**
-  - Multiple quest chains with progressive difficulty
-  - Various objective types (combat, exploration, collection)
+  - **50 quests** organized into **10 quest chains**
+  - Multiple quest types (combat, exploration, collection, boss battles)
+  - Progressive difficulty scaling
   - Rewards including items, XP, gold, and titles
   - Automatic quest chain progression
   - Quest completion tracking
+  - Automatic reward claiming on completion
+  - Support for all quest types with combat objectives
 
 - **Web Dashboard**
   - Dark mode interface with GitHub-inspired theme
   - Real-time bot status monitoring
   - Player statistics and leaderboards
-  - Complete item catalog with filtering
-  - Quest progress tracking
+  - Complete item catalog (100 items) with filtering
+  - Quest database (50 quests) with details
   - Death history viewer
 
 ## Commands
@@ -63,6 +70,10 @@ A Discord RPG bot that allows users to create and manage characters with stats, 
 - `🧪` - Use a potion during combat (reaction emoji)
 - `🏃` - Attempt to flee from combat (reaction emoji)
 - Interactive defeat system with options to heal or leave
+- `🛏️` - Rest to restore HP and Mana after victory (reaction emoji)
+- `▶️` - Continue to next quest or enemy (reaction emoji)
+- `🎒` - View inventory after combat (reaction emoji)
+- `📊` - View stats after combat (reaction emoji)
 
 **Quests:**
 - `!w quests` or `!w q` - List available quests
@@ -159,6 +170,44 @@ The bot uses SQLite for data storage. The database file (`willowbot.db`) will be
 - **Death history table** - Timestamped death records with causes
 
 All data persists in the `data/` directory and survives container restarts.
+
+## Configuration
+
+The bot includes extensive YAML-based configuration files:
+
+### Items Configuration (`src/config/items.yaml`)
+- **100 unique items** across categories:
+  - 20 Weapons (swords, axes, bows, staves)
+  - 12 Helmets
+  - 15 Armor pieces
+  - 10 Pants
+  - 10 Boots
+  - 10 Rings
+  - 10 Amulets
+  - 13 Consumables (health/mana potions, buffs)
+  - 10 Materials
+- Item effects: damage bonuses, health/mana boosts, defense, resistances
+- Rarity levels: Common, Uncommon, Rare, Epic, Legendary
+
+### Quest Configuration (`src/config/quests.yaml`)
+- **50 quests** organized into **10 quest chains**
+- Quest types: exploration, collection, combat, boss_combat
+- Progressive difficulty scaling
+- Rewards: XP, gold, items from items.yaml
+- Quest chains with sequential progression
+
+### Enemy Configuration (`src/config/enemies.yaml`)
+- **30 base enemy types**: Beasts, Undead, Elementals, Dragons, Demons, Insects, Reptiles, Goblinoids, Constructs, Aquatic, Avian, Plants, Aberrations, Fey, Celestial, Infernal, Shadow, Ooze, Swarm, Humanoid, Giant, Shapeshifter, Parasites, Fungus, Underdark, Ethereal, Primordial, Mechanical, Corrupted, Eldritch
+- **10 prefixes**: Fierce, Tough, Magical, Swift, Ancient, Savage, Armored, Berserker, Cunning, Massive
+- **10 suffixes**: of Darkness, of the Mountain, of Rage, of Wisdom, of Speed, of Power, of Protection, of Destruction, of the Void, of Eternity
+- **150+ unique combinations** possible
+- Balanced stats for fair combat
+- Attack types: melee and magic with varying damage, mana costs, miss/crit chances
+
+### Utility Scripts
+- `expand_configs.py` - Generate large-scale configurations
+- `balance_enemies.py` - Adjust enemy difficulty (HP, damage, miss/crit rates, affixes)
+- `clear_quests.py` - Clean up old quest data from database
 
 ## Invite Link
 
