@@ -126,7 +126,8 @@ class WillowBot(commands.Bot):
                     gold INTEGER DEFAULT 0,
                     current_title TEXT DEFAULT NULL,
                     in_combat BOOLEAN DEFAULT FALSE,
-                    current_enemy TEXT DEFAULT NULL
+                    current_enemy TEXT DEFAULT NULL,
+                    deaths INTEGER DEFAULT 0
                 )
             ''')
             
@@ -151,6 +152,18 @@ class WillowBot(commands.Bot):
                 )
             ''')
 
+            # Player kills tracking table
+            await db.execute('''
+                CREATE TABLE IF NOT EXISTS player_kills (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    player_id INTEGER,
+                    enemy_name TEXT NOT NULL,
+                    enemy_level INTEGER NOT NULL,
+                    killed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(player_id) REFERENCES players(id)
+                )
+            ''')
+            
             # Completed quest chains table
             await db.execute('''
                 CREATE TABLE IF NOT EXISTS completed_quest_chains (

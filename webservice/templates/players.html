@@ -37,6 +37,7 @@
                     <th>XP</th>
                     <th>Health</th>
                     <th>Mana</th>
+                    <th>Deaths</th>
                     <th>Active Quests</th>
                     <th>Completed Quests</th>
                     <th>Actions</th>
@@ -51,6 +52,7 @@
                     <td>{{ player.xp }}</td>
                     <td>{{ player.health }}/{{ player.max_health }}</td>
                     <td>{{ player.mana }}/{{ player.max_mana }}</td>
+                    <td>{{ player.deaths or 0 }}</td>
                     <td>{{ player.active_quests }}</td>
                     <td>{{ player.completed_quests }}</td>
                     <td>

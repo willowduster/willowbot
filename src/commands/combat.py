@@ -220,6 +220,14 @@ class CombatCommands(commands.Cog):
         
         # Check if enemy is defeated
         if not enemy.is_alive():
+            # Record the kill
+            async with await self.bot.db_connect() as db:
+                await db.execute('''
+                    INSERT INTO player_kills (player_id, enemy_name, enemy_level)
+                    VALUES (?, ?, ?)
+                ''', (user_id, enemy.name, enemy.level))
+                await db.commit()
+            
             # Update quest progress
             # Parse enemy name to get type/prefix/suffix
             enemy_name_parts = enemy.name.split()
@@ -743,11 +751,11 @@ class CombatCommands(commands.Cog):
             player.health = player.max_health // 2
             player.mana = player.max_mana
             
-            # Update database - keep quest active for potential restart
+            # Update database - keep quest active for potential restart and increment deaths
             async with await self.bot.db_connect() as db:
                 await db.execute('''
                     UPDATE players 
-                    SET health = ?, mana = ?, in_combat = FALSE, current_enemy = NULL
+                    SET health = ?, mana = ?, in_combat = FALSE, current_enemy = NULL, deaths = deaths + 1
                     WHERE id = ?
                 ''', (player.health, player.mana, player.id))
                 await db.commit()
@@ -1390,10 +1398,10 @@ class CombatCommands(commands.Cog):
             player.health = player.max_health // 2
             player.mana = player.max_mana
 
-            # Update database
+            # Update database and increment deaths
             async with self.bot.db.execute('''
                 UPDATE players 
-                SET health = ?, mana = ?, in_combat = FALSE, current_enemy = NULL
+                SET health = ?, mana = ?, in_combat = FALSE, current_enemy = NULL, deaths = deaths + 1
                 WHERE id = ?
             ''', (player.health, player.mana, player.id)) as cursor:
                 await self.bot.db.commit()
@@ -1903,19 +1911,32 @@ class CombatCommands(commands.Cog):
                 player.in_combat = False
                 player.current_enemy = None
 
-            # Save player state
+            # Save player state and increment deaths if defeated
             async with await self.bot.db_connect() as db:
-                await db.execute('''
-                    UPDATE players 
-                    SET health = ?, mana = ?, in_combat = ?, current_enemy = ?
-                    WHERE id = ?
-                ''', (
-                    player.health,
-                    player.mana,
-                    player.in_combat,
-                    player.current_enemy.name if player.current_enemy else None,
-                    player.id
-                ))
+                if not player.is_alive():
+                    await db.execute('''
+                        UPDATE players 
+                        SET health = ?, mana = ?, in_combat = ?, current_enemy = ?, deaths = deaths + 1
+                        WHERE id = ?
+                    ''', (
+                        player.health,
+                        player.mana,
+                        player.in_combat,
+                        player.current_enemy.name if player.current_enemy else None,
+                        player.id
+                    ))
+                else:
+                    await db.execute('''
+                        UPDATE players 
+                        SET health = ?, mana = ?, in_combat = ?, current_enemy = ?
+                        WHERE id = ?
+                    ''', (
+                        player.health,
+                        player.mana,
+                        player.in_combat,
+                        player.current_enemy.name if player.current_enemy else None,
+                        player.id
+                    ))
                 await db.commit()
 
             defeat_msg = await reaction.message.channel.send(embed=embed)

@@ -44,6 +44,9 @@
                         <p>Magic Damage Bonus: {{ player.magic_damage_bonus }}</p>
                         <p>Defense: {{ player.defense }}</p>
                         <p>Magic Defense: {{ player.magic_defense }}</p>
+                        <hr>
+                        <p><strong>Deaths:</strong> {{ player.deaths or 0 }}</p>
+                        <p><strong>Total Kills:</strong> {{ total_kills }}</p>
                     </div>
                 </div>
             </div>
@@ -112,6 +115,42 @@
                                 {% endfor %}
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Kill History</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if kills %}
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Enemy Name</th>
+                                    <th>Level</th>
+                                    <th>Times Killed</th>
+                                    <th>Last Killed</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for kill in kills %}
+                                <tr>
+                                    <td>{{ kill.enemy_name }}</td>
+                                    <td>{{ kill.enemy_level }}</td>
+                                    <td>{{ kill.count }}</td>
+                                    <td>{{ kill.killed_at }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <p class="text-muted">No kills recorded yet.</p>
+                        {% endif %}
                     </div>
                 </div>
             </div>
