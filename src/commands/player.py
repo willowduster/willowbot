@@ -10,8 +10,6 @@ class PlayerCommands(commands.Cog):
         # Remove default help command so we can override it
         self.bot.remove_command('help')
         self.help_pages = {}
-        # Remove default help command so we can override it
-        self.bot.remove_command('help')
     
     async def setup_database(self):
         async with await self.bot.db_connect() as db:
@@ -188,155 +186,84 @@ class PlayerCommands(commands.Cog):
 
     @commands.command(name='help', aliases=['h', 'commands'])
     async def help(self, ctx):
-        """Show help information with reaction navigation"""
-        pages = []
+        """Show help information with quick action buttons"""
+        # Check if player exists
+        player = await self.get_player(ctx.author.id)
         
-        # Page 1: Getting Started
-        embed1 = discord.Embed(
-            title="🎮 WillowBot - Getting Started",
-            description="Welcome to WillowBot! A Discord RPG adventure.",
+        embed = discord.Embed(
+            title="🎮 WillowBot - Discord RPG Adventure",
+            description="Welcome to WillowBot! Fight enemies, complete quests, and level up!",
             color=discord.Color.blue()
         )
-        embed1.add_field(
-            name="🌟 Start Your Adventure",
-            value="`!w start` - Create your character and begin!",
-            inline=False
-        )
-        embed1.add_field(
-            name="📊 Check Your Stats",
-            value="`!w stats` or `!w s` - View your character stats, level, HP, mana, kills, and deaths",
-            inline=False
-        )
-        embed1.add_field(
-            name="💡 Quick Tip",
-            value="React with ➡️ to see more commands!",
-            inline=False
-        )
-        embed1.set_footer(text="Page 1/4 • Use ➡️ and ⬅️ to navigate • ❌ to close")
-        pages.append(embed1)
         
-        # Page 2: Quests & Combat
-        embed2 = discord.Embed(
-            title="⚔️ WillowBot - Quests & Combat",
-            description="Embark on quests and fight enemies!",
-            color=discord.Color.red()
-        )
-        embed2.add_field(
-            name="📜 View Quests",
-            value="`!w quests` or `!w q` - Browse available quests with reaction controls",
-            inline=False
-        )
-        embed2.add_field(
-            name="📋 Quest Progress",
-            value="`!w quest_progress` - Check your current quest progress",
-            inline=False
-        )
-        embed2.add_field(
-            name="⚔️ Combat Actions (React to combat messages)",
+        # Getting Started section
+        embed.add_field(
+            name="🌟 Getting Started",
             value=(
-                "⚔️ - Melee attack\n"
-                "🔮 - Magic attack\n"
-                "🧪 - Use potion\n"
-                "🙏 - Pray (restore mana)\n"
-                "🏃 - Flee from combat"
+                "`!w start` - Create your character\n"
+                "`!w stats` or `!w s` - View your stats\n"
+                "`!w help` or `!w h` - Show this help"
             ),
             inline=False
         )
-        embed2.add_field(
-            name="💡 Combat Tip",
-            value="After victory or fleeing, use 🛏️ to rest and restore HP/Mana!",
-            inline=False
-        )
-        embed2.set_footer(text="Page 2/4 • Use ➡️ and ⬅️ to navigate • ❌ to close")
-        pages.append(embed2)
         
-        # Page 3: Inventory & Equipment
-        embed3 = discord.Embed(
-            title="🎒 WillowBot - Inventory & Equipment",
-            description="Manage your items and equipment!",
-            color=discord.Color.green()
-        )
-        embed3.add_field(
-            name="🎒 View Inventory",
-            value="`!w inventory` or `!w inv` - See all your items",
+        # Quests & Combat section
+        embed.add_field(
+            name="⚔️ Quests & Combat",
+            value=(
+                "`!w quests` or `!w q` - Browse quests\n"
+                "`!w quest_progress` - Check progress\n"
+                "\n**Combat Actions (React to messages):**\n"
+                "⚔️ Melee • 🔮 Magic • 🧪 Potion\n"
+                "🙏 Pray • 🏃 Flee • 🛏️ Rest"
+            ),
             inline=False
         )
-        embed3.add_field(
-            name="🛡️ View Equipment",
-            value="`!w equipment` or `!w equip` - See equipped items and stats",
-            inline=False
-        )
-        embed3.add_field(
-            name="🔍 Item Details",
-            value="`!w item <item_name>` - Get detailed info about an item",
-            inline=False
-        )
-        embed3.add_field(
-            name="🧪 Use Items",
-            value="`!w use <item_name>` - Use consumable items (potions, etc.)",
-            inline=False
-        )
-        embed3.add_field(
-            name="💡 Equipment Tip",
-            value="Equipment automatically boosts your stats when equipped!",
-            inline=False
-        )
-        embed3.set_footer(text="Page 3/4 • Use ➡️ and ⬅️ to navigate • ❌ to close")
-        pages.append(embed3)
         
-        # Page 4: Tips & Tricks
-        embed4 = discord.Embed(
-            title="💡 WillowBot - Tips & Tricks",
-            description="Pro tips to help you succeed!",
-            color=discord.Color.gold()
-        )
-        embed4.add_field(
-            name="⚡ Level Up",
-            value="Earn XP from combat to level up! XP carries over when you level up.",
+        # Inventory & Equipment section
+        embed.add_field(
+            name="🎒 Inventory & Items",
+            value=(
+                "`!w inventory` or `!w inv` - View items\n"
+                "`!w equipment` or `!w equip` - View gear\n"
+                "`!w item <name>` - Item details\n"
+                "`!w use <name>` - Use consumables"
+            ),
             inline=False
         )
-        embed4.add_field(
-            name="🙏 Prayer",
-            value="No mana potions? Use the 🙏 Pray action in combat to restore 20-40% mana!",
-            inline=False
-        )
-        embed4.add_field(
-            name="🏃 Fleeing",
-            value="Successfully flee from tough battles! You can rest, retry, or check your inventory after fleeing.",
-            inline=False
-        )
-        embed4.add_field(
-            name="📈 Quest Chains",
-            value="Complete quests in sequence to unlock new challenges and better rewards!",
-            inline=False
-        )
-        embed4.add_field(
-            name="💀 Death Penalty",
-            value="Death costs 10% of your gold and XP, but you can retry immediately!",
-            inline=False
-        )
-        embed4.add_field(
-            name="🌐 Web Dashboard",
-            value="Visit http://localhost:5000 to view detailed stats and leaderboards!",
-            inline=False
-        )
-        embed4.set_footer(text="Page 4/4 • Use ➡️ and ⬅️ to navigate • ❌ to close")
-        pages.append(embed4)
         
-        # Send first page
-        message = await ctx.send(embed=pages[0])
+        # Tips section
+        embed.add_field(
+            name="💡 Quick Tips",
+            value=(
+                "🙏 **Prayer** restores 20-40% mana when you have no potions\n"
+                "⚡ **XP carries over** when you level up\n"
+                "� **Death penalty** is 10% gold/XP but you can retry instantly\n"
+                "🌐 **Web Dashboard** at http://localhost:5000"
+            ),
+            inline=False
+        )
         
-        # Store pages for this user
+        # Add appropriate footer based on player status
+        if player:
+            embed.set_footer(text="� Continue Playing | ❌ Close • Click 🎯 to see your quests!")
+        else:
+            embed.set_footer(text="▶️ Start Adventure | ❌ Close")
+        
+        message = await ctx.send(embed=embed)
+        
+        # Store for reaction handling
         self.help_pages[ctx.author.id] = {
-            'pages': pages,
-            'current_page': 0,
-            'message_id': message.id
+            'message_id': message.id,
+            'has_player': player is not None
         }
         
-        # Add navigation reactions
-        await message.add_reaction("⬅️")
-        await message.add_reaction("➡️")
-        await message.add_reaction("❌")
+        # Add appropriate reactions based on player status
+        if player:
+            await message.add_reaction("🎯")  # Continue playing (show quests)
+        else:
+            await message.add_reaction("▶️")  # Start adventure
+        await message.add_reaction("❌")  # Close
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
@@ -358,13 +285,39 @@ class PlayerCommands(commands.Cog):
 
         emoji = str(reaction.emoji)
         user_help = self.help_pages[user.id]
-        pages = user_help['pages']
-        current_page = user_help['current_page']
 
-        if emoji == "➡️":  # Next page
-            current_page = (current_page + 1) % len(pages)
-        elif emoji == "⬅️":  # Previous page
-            current_page = (current_page - 1) % len(pages)
+        if emoji == "▶️":  # Start adventure
+            # Delete help message
+            try:
+                await message.delete()
+            except (discord.Forbidden, discord.NotFound):
+                pass
+            del self.help_pages[user.id]
+            
+            # Call start command
+            ctx = await self.bot.get_context(message)
+            ctx.author = user
+            await self.start(ctx)
+            return
+            
+        elif emoji == "🎯":  # Continue playing (show quests)
+            # Delete help message
+            try:
+                await message.delete()
+            except (discord.Forbidden, discord.NotFound):
+                pass
+            del self.help_pages[user.id]
+            
+            # Show quests
+            quest_cog = self.bot.get_cog('QuestCommands')
+            if quest_cog:
+                ctx = await self.bot.get_context(message)
+                ctx.author = user
+                await quest_cog.list_quests(ctx)
+            else:
+                await message.channel.send("Quest system is currently unavailable.")
+            return
+            
         elif emoji == "❌":  # Close help
             try:
                 await message.delete()
@@ -382,10 +335,6 @@ class PlayerCommands(commands.Cog):
                     pass
             del self.help_pages[user.id]
             return
-
-        # Update page and edit message
-        user_help['current_page'] = current_page
-        await message.edit(embed=pages[current_page])
 
 async def setup(bot):
     await bot.add_cog(PlayerCommands(bot))
