@@ -24,6 +24,15 @@ DISCORD_CLIENT_SECRET = os.getenv('DISCORD_CLIENT_SECRET')
 DISCORD_REDIRECT_URI = os.getenv('DISCORD_REDIRECT_URI', 'http://localhost:5000/callback')
 ADMIN_USER_ID = os.getenv('ADMIN_USER_ID')
 
+# Debug logging for environment variables (Railway troubleshooting)
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+logger.info(f"DISCORD_CLIENT_ID is {'SET' if DISCORD_CLIENT_ID else 'NOT SET'}")
+logger.info(f"DISCORD_CLIENT_SECRET is {'SET' if DISCORD_CLIENT_SECRET else 'NOT SET'}")
+logger.info(f"ADMIN_USER_ID is {'SET' if ADMIN_USER_ID else 'NOT SET'}")
+logger.info(f"DISCORD_REDIRECT_URI: {DISCORD_REDIRECT_URI}")
+
 # Discord API endpoints
 DISCORD_API_BASE = 'https://discord.com/api/v10'
 DISCORD_AUTHORIZATION_URL = 'https://discord.com/api/oauth2/authorize'
