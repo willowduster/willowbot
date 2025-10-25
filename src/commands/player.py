@@ -151,68 +151,32 @@ class PlayerCommands(commands.Cog):
 
     @commands.command(name='help', aliases=['h', 'commands'])
     async def help(self, ctx):
-        """Show help information with quick action buttons"""
+        """Show help information with quick action button"""
         # Check if player exists
         player = await self.get_player(ctx.author.id)
         
         embed = discord.Embed(
-            title="🎮 WillowBot - Discord RPG Adventure",
-            description="Welcome to WillowBot! Fight enemies, complete quests, and level up!",
+            title="🎮 WillowBot",
+            description="A Discord RPG Adventure",
             color=discord.Color.blue()
         )
         
-        # Getting Started section
-        embed.add_field(
-            name="🌟 Getting Started",
-            value=(
-                "`!w start` - Create your character\n"
-                "`!w stats` or `!w s` - View your stats\n"
-                "`!w help` or `!w h` - Show this help"
-            ),
-            inline=False
-        )
-        
-        # Quests & Combat section
-        embed.add_field(
-            name="⚔️ Quests & Combat",
-            value=(
-                "`!w quests` or `!w q` - Browse quests\n"
-                "`!w quest_progress` - Check progress\n"
-                "\n**Combat Actions (React to messages):**\n"
-                "⚔️ Melee • 🔮 Magic • 🧪 Potion\n"
-                "🙏 Pray • 🏃 Flee • 🛏️ Rest"
-            ),
-            inline=False
-        )
-        
-        # Inventory & Equipment section
-        embed.add_field(
-            name="🎒 Inventory & Items",
-            value=(
-                "`!w inventory` or `!w inv` - View items\n"
-                "`!w equipment` or `!w equip` - View gear\n"
-                "`!w item <name>` - Item details\n"
-                "`!w use <name>` - Use consumables"
-            ),
-            inline=False
-        )
-        
-        # Tips section
-        embed.add_field(
-            name="💡 Quick Tips",
-            value=(
-                "🙏 **Prayer** restores 20-40% mana when you have no potions\n"
-                "⚡ **XP and loot** is awarded after each battle\n"
-                "💀 **Death penalty** is 10% gold/XP but you can retry instantly"
-            ),
-            inline=False
-        )
-        
-        # Add appropriate footer based on player status
         if player:
-            embed.set_footer(text="� Continue Playing | ❌ Close • Click 🎯 to see your quests!")
+            # Existing player - show them how to continue
+            embed.add_field(
+                name="Welcome back!",
+                value="Click **▶️ Start Playing** below to continue your adventure!",
+                inline=False
+            )
+            embed.set_footer(text="▶️ Start Playing")
         else:
-            embed.set_footer(text="▶️ Start Adventure | ❌ Close")
+            # New player - show them how to start
+            embed.add_field(
+                name="Welcome, adventurer!",
+                value="Click **▶️ Start Playing** below to create your character and begin your quest!",
+                inline=False
+            )
+            embed.set_footer(text="▶️ Start Playing")
         
         message = await ctx.send(embed=embed)
         
@@ -222,12 +186,8 @@ class PlayerCommands(commands.Cog):
             'has_player': player is not None
         }
         
-        # Add appropriate reactions based on player status
-        if player:
-            await message.add_reaction("🎯")  # Continue playing (show quests)
-        else:
-            await message.add_reaction("▶️")  # Start adventure
-        await message.add_reaction("❌")  # Close
+        # Add start button
+        await message.add_reaction("▶️")
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
@@ -250,7 +210,7 @@ class PlayerCommands(commands.Cog):
         emoji = str(reaction.emoji)
         user_help = self.help_pages[user.id]
 
-        if emoji == "▶️":  # Start adventure
+        if emoji == "▶️":  # Start Playing
             # Delete help message
             try:
                 await message.delete()
@@ -258,46 +218,20 @@ class PlayerCommands(commands.Cog):
                 pass
             del self.help_pages[user.id]
             
-            # Call start command
-            ctx = await self.bot.get_context(message)
-            ctx.author = user
-            await self.start(ctx)
-            return
-            
-        elif emoji == "🎯":  # Continue playing (show quests)
-            # Delete help message
-            try:
-                await message.delete()
-            except (discord.Forbidden, discord.NotFound):
-                pass
-            del self.help_pages[user.id]
-            
-            # Show quests
-            quest_cog = self.bot.get_cog('QuestCommands')
-            if quest_cog:
+            if user_help['has_player']:
+                # Existing player - show quests
+                quest_cog = self.bot.get_cog('QuestCommands')
+                if quest_cog:
+                    ctx = await self.bot.get_context(message)
+                    ctx.author = user
+                    await quest_cog.list_quests(ctx)
+                else:
+                    await message.channel.send("Quest system is currently unavailable.")
+            else:
+                # New player - create character
                 ctx = await self.bot.get_context(message)
                 ctx.author = user
-                await quest_cog.list_quests(ctx)
-            else:
-                await message.channel.send("Quest system is currently unavailable.")
-            return
-            
-        elif emoji == "❌":  # Close help
-            try:
-                await message.delete()
-            except (discord.Forbidden, discord.NotFound):
-                try:
-                    # If we can't delete, edit to show it's closed
-                    close_embed = discord.Embed(
-                        title="Help Closed",
-                        description="This help menu has been closed.",
-                        color=discord.Color.dark_grey()
-                    )
-                    await message.edit(embed=close_embed)
-                    await message.clear_reactions()
-                except (discord.Forbidden, discord.NotFound):
-                    pass
-            del self.help_pages[user.id]
+                await self.start(ctx)
             return
 
 async def setup(bot):
