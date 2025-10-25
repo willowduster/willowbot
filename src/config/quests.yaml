@@ -16,9 +16,6 @@ quest_chains:
     rewards:
       xp: 150
       gold: 75
-      items:
-      - id: consumable_9
-        count: 1
     next_quest: quest_1_2
   - id: quest_1_2
     title: 'Quest 2: Final Confrontation'
@@ -274,9 +271,6 @@ quest_chains:
     rewards:
       xp: 900
       gold: 450
-      items:
-      - id: consumable_9
-        count: 1
     next_quest: quest_4_2
   - id: quest_4_2
     title: 'Quest 17: Rising Threat'
@@ -307,9 +301,6 @@ quest_chains:
     rewards:
       xp: 1000
       gold: 500
-      items:
-      - id: consumable_9
-        count: 1
     next_quest: quest_4_4
   - id: quest_4_4
     title: 'Quest 19: Victory'
@@ -393,9 +384,6 @@ quest_chains:
     rewards:
       xp: 1250
       gold: 625
-      items:
-      - id: consumable_9
-        count: 2
     next_quest: quest_5_4
   - id: quest_5_4
     title: 'Quest 24: The Beginning'
@@ -479,9 +467,6 @@ quest_chains:
     rewards:
       xp: 1500
       gold: 750
-      items:
-      - id: consumable_9
-        count: 1
     next_quest: quest_6_4
   - id: quest_6_4
     title: 'Quest 29: Final Confrontation'
@@ -651,9 +636,6 @@ quest_chains:
     rewards:
       xp: 2000
       gold: 1000
-      items:
-      - id: consumable_9
-        count: 3
     next_quest: quest_8_4
   - id: quest_8_4
     title: 'Quest 39: Dark Times'
@@ -790,9 +772,6 @@ quest_chains:
     rewards:
       xp: 2400
       gold: 1200
-      items:
-      - id: consumable_9
-        count: 2
     next_quest: quest_10_2
   - id: quest_10_2
     title: 'Quest 47: Victory'

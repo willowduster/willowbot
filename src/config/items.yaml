@@ -1117,19 +1117,6 @@ items:
     effects:
     - type: magic_damage_buff
       value: 25
-  consumable_9:
-    id: consumable_9
-    name: Phoenix Down
-    description: Revives from defeat
-    type: consumable
-    rarity: legendary
-    level_requirement: 17
-    value: 425
-    stackable: true
-    max_stack: 20
-    effects:
-    - type: revive
-      value: 50
   consumable_10:
     id: consumable_10
     name: XP Boost Potion
