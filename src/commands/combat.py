@@ -1245,7 +1245,7 @@ class CombatCommands(commands.Cog):
             if item and item.type == ItemType.CONSUMABLE:
                 # Check if any effect is mana_restore
                 for effect in item.effects:
-                    if effect.type in ["mana_restore", "mana_bonus"]:
+                    if effect.type == "mana_restore" or effect.type == "restore_mana":
                         return True
         return False
     
