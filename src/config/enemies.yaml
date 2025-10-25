@@ -8,11 +8,11 @@ enemy_types:
   - Boar
   base_stats:
     health_range:
-    - 32
-    - 40
+    - 41
+    - 52
     mana_range:
-    - 28
-    - 40
+    - 36
+    - 52
     level_range:
     - 2
     - 12
@@ -21,18 +21,18 @@ enemy_types:
     - name: Slash
       damage:
       - 6
-      - 9
+      - 11
       mana_cost: 8
-      miss_chance: 0.25
-      crit_chance: 0.064
+      miss_chance: 0.18062499999999998
+      crit_chance: 0.08463999999999999
     magic:
     - name: Lightning
       damage:
-      - 9
-      - 15
+      - 11
+      - 19
       mana_cost: 15
-      miss_chance: 0.35
-      crit_chance: 0.096
+      miss_chance: 0.25287499999999996
+      crit_chance: 0.12696
 - type: Undead
   names:
   - Skeleton
@@ -42,11 +42,11 @@ enemy_types:
   - Ghoul
   base_stats:
     health_range:
-    - 30
-    - 44
+    - 39
+    - 57
     mana_range:
-    - 24
-    - 40
+    - 31
+    - 52
     level_range:
     - 2
     - 6
@@ -55,18 +55,18 @@ enemy_types:
     - name: Slash
       damage:
       - 5
-      - 13
+      - 16
       mana_cost: 5
-      miss_chance: 0.25
-      crit_chance: 0.064
+      miss_chance: 0.18062499999999998
+      crit_chance: 0.08463999999999999
     magic:
     - name: Lightning
       damage:
-      - 9
-      - 13
+      - 11
+      - 16
       mana_cost: 17
-      miss_chance: 0.35
-      crit_chance: 0.096
+      miss_chance: 0.25287499999999996
+      crit_chance: 0.12696
 - type: Elemental
   names:
   - Fire Spirit
@@ -76,11 +76,11 @@ enemy_types:
   - Lightning Spark
   base_stats:
     health_range:
-    - 28
-    - 52
+    - 36
+    - 67
     mana_range:
-    - 20
-    - 38
+    - 26
+    - 49
     level_range:
     - 1
     - 11
@@ -89,18 +89,18 @@ enemy_types:
     - name: Bite
       damage:
       - 5
-      - 9
+      - 11
       mana_cost: 10
-      miss_chance: 0.25
-      crit_chance: 0.064
+      miss_chance: 0.18062499999999998
+      crit_chance: 0.08463999999999999
     magic:
     - name: Ice Shard
       damage:
-      - 7
-      - 18
+      - 9
+      - 23
       mana_cost: 17
-      miss_chance: 0.35
-      crit_chance: 0.096
+      miss_chance: 0.25287499999999996
+      crit_chance: 0.12696
 - type: Dragon
   names:
   - Young Dragon
@@ -110,11 +110,11 @@ enemy_types:
   - Dragon Lord
   base_stats:
     health_range:
-    - 38
-    - 60
+    - 49
+    - 79
     mana_range:
-    - 32
     - 41
+    - 54
     level_range:
     - 1
     - 14
@@ -122,19 +122,19 @@ enemy_types:
     melee:
     - name: Claw
       damage:
-      - 7
-      - 10
+      - 9
+      - 12
       mana_cost: 5
-      miss_chance: 0.25
-      crit_chance: 0.064
+      miss_chance: 0.18062499999999998
+      crit_chance: 0.08463999999999999
     magic:
     - name: Lightning
       damage:
-      - 8
-      - 17
+      - 10
+      - 21
       mana_cost: 15
-      miss_chance: 0.35
-      crit_chance: 0.096
+      miss_chance: 0.25287499999999996
+      crit_chance: 0.12696
 - type: Demon
   names:
   - Imp
@@ -144,11 +144,11 @@ enemy_types:
   - Demon Lord
   base_stats:
     health_range:
-    - 36
-    - 41
+    - 47
+    - 54
     mana_range:
-    - 24
-    - 64
+    - 31
+    - 83
     level_range:
     - 2
     - 13
@@ -157,18 +157,18 @@ enemy_types:
     - name: Bite
       damage:
       - 5
-      - 11
+      - 13
       mana_cost: 5
-      miss_chance: 0.25
-      crit_chance: 0.064
+      miss_chance: 0.18062499999999998
+      crit_chance: 0.08463999999999999
     magic:
     - name: Fireball
       damage:
-      - 9
-      - 12
+      - 11
+      - 14
       mana_cost: 15
-      miss_chance: 0.35
-      crit_chance: 0.096
+      miss_chance: 0.25287499999999996
+      crit_chance: 0.12696
 - type: Insect
   names:
   - Giant Spider
@@ -178,11 +178,11 @@ enemy_types:
   - Beetle
   base_stats:
     health_range:
-    - 30
-    - 57
+    - 39
+    - 74
     mana_range:
-    - 30
-    - 64
+    - 39
+    - 83
     level_range:
     - 2
     - 15
@@ -190,19 +190,19 @@ enemy_types:
     melee:
     - name: Strike
       damage:
-      - 7
-      - 13
+      - 9
+      - 16
       mana_cost: 8
-      miss_chance: 0.25
-      crit_chance: 0.064
+      miss_chance: 0.18062499999999998
+      crit_chance: 0.08463999999999999
     magic:
     - name: Lightning
       damage:
-      - 11
-      - 18
+      - 13
+      - 23
       mana_cost: 20
-      miss_chance: 0.3125
-      crit_chance: 0.12
+      miss_chance: 0.22578125
+      crit_chance: 0.15869999999999998
 - type: Reptile
   names:
   - Lizardman
@@ -212,11 +212,11 @@ enemy_types:
   - Crocodile
   base_stats:
     health_range:
-    - 45
-    - 51
+    - 58
+    - 66
     mana_range:
-    - 25
-    - 48
+    - 32
+    - 63
     level_range:
     - 1
     - 15
@@ -224,19 +224,19 @@ enemy_types:
     melee:
     - name: Crush
       damage:
-      - 9
-      - 18
+      - 11
+      - 23
       mana_cost: 6
-      miss_chance: 0.1875
-      crit_chance: 0.08000000000000002
+      miss_chance: 0.15
+      crit_chance: 0.1058
     magic:
     - name: Arcane Blast
       damage:
-      - 9
-      - 15
+      - 11
+      - 19
       mana_cost: 15
-      miss_chance: 0.3125
-      crit_chance: 0.12
+      miss_chance: 0.22578125
+      crit_chance: 0.15869999999999998
 - type: Goblinoid
   names:
   - Goblin
@@ -246,11 +246,11 @@ enemy_types:
   - Ogre
   base_stats:
     health_range:
-    - 47
-    - 80
+    - 62
+    - 105
     mana_range:
-    - 28
-    - 56
+    - 36
+    - 73
     level_range:
     - 2
     - 8
@@ -258,19 +258,19 @@ enemy_types:
     melee:
     - name: Claw
       damage:
-      - 8
-      - 16
+      - 10
+      - 20
       mana_cost: 7
-      miss_chance: 0.1875
-      crit_chance: 0.08000000000000002
+      miss_chance: 0.15
+      crit_chance: 0.1058
     magic:
     - name: Ice Shard
       damage:
-      - 12
-      - 16
+      - 14
+      - 20
       mana_cost: 18
-      miss_chance: 0.3125
-      crit_chance: 0.12
+      miss_chance: 0.22578125
+      crit_chance: 0.15869999999999998
 - type: Construct
   names:
   - Golem
@@ -280,11 +280,11 @@ enemy_types:
   - War Machine
   base_stats:
     health_range:
-    - 38
-    - 63
+    - 49
+    - 82
     mana_range:
-    - 26
-    - 62
+    - 33
+    - 81
     level_range:
     - 1
     - 5
@@ -292,19 +292,19 @@ enemy_types:
     melee:
     - name: Strike
       damage:
-      - 9
       - 11
+      - 13
       mana_cost: 7
-      miss_chance: 0.1875
-      crit_chance: 0.08000000000000002
+      miss_chance: 0.15
+      crit_chance: 0.1058
     magic:
     - name: Arcane Blast
       damage:
-      - 12
-      - 18
+      - 14
+      - 23
       mana_cost: 17
-      miss_chance: 0.3125
-      crit_chance: 0.12
+      miss_chance: 0.22578125
+      crit_chance: 0.15869999999999998
 - type: Aquatic
   names:
   - Merfolk
@@ -314,11 +314,11 @@ enemy_types:
   - Leviathan
   base_stats:
     health_range:
-    - 47
     - 62
+    - 81
     mana_range:
-    - 30
-    - 65
+    - 39
+    - 85
     level_range:
     - 2
     - 5
@@ -326,19 +326,19 @@ enemy_types:
     melee:
     - name: Crush
       damage:
-      - 9
-      - 12
+      - 11
+      - 14
       mana_cost: 7
-      miss_chance: 0.1875
-      crit_chance: 0.08000000000000002
+      miss_chance: 0.15
+      crit_chance: 0.1058
     magic:
     - name: Ice Shard
       damage:
-      - 12
-      - 21
+      - 14
+      - 27
       mana_cost: 18
-      miss_chance: 0.3125
-      crit_chance: 0.12
+      miss_chance: 0.22578125
+      crit_chance: 0.15869999999999998
 - type: Avian
   names:
   - Giant Eagle
@@ -348,11 +348,11 @@ enemy_types:
   - Thunderbird
   base_stats:
     health_range:
-    - 35
-    - 52
+    - 46
+    - 67
     mana_range:
-    - 29
-    - 74
+    - 37
+    - 97
     level_range:
     - 1
     - 6
@@ -361,18 +361,18 @@ enemy_types:
     - name: Strike
       damage:
       - 6
-      - 18
+      - 23
       mana_cost: 8
-      miss_chance: 0.1875
-      crit_chance: 0.08000000000000002
+      miss_chance: 0.15
+      crit_chance: 0.1058
     magic:
     - name: Lightning
       damage:
-      - 9
-      - 17
+      - 11
+      - 21
       mana_cost: 16
-      miss_chance: 0.3125
-      crit_chance: 0.12
+      miss_chance: 0.22578125
+      crit_chance: 0.15869999999999998
 - type: Plant
   names:
   - Treant
@@ -382,11 +382,11 @@ enemy_types:
   - Bloom Terror
   base_stats:
     health_range:
-    - 45
-    - 71
+    - 58
+    - 93
     mana_range:
-    - 29
-    - 41
+    - 37
+    - 54
     level_range:
     - 1
     - 10
@@ -395,18 +395,18 @@ enemy_types:
     - name: Claw
       damage:
       - 6
-      - 15
+      - 19
       mana_cost: 7
-      miss_chance: 0.1875
-      crit_chance: 0.08000000000000002
+      miss_chance: 0.15
+      crit_chance: 0.1058
     magic:
     - name: Arcane Blast
       damage:
-      - 11
-      - 16
+      - 13
+      - 20
       mana_cost: 16
-      miss_chance: 0.3125
-      crit_chance: 0.12
+      miss_chance: 0.22578125
+      crit_chance: 0.15869999999999998
 - type: Aberration
   names:
   - Beholder
@@ -416,11 +416,11 @@ enemy_types:
   - Aboleth
   base_stats:
     health_range:
-    - 40
-    - 56
+    - 52
+    - 73
     mana_range:
-    - 30
-    - 70
+    - 39
+    - 92
     level_range:
     - 3
     - 15
@@ -429,18 +429,18 @@ enemy_types:
     - name: Bite
       damage:
       - 6
-      - 14
+      - 18
       mana_cost: 7
-      miss_chance: 0.1875
-      crit_chance: 0.08000000000000002
+      miss_chance: 0.15
+      crit_chance: 0.1058
     magic:
     - name: Lightning
       damage:
-      - 9
-      - 19
+      - 11
+      - 24
       mana_cost: 20
-      miss_chance: 0.3125
-      crit_chance: 0.12
+      miss_chance: 0.22578125
+      crit_chance: 0.15869999999999998
 - type: Celestial
   names:
   - Angel
@@ -450,11 +450,11 @@ enemy_types:
   - Planetar
   base_stats:
     health_range:
-    - 45
-    - 60
+    - 58
+    - 79
     mana_range:
-    - 36
-    - 80
+    - 47
+    - 105
     level_range:
     - 3
     - 6
@@ -463,18 +463,18 @@ enemy_types:
     - name: Crush
       damage:
       - 6
-      - 12
+      - 14
       mana_cost: 5
-      miss_chance: 0.1875
-      crit_chance: 0.08000000000000002
+      miss_chance: 0.15
+      crit_chance: 0.1058
     magic:
     - name: Arcane Blast
       damage:
-      - 10
-      - 15
+      - 12
+      - 19
       mana_cost: 19
-      miss_chance: 0.3125
-      crit_chance: 0.12
+      miss_chance: 0.22578125
+      crit_chance: 0.15869999999999998
 - type: Fey
   names:
   - Pixie
@@ -484,11 +484,11 @@ enemy_types:
   - Faerie Dragon
   base_stats:
     health_range:
-    - 32
-    - 49
+    - 41
+    - 64
     mana_range:
-    - 39
     - 50
+    - 65
     level_range:
     - 1
     - 13
@@ -496,19 +496,19 @@ enemy_types:
     melee:
     - name: Slash
       damage:
-      - 8
-      - 14
+      - 10
+      - 18
       mana_cost: 5
-      miss_chance: 0.1875
-      crit_chance: 0.08000000000000002
+      miss_chance: 0.15
+      crit_chance: 0.1058
     magic:
     - name: Lightning
       damage:
-      - 10
-      - 21
+      - 12
+      - 27
       mana_cost: 20
-      miss_chance: 0.3125
-      crit_chance: 0.12
+      miss_chance: 0.22578125
+      crit_chance: 0.15869999999999998
 - type: Giant
   names:
   - Hill Giant
@@ -518,11 +518,11 @@ enemy_types:
   - Cloud Giant
   base_stats:
     health_range:
-    - 48
-    - 61
+    - 63
+    - 80
     mana_range:
-    - 28
-    - 40
+    - 36
+    - 52
     level_range:
     - 2
     - 6
@@ -531,18 +531,18 @@ enemy_types:
     - name: Strike
       damage:
       - 6
-      - 18
+      - 23
       mana_cost: 5
-      miss_chance: 0.1875
-      crit_chance: 0.08000000000000002
+      miss_chance: 0.15
+      crit_chance: 0.1058
     magic:
     - name: Ice Shard
       damage:
-      - 12
-      - 18
+      - 14
+      - 23
       mana_cost: 15
-      miss_chance: 0.3125
-      crit_chance: 0.12
+      miss_chance: 0.22578125
+      crit_chance: 0.15869999999999998
 - type: Humanoid
   names:
   - Bandit
@@ -552,11 +552,11 @@ enemy_types:
   - Necromancer
   base_stats:
     health_range:
-    - 48
-    - 66
+    - 63
+    - 86
     mana_range:
-    - 34
-    - 52
+    - 44
+    - 67
     level_range:
     - 2
     - 14
@@ -564,19 +564,19 @@ enemy_types:
     melee:
     - name: Claw
       damage:
-      - 8
-      - 15
+      - 10
+      - 19
       mana_cost: 8
-      miss_chance: 0.1875
-      crit_chance: 0.08000000000000002
+      miss_chance: 0.15
+      crit_chance: 0.1058
     magic:
     - name: Dark Bolt
       damage:
-      - 11
-      - 21
+      - 13
+      - 27
       mana_cost: 18
-      miss_chance: 0.3125
-      crit_chance: 0.12
+      miss_chance: 0.22578125
+      crit_chance: 0.15869999999999998
 - type: Monstrosity
   names:
   - Chimera
@@ -586,11 +586,11 @@ enemy_types:
   - Griffon
   base_stats:
     health_range:
-    - 44
-    - 56
+    - 57
+    - 73
     mana_range:
-    - 33
-    - 74
+    - 42
+    - 97
     level_range:
     - 3
     - 7
@@ -598,19 +598,19 @@ enemy_types:
     melee:
     - name: Bite
       damage:
-      - 8
-      - 18
+      - 10
+      - 23
       mana_cost: 9
-      miss_chance: 0.1875
-      crit_chance: 0.08000000000000002
+      miss_chance: 0.15
+      crit_chance: 0.1058
     magic:
     - name: Dark Bolt
       damage:
-      - 9
-      - 18
+      - 11
+      - 23
       mana_cost: 16
-      miss_chance: 0.3125
-      crit_chance: 0.12
+      miss_chance: 0.22578125
+      crit_chance: 0.15869999999999998
 - type: Ooze
   names:
   - Slime
@@ -620,11 +620,11 @@ enemy_types:
   - Ochre Jelly
   base_stats:
     health_range:
-    - 32
-    - 79
+    - 41
+    - 103
     mana_range:
-    - 38
-    - 45
+    - 49
+    - 58
     level_range:
     - 3
     - 9
@@ -632,19 +632,19 @@ enemy_types:
     melee:
     - name: Slash
       damage:
-      - 9
-      - 13
+      - 11
+      - 16
       mana_cost: 9
-      miss_chance: 0.1875
-      crit_chance: 0.08000000000000002
+      miss_chance: 0.15
+      crit_chance: 0.1058
     magic:
     - name: Dark Bolt
       damage:
-      - 9
-      - 19
+      - 11
+      - 24
       mana_cost: 16
-      miss_chance: 0.3125
-      crit_chance: 0.12
+      miss_chance: 0.22578125
+      crit_chance: 0.15869999999999998
 - type: Fiend
   names:
   - Devil
@@ -654,11 +654,11 @@ enemy_types:
   - Bone Devil
   base_stats:
     health_range:
-    - 41
-    - 57
+    - 54
+    - 74
     mana_range:
-    - 24
-    - 50
+    - 31
+    - 65
     level_range:
     - 1
     - 10
@@ -666,19 +666,19 @@ enemy_types:
     melee:
     - name: Strike
       damage:
-      - 7
-      - 14
+      - 9
+      - 18
       mana_cost: 7
-      miss_chance: 0.1875
-      crit_chance: 0.08000000000000002
+      miss_chance: 0.15
+      crit_chance: 0.1058
     magic:
     - name: Ice Shard
       damage:
-      - 11
-      - 21
+      - 13
+      - 27
       mana_cost: 20
-      miss_chance: 0.3125
-      crit_chance: 0.12
+      miss_chance: 0.22578125
+      crit_chance: 0.15869999999999998
 - type: Underdark
   names:
   - Drow
@@ -688,11 +688,11 @@ enemy_types:
   - Hook Horror
   base_stats:
     health_range:
-    - 41
-    - 53
+    - 54
+    - 69
     mana_range:
-    - 27
-    - 58
+    - 35
+    - 75
     level_range:
     - 3
     - 6
@@ -700,19 +700,19 @@ enemy_types:
     melee:
     - name: Strike
       damage:
-      - 9
       - 11
+      - 13
       mana_cost: 6
-      miss_chance: 0.1875
-      crit_chance: 0.08000000000000002
+      miss_chance: 0.15
+      crit_chance: 0.1058
     magic:
     - name: Arcane Blast
       damage:
-      - 11
-      - 15
+      - 13
+      - 19
       mana_cost: 19
-      miss_chance: 0.3125
-      crit_chance: 0.12
+      miss_chance: 0.22578125
+      crit_chance: 0.15869999999999998
 - type: Arctic
   names:
   - Yeti
@@ -722,11 +722,11 @@ enemy_types:
   - Abominable Snowman
   base_stats:
     health_range:
-    - 38
-    - 51
+    - 49
+    - 66
     mana_range:
-    - 34
-    - 65
+    - 44
+    - 85
     level_range:
     - 3
     - 8
@@ -735,18 +735,18 @@ enemy_types:
     - name: Strike
       damage:
       - 6
-      - 15
+      - 19
       mana_cost: 10
-      miss_chance: 0.1875
-      crit_chance: 0.08000000000000002
+      miss_chance: 0.15
+      crit_chance: 0.1058
     magic:
     - name: Dark Bolt
       damage:
-      - 12
-      - 19
+      - 14
+      - 24
       mana_cost: 19
-      miss_chance: 0.3125
-      crit_chance: 0.12
+      miss_chance: 0.22578125
+      crit_chance: 0.15869999999999998
 - type: Desert
   names:
   - Sand Worm
@@ -756,11 +756,11 @@ enemy_types:
   - Desert Drake
   base_stats:
     health_range:
-    - 40
-    - 48
+    - 52
+    - 63
     mana_range:
-    - 38
-    - 44
+    - 49
+    - 57
     level_range:
     - 3
     - 7
@@ -768,19 +768,19 @@ enemy_types:
     melee:
     - name: Crush
       damage:
-      - 9
-      - 12
+      - 11
+      - 14
       mana_cost: 8
-      miss_chance: 0.1875
-      crit_chance: 0.08000000000000002
+      miss_chance: 0.15
+      crit_chance: 0.1058
     magic:
     - name: Lightning
       damage:
-      - 10
-      - 22
+      - 12
+      - 28
       mana_cost: 17
-      miss_chance: 0.3125
-      crit_chance: 0.12
+      miss_chance: 0.22578125
+      crit_chance: 0.15869999999999998
 - type: Swamp
   names:
   - Bog Beast
@@ -790,11 +790,11 @@ enemy_types:
   - Rot Grub
   base_stats:
     health_range:
-    - 44
-    - 61
+    - 57
+    - 80
     mana_range:
-    - 35
-    - 68
+    - 46
+    - 89
     level_range:
     - 1
     - 9
@@ -803,18 +803,18 @@ enemy_types:
     - name: Crush
       damage:
       - 6
-      - 13
+      - 16
       mana_cost: 9
-      miss_chance: 0.1875
-      crit_chance: 0.08000000000000002
+      miss_chance: 0.15
+      crit_chance: 0.1058
     magic:
     - name: Fireball
       damage:
-      - 10
-      - 22
+      - 12
+      - 28
       mana_cost: 18
-      miss_chance: 0.3125
-      crit_chance: 0.12
+      miss_chance: 0.22578125
+      crit_chance: 0.15869999999999998
 - type: Mountain
   names:
   - Mountain Lion
@@ -824,11 +824,11 @@ enemy_types:
   - Storm Giant
   base_stats:
     health_range:
-    - 32
-    - 80
+    - 41
+    - 105
     mana_range:
-    - 26
-    - 75
+    - 33
+    - 98
     level_range:
     - 2
     - 12
@@ -836,19 +836,19 @@ enemy_types:
     melee:
     - name: Claw
       damage:
-      - 8
-      - 18
+      - 10
+      - 23
       mana_cost: 10
-      miss_chance: 0.1875
-      crit_chance: 0.08000000000000002
+      miss_chance: 0.15
+      crit_chance: 0.1058
     magic:
     - name: Dark Bolt
       damage:
-      - 10
-      - 18
+      - 12
+      - 23
       mana_cost: 20
-      miss_chance: 0.3125
-      crit_chance: 0.12
+      miss_chance: 0.22578125
+      crit_chance: 0.15869999999999998
 - type: Forest
   names:
   - Dire Wolf
@@ -858,11 +858,11 @@ enemy_types:
   - Green Dragon
   base_stats:
     health_range:
-    - 36
-    - 72
+    - 47
+    - 94
     mana_range:
-    - 31
-    - 66
+    - 40
+    - 86
     level_range:
     - 1
     - 8
@@ -870,19 +870,19 @@ enemy_types:
     melee:
     - name: Bite
       damage:
-      - 9
-      - 18
+      - 11
+      - 23
       mana_cost: 5
-      miss_chance: 0.1875
-      crit_chance: 0.08000000000000002
+      miss_chance: 0.15
+      crit_chance: 0.1058
     magic:
     - name: Lightning
       damage:
-      - 10
-      - 15
+      - 12
+      - 19
       mana_cost: 18
-      miss_chance: 0.3125
-      crit_chance: 0.12
+      miss_chance: 0.22578125
+      crit_chance: 0.15869999999999998
 - type: Volcanic
   names:
   - Magma Elemental
@@ -892,11 +892,11 @@ enemy_types:
   - Efreet
   base_stats:
     health_range:
-    - 42
-    - 48
+    - 55
+    - 63
     mana_range:
-    - 37
-    - 41
+    - 48
+    - 54
     level_range:
     - 2
     - 7
@@ -905,18 +905,18 @@ enemy_types:
     - name: Crush
       damage:
       - 6
-      - 15
+      - 19
       mana_cost: 6
-      miss_chance: 0.1875
-      crit_chance: 0.08000000000000002
+      miss_chance: 0.15
+      crit_chance: 0.1058
     magic:
     - name: Ice Shard
       damage:
-      - 9
-      - 19
+      - 11
+      - 24
       mana_cost: 19
-      miss_chance: 0.3125
-      crit_chance: 0.12
+      miss_chance: 0.22578125
+      crit_chance: 0.15869999999999998
 - type: Shadow
   names:
   - Shadow Beast
@@ -926,11 +926,11 @@ enemy_types:
   - Void Creature
   base_stats:
     health_range:
-    - 33
-    - 52
+    - 42
+    - 67
     mana_range:
-    - 31
-    - 61
+    - 40
+    - 80
     level_range:
     - 2
     - 5
@@ -938,19 +938,19 @@ enemy_types:
     melee:
     - name: Crush
       damage:
-      - 8
-      - 13
+      - 10
+      - 16
       mana_cost: 10
-      miss_chance: 0.1875
-      crit_chance: 0.08000000000000002
+      miss_chance: 0.15
+      crit_chance: 0.1058
     magic:
     - name: Ice Shard
       damage:
-      - 9
-      - 20
+      - 11
+      - 26
       mana_cost: 18
-      miss_chance: 0.3125
-      crit_chance: 0.12
+      miss_chance: 0.22578125
+      crit_chance: 0.15869999999999998
 - type: Ethereal
   names:
   - Ghost Dragon
@@ -960,11 +960,11 @@ enemy_types:
   - Astral Deva
   base_stats:
     health_range:
-    - 47
-    - 76
+    - 62
+    - 100
     mana_range:
-    - 24
-    - 68
+    - 31
+    - 89
     level_range:
     - 1
     - 6
@@ -973,18 +973,18 @@ enemy_types:
     - name: Slash
       damage:
       - 6
-      - 14
+      - 18
       mana_cost: 8
-      miss_chance: 0.1875
-      crit_chance: 0.08000000000000002
+      miss_chance: 0.15
+      crit_chance: 0.1058
     magic:
     - name: Fireball
       damage:
-      - 12
-      - 22
+      - 14
+      - 28
       mana_cost: 15
-      miss_chance: 0.3125
-      crit_chance: 0.12
+      miss_chance: 0.22578125
+      crit_chance: 0.15869999999999998
 - type: Planar
   names:
   - Chaos Beast
@@ -994,11 +994,11 @@ enemy_types:
   - Titan
   base_stats:
     health_range:
-    - 39
-    - 66
+    - 50
+    - 86
     mana_range:
-    - 31
-    - 58
+    - 40
+    - 75
     level_range:
     - 3
     - 10
@@ -1007,96 +1007,96 @@ enemy_types:
     - name: Bite
       damage:
       - 6
-      - 15
+      - 19
       mana_cost: 8
-      miss_chance: 0.1875
-      crit_chance: 0.08000000000000002
+      miss_chance: 0.15
+      crit_chance: 0.1058
     magic:
     - name: Dark Bolt
       damage:
-      - 9
-      - 17
+      - 11
+      - 21
       mana_cost: 20
-      miss_chance: 0.3125
-      crit_chance: 0.12
+      miss_chance: 0.22578125
+      crit_chance: 0.15869999999999998
 affixes:
   prefixes:
   - name: Fierce
     stat_multipliers:
-      damage: 1.105
-      health: 1.0350000000000001
+      damage: 1.1388624999999999
+      health: 1.0462875
   - name: Tough
     stat_multipliers:
-      health: 1.14
+      health: 1.1851499999999997
       damage: 0.95
   - name: Magical
     stat_multipliers:
-      mana: 1.14
-      magic_damage: 1.105
+      mana: 1.1851499999999997
+      magic_damage: 1.1388624999999999
   - name: Swift
     stat_multipliers:
       miss_chance: 0.895
-      crit_chance: 1.105
+      crit_chance: 1.1388624999999999
   - name: Ancient
     stat_multipliers:
-      health: 1.175
-      mana: 1.175
-      damage: 1.07
+      health: 1.2314375
+      mana: 1.2314375
+      damage: 1.092575
   - name: Savage
     stat_multipliers:
-      damage: 1.21
-      crit_chance: 1.14
+      damage: 1.2777249999999998
+      crit_chance: 1.1851499999999997
   - name: Armored
     stat_multipliers:
-      health: 1.105
-      defense: 1.175
+      health: 1.1388624999999999
+      defense: 1.2314375
   - name: Berserker
     stat_multipliers:
-      damage: 1.2799999999999998
+      damage: 1.3702999999999994
       health: 0.8
   - name: Cunning
     stat_multipliers:
-      crit_chance: 1.21
+      crit_chance: 1.2777249999999998
       miss_chance: 0.93
   - name: Massive
     stat_multipliers:
-      health: 1.35
-      damage: 1.14
+      health: 1.462875
+      damage: 1.1851499999999997
   suffixes:
   - name: of Darkness
     stat_multipliers:
-      magic_damage: 1.14
+      magic_damage: 1.1851499999999997
   - name: of the Mountain
     stat_multipliers:
-      health: 1.21
+      health: 1.2777249999999998
   - name: of Rage
     stat_multipliers:
-      damage: 1.175
-      crit_chance: 1.14
+      damage: 1.2314375
+      crit_chance: 1.1851499999999997
   - name: of Wisdom
     stat_multipliers:
-      mana: 1.21
-      magic_damage: 1.105
+      mana: 1.2777249999999998
+      magic_damage: 1.1388624999999999
   - name: of Speed
     stat_multipliers:
       miss_chance: 0.8600000000000001
   - name: of Power
     stat_multipliers:
-      damage: 1.21
-      magic_damage: 1.21
+      damage: 1.2777249999999998
+      magic_damage: 1.2777249999999998
   - name: of Protection
     stat_multipliers:
-      health: 1.14
-      defense: 1.21
+      health: 1.1851499999999997
+      defense: 1.2777249999999998
   - name: of Destruction
     stat_multipliers:
-      damage: 1.35
+      damage: 1.462875
   - name: of the Void
     stat_multipliers:
-      magic_damage: 1.2799999999999998
-      mana: 1.2799999999999998
+      magic_damage: 1.3702999999999994
+      mana: 1.3702999999999994
   - name: of Eternity
     stat_multipliers:
-      health: 1.2799999999999998
-      mana: 1.2799999999999998
-      damage: 1.14
+      health: 1.3702999999999994
+      mana: 1.3702999999999994
+      damage: 1.1851499999999997

@@ -26,14 +26,16 @@ A Discord RPG bot that allows users to create and manage characters with stats, 
 - **Combat System**
   - Turn-based combat with enemies
   - Melee and magic attacks with emoji reactions
-  - **Prayer system** - Restore mana when no potions available (20-40% mana restore)
+  - **Prayer system** - Restore mana during combat (20-40% mana restore, always available)
   - Critical hits and miss chances
   - **150+ unique enemy combinations** with affixes
   - **30 enemy types** with prefix/suffix modifiers
-  - Balanced difficulty with adjustable stats
-  - **Flee mechanics** with action buttons after successful escape
+  - **Enhanced loot system** with 75% equipment drop rate and tiered rewards
+  - **Balanced difficulty** - Enemies provide a moderate challenge
+  - **Flee mechanics** with full action menu after successful escape
   - Defeat system with heal/restart or leave options
-  - Victory screen with rest option to restore HP/Mana
+  - **Victory screen with complete action menu**: Rest, Next Quest, Inventory, Stats
+  - **Rest system** - Restore HP/Mana with full action menu including Next Quest
   - **Interactive combat log** with all actions and results
   - Death tracking and penalties
 
@@ -54,6 +56,36 @@ A Discord RPG bot that allows users to create and manage characters with stats, 
   - Complete item catalog (100 items) with filtering
   - Quest database (50 quests) with details
   - Death history viewer
+
+## Recent Improvements
+
+### Combat Enhancements
+- **Prayer Button Persistence**: Prayer emoji (🙏) now stays visible throughout entire combat, not just first turn
+- **Victory Screen Actions**: Added "Rest" to the victory actions list for clarity
+- **Rest Screen Improvements**: 
+  - Added "Next Quest" button to rest screen
+  - All post-combat actions now work from rest screen (Next Quest, Retry, Inventory, Stats)
+
+### Loot System Overhaul
+- **Increased Equipment Drops**: 75% drop rate (up from 60%)
+- **Expanded Equipment Pool**: 
+  - Added: basic_staff, worn_boots, apprentice_staff, leather_boots, iron_boots
+  - Added: chainmail_armor, steel_helmet, mage_staff
+- **Tiered Loot System**:
+  - Level 1-3: Basic equipment only
+  - Level 3-6: 60% common, 40% basic
+  - Level 5+: 50% uncommon, 35% common, 15% basic
+- **Better Consumables**: 40% drop rate (up from 30%) with variety
+- **More Gold**: 50-100% more gold per kill (15-30x enemy level, up from 10-25x)
+
+### Difficulty Balancing
+Recent difficulty increase (+15% across the board):
+- Enemy health: +15%
+- Enemy mana: +15%
+- Enemy damage: +15%
+- Enemy hit rate: +15% (lower miss chance)
+- Enemy crit chance: +15%
+- Affix bonuses: +15%
 
 ## Commands
 
@@ -79,11 +111,11 @@ A Discord RPG bot that allows users to create and manage characters with stats, 
 - `🔮` - Use a magic attack (reaction emoji)
 - `🧪` - Use a potion during combat (reaction emoji)
 - `🏃` - Attempt to flee from combat (reaction emoji)
-- `🙏` - Pray to restore mana (20-40% mana restore when no potions available)
+- `🙏` - Pray to restore mana (20-40% mana restore, always available in combat)
 - Interactive defeat system with options to heal or leave
 - `🛏️` - Rest to restore HP and Mana after victory or successful flee (reaction emoji)
 - `▶️` - Continue to next quest or enemy (reaction emoji)
-- `🔄` - Retry quest after fleeing or resting (reaction emoji)
+- `🔄` - Retry quest after fleeing, defeat, or resting (reaction emoji)
 - `🎒` - View inventory after combat (reaction emoji)
 - `📊` - View stats after combat (reaction emoji)
 
@@ -220,7 +252,8 @@ The bot includes extensive YAML-based configuration files:
 
 ### Utility Scripts
 - `expand_configs.py` - Generate large-scale configurations
-- `balance_enemies.py` - Adjust enemy difficulty (HP, damage, miss/crit rates, affixes)
+- `balance_enemies.py` - Reduce enemy difficulty (HP, damage, miss/crit rates, affixes)
+- `increase_difficulty.py` - Increase enemy difficulty for more challenge
 - `clear_quests.py` - Clean up old quest data from database
 
 ## Invite Link

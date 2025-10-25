@@ -40,27 +40,51 @@ class CombatCommands(commands.Cog):
         """Generate random loot drops based on enemy level"""
         loot = []
         
-        # Common loot pool (for level 1-5)
-        common_items = ['rusty_sword', 'leather_cap', 'cloth_robe', 'wooden_shield']
-        # Uncommon loot pool (for level 5+)
-        uncommon_items = ['steel_sword', 'iron_helmet', 'leather_armor', 'iron_shield']
+        # Equipment loot pools by level
+        # Level 1-3: Basic equipment
+        basic_equipment = ['rusty_sword', 'leather_cap', 'cloth_robe', 'wooden_shield', 'basic_staff', 'worn_boots']
+        # Level 3-6: Common equipment
+        common_equipment = ['iron_sword', 'leather_armor', 'iron_helmet', 'iron_shield', 'apprentice_staff', 'leather_boots']
+        # Level 5+: Uncommon equipment
+        uncommon_equipment = ['steel_sword', 'chainmail_armor', 'steel_helmet', 'steel_shield', 'mage_staff', 'iron_boots']
+        
+        # Consumables
+        consumables = ['health_potion', 'mana_potion', 'greater_health_potion']
         
         # Gold always drops
-        gold_amount = random.randint(10 * enemy.level, 25 * enemy.level)
+        gold_amount = random.randint(15 * enemy.level, 30 * enemy.level)
         
-        # Item drop chance: 60% for common, 30% for uncommon (if level 5+), 10% nothing extra
-        drop_roll = random.random()
-        
-        if drop_roll < 0.6:  # 60% chance for common item
-            item_id = random.choice(common_items)
+        # Equipment drop chance: 75% chance to drop equipment
+        if random.random() < 0.75:
+            # Choose equipment tier based on enemy level
+            if enemy.level <= 3:
+                item_id = random.choice(basic_equipment)
+            elif enemy.level <= 6:
+                # 60% common, 40% basic
+                if random.random() < 0.6:
+                    item_id = random.choice(common_equipment)
+                else:
+                    item_id = random.choice(basic_equipment)
+            else:
+                # 50% uncommon, 35% common, 15% basic
+                roll = random.random()
+                if roll < 0.5:
+                    item_id = random.choice(uncommon_equipment)
+                elif roll < 0.85:
+                    item_id = random.choice(common_equipment)
+                else:
+                    item_id = random.choice(basic_equipment)
+            
             loot.append((item_id, 1))
-        elif drop_roll < 0.9 and enemy.level >= 5:  # 30% chance for uncommon if level 5+
-            item_id = random.choice(uncommon_items)
-            loot.append((item_id, 1))
         
-        # Small chance for consumables
-        if random.random() < 0.3:  # 30% chance for consumable
-            loot.append(('greater_health_potion', random.randint(1, 2)))
+        # Consumable drop chance: 40% chance
+        if random.random() < 0.4:
+            # Choose consumable based on enemy level
+            if enemy.level >= 5:
+                consumable = random.choice(consumables)
+            else:
+                consumable = random.choice(['health_potion', 'mana_potion'])
+            loot.append((consumable, random.randint(1, 2)))
         
         return loot, gold_amount
         
@@ -447,7 +471,7 @@ class CombatCommands(commands.Cog):
             # Add action options footer
             victory_embed.add_field(
                 name="⚙️ Actions",
-                value="▶️ Next Quest\n🎒 Inventory\n📊 Stats",
+                value="🛏️ Rest\n▶️ Next Quest\n🎒 Inventory\n📊 Stats",
                 inline=False
             )
             
@@ -866,6 +890,7 @@ class CombatCommands(commands.Cog):
         # Add fresh reactions
         for emoji in self.combat_emojis:
             await combat_msg.add_reaction(emoji)
+        await combat_msg.add_reaction(self.PRAY_EMOJI)
         
         # Update stored combat data with message ID and turn history
         combat_data['message_id'] = combat_msg.id
@@ -1089,6 +1114,7 @@ class CombatCommands(commands.Cog):
         # Add fresh reactions
         for emoji in self.combat_emojis:
             await combat_msg.add_reaction(emoji)
+        await combat_msg.add_reaction(self.PRAY_EMOJI)
         
         # Update stored combat data
         combat_data['message_id'] = combat_msg.id
@@ -1490,7 +1516,9 @@ class CombatCommands(commands.Cog):
         
         # Check if this is a rest reaction
         if victory_data and victory_data.get('type') == 'rest':
-            if emoji == "🔄":  # Retry quest (restart combat)
+            if emoji == "▶️":  # Next Quest
+                await self.handle_next_quest(reaction.message.channel, user)
+            elif emoji == "🔄":  # Retry quest (restart combat)
                 await self.handle_flee_retry(reaction.message.channel, user)
             elif emoji == "🎒":  # Show Inventory
                 await self.handle_show_inventory(reaction.message.channel, user)
@@ -1785,13 +1813,14 @@ class CombatCommands(commands.Cog):
             
             embed.add_field(
                 name="What would you like to do?",
-                value=f"🔄 Retry Quest (start combat again)\n🎒 View Inventory\n📊 View Stats",
+                value=f"▶️ Next Quest\n🔄 Retry Quest (start combat again)\n🎒 View Inventory\n📊 View Stats",
                 inline=False
             )
             
             rest_msg = await channel.send(embed=embed)
             
             # Add reaction buttons
+            await rest_msg.add_reaction("▶️")  # Next quest
             await rest_msg.add_reaction("🔄")  # Retry quest
             await rest_msg.add_reaction("🎒")  # Inventory
             await rest_msg.add_reaction("📊")  # Stats
