@@ -61,6 +61,22 @@ A Discord RPG bot that allows users to create and manage characters with stats, 
 
 ## Recent Improvements
 
+### UI/UX Enhancements (October 2025)
+- **Seamless Navigation**: All info screens (Inventory, Stats, Equipment) now edit the current message instead of creating new ones
+  - Reduces message spam and provides cleaner chat experience
+  - Reactions are cleared and updated when switching between screens
+  - Graceful fallback to new messages if editing fails
+- **Universal Reaction Navigation**: Added reaction buttons to all info screens:
+  - 🛏️ Rest - Restore HP/Mana
+  - ▶️ Next Quest - Continue your adventure
+  - 🎒 Inventory - View items
+  - 📊 Stats - View character stats
+  - 🛡️ Equipment - View equipped gear
+  - Navigate seamlessly between screens without typing commands
+- **Code Refactoring**: Streamlined codebase by removing redundant code and obsolete scripts
+  - Improved maintainability and performance
+  - Cleaner project structure
+
 ### Combat Enhancements
 - **Prayer Button Persistence**: Prayer emoji (🙏) now stays visible throughout entire combat, not just first turn
 - **Victory Screen Actions**: Added "Rest" to the victory actions list for clarity
@@ -103,11 +119,13 @@ Recent difficulty increase (+15% across the board):
 - `!w stats` or `!w s` - View your character's current stats including deaths and kills
 
 **Equipment & Inventory:**
-- `!w inventory` - View your inventory
+- `!w inventory` - View your inventory with navigation buttons
 - `!w equip <item>` - Equip an item
 - `!w unequip <slot>` - Unequip an item from a slot
 - `!w use <item>` - Use a consumable item
-- `🛡️` - View equipped items with stats (available after victory, defeat, flee, rest, or from stats screen)
+- `🛡️` - View equipped items with stats (reaction button - available throughout the game)
+- `🎒` - View inventory (reaction button - available after combat and from other screens)
+- `📊` - View stats (reaction button - available after combat and from other screens)
 
 **Combat:**
 - `⚔️` - Use a melee attack (reaction emoji)
@@ -115,13 +133,13 @@ Recent difficulty increase (+15% across the board):
 - `🧪` - Use a potion during combat (reaction emoji)
 - `🏃` - Attempt to flee from combat (reaction emoji)
 - `🙏` - Pray to restore mana (20-40% mana restore, always available in combat)
-- `🛡️` - View equipped items and total stats (available during and after combat)
+- `🛡️` - View equipped items and total stats (reaction button)
 - Interactive defeat system with options to heal or leave
-- `🛏️` - Rest to restore HP and Mana after victory or successful flee (reaction emoji)
-- `▶️` - Continue to next quest or enemy (reaction emoji)
-- `🔄` - Retry quest after fleeing, defeat, or resting (reaction emoji)
-- `🎒` - View inventory after combat (reaction emoji)
-- `📊` - View stats after combat (reaction emoji)
+- `🛏️` - Rest to restore HP and Mana (reaction button)
+- `▶️` - Continue to next quest or enemy (reaction button)
+- `🔄` - Retry quest (reaction button)
+- `🎒` - View inventory (reaction button - seamlessly switches between screens)
+- `📊` - View stats (reaction button - seamlessly switches between screens)
 
 **Quests:**
 - `!w quests` or `!w q` - List available quests
