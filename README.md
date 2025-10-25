@@ -12,7 +12,7 @@ A Discord RPG bot that allows users to create and manage characters with stats, 
 
 - **Stats System**
   - Health and Mana with regeneration
-  - Experience (XP) and Leveling
+  - **Cumulative XP system** - XP carries over when leveling up
   - Automatic level-up system with stat increases
   - Comprehensive stat tracking (deaths, kills, quests completed)
 
@@ -26,23 +26,26 @@ A Discord RPG bot that allows users to create and manage characters with stats, 
 - **Combat System**
   - Turn-based combat with enemies
   - Melee and magic attacks with emoji reactions
+  - **Prayer system** - Restore mana when no potions available (20-40% mana restore)
   - Critical hits and miss chances
   - **150+ unique enemy combinations** with affixes
   - **30 enemy types** with prefix/suffix modifiers
   - Balanced difficulty with adjustable stats
+  - **Flee mechanics** with action buttons after successful escape
   - Defeat system with heal/restart or leave options
   - Victory screen with rest option to restore HP/Mana
+  - **Interactive combat log** with all actions and results
   - Death tracking and penalties
 
 - **Quest System**
   - **50 quests** organized into **10 quest chains**
-  - Multiple quest types (combat, exploration, collection, boss battles)
+  - All combat-focused quests for streamlined gameplay
   - Progressive difficulty scaling
   - Rewards including items, XP, gold, and titles
   - Automatic quest chain progression
-  - Quest completion tracking
+  - Quest completion tracking (quests marked as completed, not deleted)
   - Automatic reward claiming on completion
-  - Support for all quest types with combat objectives
+  - Auto-start combat when clicking "Next Quest" button
 
 - **Web Dashboard**
   - Dark mode interface with GitHub-inspired theme
@@ -69,9 +72,11 @@ A Discord RPG bot that allows users to create and manage characters with stats, 
 - `🔮` - Use a magic attack (reaction emoji)
 - `🧪` - Use a potion during combat (reaction emoji)
 - `🏃` - Attempt to flee from combat (reaction emoji)
+- `🙏` - Pray to restore mana (20-40% mana restore when no potions available)
 - Interactive defeat system with options to heal or leave
-- `🛏️` - Rest to restore HP and Mana after victory (reaction emoji)
+- `🛏️` - Rest to restore HP and Mana after victory or successful flee (reaction emoji)
 - `▶️` - Continue to next quest or enemy (reaction emoji)
+- `🔄` - Retry quest after fleeing or resting (reaction emoji)
 - `🎒` - View inventory after combat (reaction emoji)
 - `📊` - View stats after combat (reaction emoji)
 
@@ -129,7 +134,9 @@ The web interface provides a modern dark mode dashboard to monitor and manage yo
   - Level, XP, HP, Mana
   - Gold and inventory items
   - Death and kill statistics
-  - Active quests and completion records
+  - Active quests with quest names and IDs
+  - Quest completion records
+  - Detailed death history with timestamps
 - **Items** (`/api/items`) - Comprehensive item catalog with:
   - Rarity-based color coding
   - Detailed stats and effects
@@ -191,7 +198,7 @@ The bot includes extensive YAML-based configuration files:
 
 ### Quest Configuration (`src/config/quests.yaml`)
 - **50 quests** organized into **10 quest chains**
-- Quest types: exploration, collection, combat, boss_combat
+- All combat-type quests for consistent gameplay experience
 - Progressive difficulty scaling
 - Rewards: XP, gold, items from items.yaml
 - Quest chains with sequential progression

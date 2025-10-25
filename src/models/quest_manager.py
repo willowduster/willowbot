@@ -371,12 +371,13 @@ class QuestManager:
                     VALUES (?, ?)
                 ''', (player_id, quest.rewards.title))
 
-            # Delete the quest from active_quests since it's completed and rewards are claimed
+            # Mark quest as completed and rewards claimed (keep it in active_quests for quest chain tracking)
             await db.execute('''
-                DELETE FROM active_quests 
+                UPDATE active_quests 
+                SET completed = 1, rewards_claimed = 1
                 WHERE player_id = ? AND quest_id = ?
             ''', (player_id, quest_id))
 
             await db.commit()
-            logger.info(f"Claimed rewards and removed quest {quest_id} from active_quests for player {player_id}")
+            logger.info(f"Claimed rewards and marked quest {quest_id} as completed for player {player_id}")
             return quest.rewards

@@ -8,7 +8,7 @@ from ..models.combat import Attack, CombatEntity
 from ..models.inventory_manager import InventoryManager
 from ..models.quest_manager import QuestManager
 from ..models.inventory import ItemType
-from ..models.quest import QuestType
+from ..models.quest import QuestType, ObjectiveType
 import random
 
 logger = logging.getLogger('willowbot.combat')
@@ -28,6 +28,7 @@ class CombatCommands(commands.Cog):
         self.MAGIC_EMOJI = "🔮"
         self.FLEE_EMOJI = "🏃"
         self.ITEM_EMOJI = "🧪"
+        self.PRAY_EMOJI = "🙏"
         self.combat_emojis = [self.MELEE_EMOJI, self.MAGIC_EMOJI, self.ITEM_EMOJI, self.FLEE_EMOJI]
         # Defeat reaction emojis
         self.RESTART_EMOJI = "🔄"  # Heal and restart quest
@@ -133,9 +134,17 @@ class CombatCommands(commands.Cog):
                 inline=True
             )
             
+            # Check if player has mana restore items
+            has_mana_items = await self.has_mana_restore_items(user_id)
+            
             actions_text = f"{self.MELEE_EMOJI} Melee Attack\n{self.MAGIC_EMOJI} Magic Attack\n{self.ITEM_EMOJI} Use Item"
             if healing_item_count > 0:
                 actions_text += f" ({healing_item_count} healing items)"
+            
+            # Add Pray option if no mana restore items
+            if not has_mana_items:
+                actions_text += f"\n{self.PRAY_EMOJI} Pray (restore mana)"
+            
             actions_text += f"\n{self.FLEE_EMOJI} Flee"
             
             init_embed.add_field(
@@ -153,13 +162,19 @@ class CombatCommands(commands.Cog):
                 'message_id': combat_msg.id,
                 'player': player,
                 'enemy': enemy,
-                'turn_history': []  # Track all combat turns
+                'turn_history': [],  # Track all combat turns
+                'has_mana_items': has_mana_items  # Store this for later reference
             }
             logger.info(f"Stored combat session for user {user_id}")
             
             # Add combat action reactions AFTER storing the session
             for emoji in self.combat_emojis:
                 await combat_msg.add_reaction(emoji)
+            
+            # Add pray emoji if no mana items
+            if not has_mana_items:
+                await combat_msg.add_reaction(self.PRAY_EMOJI)
+            
             logger.info("Added combat reaction emojis")
             
             # Update player state in database
@@ -817,10 +832,18 @@ class CombatCommands(commands.Cog):
         # Get healing item count
         healing_item_count = await self.get_healing_consumable_count(player.id)
         
+        # Check if player has mana restore items (from stored combat data)
+        has_mana_items = combat_data.get('has_mana_items', True)  # Default to True if not stored
+        
         # Update message with combat status and options for next round
         actions_text = f"{self.MELEE_EMOJI} Melee Attack\n{self.MAGIC_EMOJI} Magic Attack\n{self.ITEM_EMOJI} Use Item"
         if healing_item_count > 0:
             actions_text += f" ({healing_item_count} healing items)"
+        
+        # Add Pray option if no mana restore items
+        if not has_mana_items:
+            actions_text += f"\n{self.PRAY_EMOJI} Pray (restore mana)"
+        
         actions_text += f"\n{self.FLEE_EMOJI} Flee"
         
         # Build history display
@@ -1033,10 +1056,18 @@ class CombatCommands(commands.Cog):
         # Get healing item count
         healing_item_count = await self.get_healing_consumable_count(player.id)
         
+        # Check if player has mana restore items (from stored combat data)
+        has_mana_items = combat_data.get('has_mana_items', True)  # Default to True if not stored
+        
         # Update message with combat status and options for next round
         actions_text = f"{self.MELEE_EMOJI} Melee Attack\n{self.MAGIC_EMOJI} Magic Attack\n{self.ITEM_EMOJI} Use Item"
         if healing_item_count > 0:
             actions_text += f" ({healing_item_count} healing items)"
+        
+        # Add Pray option if no mana restore items
+        if not has_mana_items:
+            actions_text += f"\n{self.PRAY_EMOJI} Pray (restore mana)"
+        
         actions_text += f"\n{self.FLEE_EMOJI} Flee"
         
         # Build history display
@@ -1097,12 +1128,126 @@ class CombatCommands(commands.Cog):
         """Handle flee attempt"""
         if random.random() < 0.5:
             # Successful flee
+            player = combat_data['player']
+            enemy = combat_data['enemy']
+            
+            # Update player state in database
+            async with await self.bot.db_connect() as db:
+                await db.execute('''
+                    UPDATE players 
+                    SET health = ?, mana = ?, in_combat = FALSE, current_enemy = NULL
+                    WHERE id = ?
+                ''', (player.health, player.mana, user.id))
+                await db.commit()
+            
+            # Clear combat data
             del self.active_combats[user.id]
+            
+            # Clear reactions from combat message
             message = await channel.fetch_message(combat_data['message_id'])
             await message.clear_reactions()
-            await channel.send(f"{user.mention} successfully fled from combat!")
+            
+            # Send flee success message with action buttons
+            flee_embed = discord.Embed(
+                title="🏃 Fled from Combat!",
+                description=f"{user.mention} successfully escaped from **{enemy.name}**!",
+                color=discord.Color.orange()
+            )
+            flee_embed.add_field(
+                name="Current Status",
+                value=f"HP: {player.health}/{player.max_health}\nMana: {player.mana}/{player.max_mana}",
+                inline=False
+            )
+            flee_embed.add_field(
+                name="What would you like to do?",
+                value=f"🛏️ Rest (restore HP and Mana)\n🔄 Retry Quest (start combat again)\n🎒 View Inventory\n📊 View Stats",
+                inline=False
+            )
+            
+            flee_msg = await channel.send(embed=flee_embed)
+            
+            # Add reaction buttons
+            await flee_msg.add_reaction("🛏️")  # Rest
+            await flee_msg.add_reaction("🔄")  # Retry quest
+            await flee_msg.add_reaction("🎒")  # Inventory
+            await flee_msg.add_reaction("📊")  # Stats
+            
+            # Store flee message for reaction handling
+            self.victory_messages[user.id] = {
+                'message_id': flee_msg.id,
+                'channel_id': channel.id,
+                'type': 'flee'
+            }
         else:
-            await channel.send(f"{user.mention} failed to flee! The enemy blocks your escape!")
+            # Failed to flee - update combat log
+            player = combat_data['player']
+            enemy = combat_data['enemy']
+            turn_history = combat_data.get('turn_history', [])
+            message_id = combat_data['message_id']
+            
+            # Add failed flee to turn history
+            turn_history.append(f"🏃 {player.name} tried to flee but the enemy blocked the escape!")
+            self.active_combats[user.id]['turn_history'] = turn_history
+            
+            # Update the combat message
+            try:
+                combat_msg = await channel.fetch_message(message_id)
+                
+                # Build history display
+                history_display = "\n".join(turn_history[-10:])
+                
+                # Check if player has mana restore items (from stored combat data)
+                has_mana_items = combat_data.get('has_mana_items', True)
+                
+                # Get healing item count
+                healing_item_count = await self.get_healing_consumable_count(player.id)
+                
+                # Build actions text
+                actions_text = f"{self.MELEE_EMOJI} Melee Attack\n{self.MAGIC_EMOJI} Magic Attack\n{self.ITEM_EMOJI} Use Item"
+                if healing_item_count > 0:
+                    actions_text += f" ({healing_item_count} healing items)"
+                
+                # Add Pray option if no mana restore items
+                if not has_mana_items:
+                    actions_text += f"\n{self.PRAY_EMOJI} Pray (restore mana)"
+                
+                actions_text += f"\n{self.FLEE_EMOJI} Flee"
+                
+                flee_fail_embed = discord.Embed(
+                    title="🏃 Flee Failed!",
+                    description=f"**Combat History:**\n{history_display}",
+                    color=discord.Color.red()
+                )
+                flee_fail_embed.add_field(name="Your Stats", value=f"HP: {player.health}/{player.max_health}\nMana: {player.mana}/{player.max_mana}", inline=True)
+                flee_fail_embed.add_field(name="Enemy Stats", value=f"HP: {enemy.health}/{enemy.max_health}\nMana: {enemy.mana}/{enemy.max_mana}", inline=True)
+                flee_fail_embed.add_field(name="Actions", value=actions_text, inline=False)
+                
+                await combat_msg.edit(embed=flee_fail_embed)
+                await combat_msg.clear_reactions()
+            except Exception as e:
+                logger.error(f"Error updating combat message after failed flee: {e}")
+            
+            # Enemy gets a turn for punishing the failed flee attempt
+            await asyncio.sleep(1)
+            await self.handle_enemy_turn(channel, user.id)
+    
+    async def has_mana_restore_items(self, user_id):
+        """Check if player has any mana restore consumables"""
+        async with await self.bot.db_connect() as db:
+            cursor = await db.execute('''
+                SELECT item_id, count FROM inventory 
+                WHERE player_id = ? AND count > 0
+            ''', (user_id,))
+            items = await cursor.fetchall()
+        
+        for item_id, count in items:
+            item = self.inventory_manager.items.get(item_id)
+            if item and item.type == ItemType.CONSUMABLE:
+                # Check if any effect is mana_restore
+                for effect in item.effects:
+                    if effect.type in ["mana_restore", "mana_bonus"]:
+                        return True
+        return False
     
     async def handle_item_usage(self, channel, user, combat_data):
         """Handle consumable item usage during combat"""
@@ -1257,6 +1402,71 @@ class CombatCommands(commands.Cog):
             await item_msg.delete()
             await channel.send(f"{user.mention} Item selection timed out.")
     
+    async def handle_pray(self, channel, user_id):
+        """Handle pray action - restore random amount of mana"""
+        combat_data = self.active_combats.get(user_id)
+        if not combat_data:
+            return
+        
+        player = combat_data['player']
+        enemy = combat_data['enemy']
+        message_id = combat_data['message_id']
+        turn_history = combat_data.get('turn_history', [])
+        
+        # Restore random amount of mana (20-40% of max mana)
+        restore_percent = random.uniform(0.20, 0.40)
+        mana_restored = int(player.max_mana * restore_percent)
+        mana_restored = min(mana_restored, player.max_mana - player.mana)
+        
+        player.mana += mana_restored
+        
+        # Add to turn history
+        turn_history.append(f"🙏 {player.name} prayed to the gods and restored {mana_restored} mana!")
+        self.active_combats[user_id]['turn_history'] = turn_history
+        self.active_combats[user_id]['player'] = player
+        
+        # Update the combat message to show prayer was used
+        try:
+            combat_msg = await channel.fetch_message(message_id)
+            
+            # Build history display
+            history_display = "\n".join(turn_history[-10:])
+            
+            # Check if player has mana restore items (from stored combat data)
+            has_mana_items = combat_data.get('has_mana_items', True)
+            
+            # Get healing item count
+            healing_item_count = await self.get_healing_consumable_count(player.id)
+            
+            # Build actions text
+            actions_text = f"{self.MELEE_EMOJI} Melee Attack\n{self.MAGIC_EMOJI} Magic Attack\n{self.ITEM_EMOJI} Use Item"
+            if healing_item_count > 0:
+                actions_text += f" ({healing_item_count} healing items)"
+            
+            # Add Pray option if no mana restore items
+            if not has_mana_items:
+                actions_text += f"\n{self.PRAY_EMOJI} Pray (restore mana)"
+            
+            actions_text += f"\n{self.FLEE_EMOJI} Flee"
+            
+            pray_embed = discord.Embed(
+                title="🙏 Prayer",
+                description=f"**Combat History:**\n{history_display}",
+                color=discord.Color.gold()
+            )
+            pray_embed.add_field(name="Your Stats", value=f"HP: {player.health}/{player.max_health}\nMana: {player.mana}/{player.max_mana}", inline=True)
+            pray_embed.add_field(name="Enemy Stats", value=f"HP: {enemy.health}/{enemy.max_health}\nMana: {enemy.mana}/{enemy.max_mana}", inline=True)
+            pray_embed.add_field(name="Actions", value=actions_text, inline=False)
+            
+            await combat_msg.edit(embed=pray_embed)
+            await combat_msg.clear_reactions()
+        except Exception as e:
+            logger.error(f"Error updating combat message after prayer: {e}")
+        
+        # Enemy gets a turn
+        await asyncio.sleep(1)
+        await self.handle_enemy_turn(channel, user_id)
+    
     async def handle_victory_action(self, reaction, user):
         """Handle post-combat victory and defeat actions"""
         emoji = str(reaction.emoji)
@@ -1274,6 +1484,28 @@ class CombatCommands(commands.Cog):
                 await self.handle_defeat_restart(reaction.message.channel, user)
             elif emoji == self.LEAVE_EMOJI:  # Leave battle and view status
                 await self.handle_defeat_leave(reaction.message.channel, user)
+            return
+        
+        # Check if this is a flee reaction
+        if victory_data and victory_data.get('type') == 'flee':
+            if emoji == "🛏️":  # Rest to restore HP/Mana
+                await self.handle_rest(reaction.message.channel, user)
+            elif emoji == "🔄":  # Retry quest (restart combat)
+                await self.handle_flee_retry(reaction.message.channel, user)
+            elif emoji == "🎒":  # Show Inventory
+                await self.handle_show_inventory(reaction.message.channel, user)
+            elif emoji == "📊":  # Show Stats
+                await self.handle_show_stats(reaction.message.channel, user)
+            return
+        
+        # Check if this is a rest reaction
+        if victory_data and victory_data.get('type') == 'rest':
+            if emoji == "🔄":  # Retry quest (restart combat)
+                await self.handle_flee_retry(reaction.message.channel, user)
+            elif emoji == "🎒":  # Show Inventory
+                await self.handle_show_inventory(reaction.message.channel, user)
+            elif emoji == "📊":  # Show Stats
+                await self.handle_show_stats(reaction.message.channel, user)
             return
         
         # Victory reactions
@@ -1348,6 +1580,10 @@ class CombatCommands(commands.Cog):
                     await channel.send(f"⚔️ {user.mention} Continuing quest: **{quest.title}**")
                     # Start combat for the quest
                     await self.start_quest_combat(channel, user.id)
+                elif quest and quest.objectives and quest.objectives[0].type == ObjectiveType.COMBAT:
+                    # Check if first objective is combat (for exploration/collection quests with combat objectives)
+                    await channel.send(f"⚔️ {user.mention} Continuing quest: **{quest.title}**")
+                    await self.start_quest_combat(channel, user.id)
                 elif quest:
                     await channel.send(f"📜 {user.mention} Continue your quest: **{quest.title}**\n{quest.description}")
                 return
@@ -1391,6 +1627,15 @@ class CombatCommands(commands.Cog):
                 success = await self.quest_manager.start_quest(user.id, next_quest.id)
                 if success:
                     await channel.send(f"✅ {user.mention} Started quest: **{next_quest.title}**\n{next_quest.description}")
+                    
+                    # Auto-start combat if it's a combat quest
+                    if next_quest.type == QuestType.COMBAT:
+                        logger.info(f"Auto-starting combat for quest {next_quest.id}")
+                        await self.start_quest_combat(channel, user.id)
+                    elif next_quest.objectives and next_quest.objectives[0].type == ObjectiveType.COMBAT:
+                        # Check if first objective is combat (for exploration/collection quests with combat objectives)
+                        logger.info(f"Auto-starting combat for {next_quest.type.value} quest {next_quest.id}")
+                        await self.start_quest_combat(channel, user.id)
                 else:
                     await channel.send(f"{user.mention} Failed to start quest.")
             else:
@@ -1548,11 +1793,40 @@ class CombatCommands(commands.Cog):
                 inline=False
             )
             
-            await channel.send(embed=embed)
+            embed.add_field(
+                name="What would you like to do?",
+                value=f"🔄 Retry Quest (start combat again)\n🎒 View Inventory\n📊 View Stats",
+                inline=False
+            )
             
-            # Clean up victory message tracking
+            rest_msg = await channel.send(embed=embed)
+            
+            # Add reaction buttons
+            await rest_msg.add_reaction("🔄")  # Retry quest
+            await rest_msg.add_reaction("🎒")  # Inventory
+            await rest_msg.add_reaction("📊")  # Stats
+            
+            # Store rest message for reaction handling (reuse victory_messages)
+            # Clean up old victory message first
             if user.id in self.victory_messages:
                 del self.victory_messages[user.id]
+            
+            # Store new rest message
+            self.victory_messages[user.id] = {
+                'message_id': rest_msg.id,
+                'channel_id': channel.id,
+                'type': 'rest'
+            }
+    
+    async def handle_flee_retry(self, channel, user):
+        """Handle retrying combat after fleeing"""
+        # Clean up flee message tracking
+        if user.id in self.victory_messages:
+            del self.victory_messages[user.id]
+        
+        # Simply start quest combat again
+        await channel.send(f"{user.mention} You steel your courage and prepare to face your foe once more!")
+        await self.start_quest_combat(channel, user.id)
     
     async def handle_defeat_restart(self, channel, user):
         """Handle defeat restart - heal fully, apply penalties, and restart quest"""
@@ -2047,7 +2321,9 @@ class CombatCommands(commands.Cog):
 
         # Check for victory message reactions
         victory_data = self.victory_messages.get(user.id)
+        logger.info(f"Checking victory message for user {user.id}: victory_data={victory_data}, message_id={reaction.message.id}")
         if victory_data and reaction.message.id == victory_data['message_id']:
+            logger.info(f"Handling victory action for user {user.id}")
             await self.handle_victory_action(reaction, user)
             return
 
@@ -2064,6 +2340,9 @@ class CombatCommands(commands.Cog):
                     attack_type = "magic"
                 elif str(reaction.emoji) == self.ITEM_EMOJI:
                     await self.handle_item_usage(reaction.message.channel, user, combat_data)
+                    return
+                elif str(reaction.emoji) == self.PRAY_EMOJI:
+                    await self.handle_pray(reaction.message.channel, user.id)
                     return
                 elif str(reaction.emoji) == self.FLEE_EMOJI:
                     await self.handle_flee(reaction.message.channel, user, combat_data)

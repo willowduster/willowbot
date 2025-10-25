@@ -62,12 +62,14 @@ class Player:
     
     def level_up(self):
         """Level up the player and increase stats"""
+        # Subtract XP needed for current level to make it cumulative
+        xp_needed = self.xp_needed_for_next_level()
         self.level += 1
         self.max_health += 10
         self.health = self.max_health
         self.max_mana += 5
         self.mana = self.max_mana
-        self.xp = 0  # Reset XP for next level
+        self.xp -= xp_needed  # Subtract XP cost instead of resetting to 0
     
     def is_alive(self) -> bool:
         """Check if player is still alive"""

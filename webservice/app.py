@@ -5,6 +5,11 @@ import sqlite3
 from threading import Thread
 import sys
 import yaml
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.bot import WillowBot
 
@@ -22,7 +27,23 @@ def load_items():
     except FileNotFoundError:
         return {}
 
+# Load quests data
+def load_quests():
+    quests_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'src', 'config', 'quests.yaml')
+    try:
+        with open(quests_path, 'r', encoding='utf-8') as f:
+            data = yaml.safe_load(f)
+            # Flatten quest chains into a dict with quest_id as key
+            quests_dict = {}
+            for chain in data.get('quest_chains', []):
+                for quest in chain.get('quests', []):
+                    quests_dict[quest['id']] = quest
+            return quests_dict
+    except FileNotFoundError:
+        return {}
+
 ITEMS_DATA = load_items()
+QUESTS_DATA = load_quests()
 
 def start_bot_if_not_running():
     global bot_instance, bot_thread
@@ -142,11 +163,24 @@ def get_player_details(player_id):
             'effects': item_data.get('effects', [])
         })
     
+    # Enrich quests with quest details
+    quests_with_details = []
+    for quest_row in quests:
+        quest_data = QUESTS_DATA.get(quest_row['quest_id'], {})
+        quests_with_details.append({
+            'quest_id': quest_row['quest_id'],
+            'quest_name': quest_data.get('title', quest_row['quest_id']),
+            'description': quest_data.get('description', ''),
+            'objectives_progress': quest_row['objectives_progress'],
+            'completed': quest_row['completed'],
+            'rewards_claimed': quest_row['rewards_claimed']
+        })
+    
     return render_template(
         'player_details.html',
         player=player,
         inventory=inventory_with_details,
-        quests=quests,
+        quests=quests_with_details,
         kills=kills,
         total_kills=total_kills['total'] if total_kills else 0,
         deaths=deaths

@@ -111,7 +111,7 @@ class PlayerCommands(commands.Cog):
                 return None
 
     async def save_player(self, player: Player):
-        async with aiosqlite.connect(self.db_path) as db:
+        async with aiosqlite.connect(self.bot.db_path) as db:
             await db.execute('''
                 INSERT OR REPLACE INTO players 
                 (id, name, level, xp, health, max_health, mana, max_mana)

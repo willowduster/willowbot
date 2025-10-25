@@ -58,6 +58,59 @@ async def setup_database():
             )
         ''')
 
+        # Active quests table
+        await db.execute('''
+            CREATE TABLE IF NOT EXISTS active_quests (
+                player_id INTEGER,
+                quest_id TEXT,
+                completed BOOLEAN DEFAULT FALSE,
+                rewards_claimed BOOLEAN DEFAULT FALSE,
+                objectives_progress TEXT,
+                FOREIGN KEY(player_id) REFERENCES players(id),
+                PRIMARY KEY (player_id, quest_id)
+            )
+        ''')
+
+        # Player kills tracking table
+        await db.execute('''
+            CREATE TABLE IF NOT EXISTS player_kills (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                player_id INTEGER,
+                enemy_name TEXT NOT NULL,
+                enemy_level INTEGER NOT NULL,
+                killed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(player_id) REFERENCES players(id)
+            )
+        ''')
+        
+        # Player death history table
+        await db.execute('''
+            CREATE TABLE IF NOT EXISTS death_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                player_id INTEGER,
+                enemy_name TEXT NOT NULL,
+                enemy_level INTEGER NOT NULL,
+                player_level INTEGER NOT NULL,
+                player_health INTEGER NOT NULL,
+                player_max_health INTEGER NOT NULL,
+                player_mana INTEGER NOT NULL,
+                player_max_mana INTEGER NOT NULL,
+                died_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(player_id) REFERENCES players(id)
+            )
+        ''')
+        
+        # Completed quest chains table
+        await db.execute('''
+            CREATE TABLE IF NOT EXISTS completed_quest_chains (
+                player_id INTEGER,
+                chain_id TEXT,
+                completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (player_id) REFERENCES players(id),
+                PRIMARY KEY (player_id, chain_id)
+            )
+        ''')
+
         await db.commit()
         print("Database schema created successfully!")
 

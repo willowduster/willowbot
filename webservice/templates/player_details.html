@@ -203,7 +203,7 @@
                         <table class="table">
                             <thead>
                                 <tr>
-                                    <th>Quest ID</th>
+                                    <th>Quest</th>
                                     <th>Progress</th>
                                     <th>Status</th>
                                 </tr>
@@ -211,7 +211,11 @@
                             <tbody>
                                 {% for quest in quests %}
                                 <tr>
-                                    <td>{{ quest.quest_id }}</td>
+                                    <td>
+                                        <strong>{{ quest.quest_name }}</strong>
+                                        <br>
+                                        <small class="text-muted">({{ quest.quest_id }})</small>
+                                    </td>
                                     <td>{{ quest.objectives_progress }}</td>
                                     <td>
                                         {% if quest.completed %}
