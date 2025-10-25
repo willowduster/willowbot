@@ -96,6 +96,10 @@ A Discord RPG bot that allows users to create and manage characters with stats, 
   - 📊 Stats - View character stats
   - 🛡️ Equipment - View equipped gear
   - Navigate seamlessly between screens without typing commands
+- **Enhanced Combat Readability**:
+  - **Bold Last Combat Log Entry**: The most recent combat action is now displayed in bold
+  - Makes it easier to track what just happened during fast-paced battles
+  - All 18 combat display locations updated for consistency
 - **Code Refactoring**: Streamlined codebase by removing redundant code and obsolete scripts
   - Improved maintainability and performance
   - Cleaner project structure
