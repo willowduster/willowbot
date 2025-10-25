@@ -112,10 +112,27 @@ with app.app_context():
 
 # ==================== Authentication Routes ====================
 
+@app.route('/debug-env')
+def debug_env():
+    """Debug endpoint to check environment variables (REMOVE IN PRODUCTION!)"""
+    import os
+    env_status = {
+        'DISCORD_CLIENT_ID': 'SET' if os.getenv('DISCORD_CLIENT_ID') else 'NOT SET',
+        'DISCORD_CLIENT_SECRET': 'SET' if os.getenv('DISCORD_CLIENT_SECRET') else 'NOT SET',
+        'DISCORD_REDIRECT_URI': os.getenv('DISCORD_REDIRECT_URI', 'NOT SET'),
+        'ADMIN_USER_ID': 'SET' if os.getenv('ADMIN_USER_ID') else 'NOT SET',
+        'FLASK_SECRET_KEY': 'SET' if os.getenv('FLASK_SECRET_KEY') else 'NOT SET',
+        'DISCORD_TOKEN': 'SET' if os.getenv('DISCORD_TOKEN') else 'NOT SET',
+        'All_ENV_KEYS': list(os.environ.keys())
+    }
+    return f"<pre>{env_status}</pre>", 200
+
 @app.route('/login')
 def login():
     """Redirect to Discord OAuth2 login"""
     if not DISCORD_CLIENT_ID:
+        logger.error("LOGIN FAILED: DISCORD_CLIENT_ID is not set!")
+        logger.error(f"All environment variables: {list(os.environ.keys())}")
         return "Discord OAuth2 not configured. Please set DISCORD_CLIENT_ID in .env", 500
     
     params = {
