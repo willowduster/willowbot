@@ -57,6 +57,13 @@ A Discord RPG bot that allows users to create and manage characters with stats, 
 
 ## Commands
 
+**Getting Help:**
+- `!w help` or `!w h` - Interactive help menu with reaction navigation (⬅️ ➡️ ❌)
+  - Page 1: Getting Started
+  - Page 2: Quests & Combat
+  - Page 3: Inventory & Equipment
+  - Page 4: Tips & Tricks
+
 **Character Management:**
 - `!w start` - Create your character and begin your adventure
 - `!w stats` or `!w s` - View your character's current stats including deaths and kills
