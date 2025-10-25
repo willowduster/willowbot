@@ -1,11 +1,13 @@
 import os
 import asyncio
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, redirect, url_for, session
 import sqlite3
 from threading import Thread
 import sys
 import yaml
 from dotenv import load_dotenv
+import requests
+from functools import wraps
 
 # Load environment variables from .env file
 load_dotenv()
@@ -14,6 +16,20 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.bot import WillowBot
 
 app = Flask(__name__)
+app.secret_key = os.getenv('FLASK_SECRET_KEY', os.urandom(24))  # For session management
+
+# Discord OAuth2 Configuration
+DISCORD_CLIENT_ID = os.getenv('DISCORD_CLIENT_ID')
+DISCORD_CLIENT_SECRET = os.getenv('DISCORD_CLIENT_SECRET')
+DISCORD_REDIRECT_URI = os.getenv('DISCORD_REDIRECT_URI', 'http://localhost:5000/callback')
+ADMIN_USER_ID = os.getenv('ADMIN_USER_ID')
+
+# Discord API endpoints
+DISCORD_API_BASE = 'https://discord.com/api/v10'
+DISCORD_AUTHORIZATION_URL = 'https://discord.com/api/oauth2/authorize'
+DISCORD_TOKEN_URL = f'{DISCORD_API_BASE}/oauth2/token'
+DISCORD_USER_URL = f'{DISCORD_API_BASE}/users/@me'
+
 bot_instance = None
 bot_thread = None
 
@@ -45,6 +61,27 @@ def load_quests():
 ITEMS_DATA = load_items()
 QUESTS_DATA = load_quests()
 
+# Authentication decorators
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'discord_user' not in session:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'discord_user' not in session:
+            return redirect(url_for('login'))
+        if session.get('discord_user', {}).get('id') != ADMIN_USER_ID:
+            # Redirect non-admin users to their player page
+            user_id = session.get('discord_user', {}).get('id')
+            return redirect(url_for('get_player_details', player_id=user_id))
+        return f(*args, **kwargs)
+    return decorated_function
+
 def start_bot_if_not_running():
     global bot_instance, bot_thread
     if bot_instance is None or not bot_instance.is_ready():
@@ -64,9 +101,83 @@ def get_db():
 with app.app_context():
     start_bot_if_not_running()
 
+# ==================== Authentication Routes ====================
+
+@app.route('/login')
+def login():
+    """Redirect to Discord OAuth2 login"""
+    if not DISCORD_CLIENT_ID:
+        return "Discord OAuth2 not configured. Please set DISCORD_CLIENT_ID in .env", 500
+    
+    params = {
+        'client_id': DISCORD_CLIENT_ID,
+        'redirect_uri': DISCORD_REDIRECT_URI,
+        'response_type': 'code',
+        'scope': 'identify'
+    }
+    auth_url = f"{DISCORD_AUTHORIZATION_URL}?{'&'.join([f'{k}={v}' for k, v in params.items()])}"
+    return redirect(auth_url)
+
+@app.route('/callback')
+def callback():
+    """Handle Discord OAuth2 callback"""
+    code = request.args.get('code')
+    if not code:
+        return "Authorization failed", 400
+    
+    # Exchange code for access token
+    data = {
+        'client_id': DISCORD_CLIENT_ID,
+        'client_secret': DISCORD_CLIENT_SECRET,
+        'grant_type': 'authorization_code',
+        'code': code,
+        'redirect_uri': DISCORD_REDIRECT_URI
+    }
+    headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+    
+    token_response = requests.post(DISCORD_TOKEN_URL, data=data, headers=headers)
+    if token_response.status_code != 200:
+        return f"Failed to get access token: {token_response.text}", 400
+    
+    token_data = token_response.json()
+    access_token = token_data.get('access_token')
+    
+    # Get user info
+    headers = {'Authorization': f'Bearer {access_token}'}
+    user_response = requests.get(DISCORD_USER_URL, headers=headers)
+    if user_response.status_code != 200:
+        return "Failed to get user info", 400
+    
+    user_data = user_response.json()
+    
+    # Store user in session
+    session['discord_user'] = {
+        'id': user_data.get('id'),
+        'username': user_data.get('username'),
+        'discriminator': user_data.get('discriminator'),
+        'avatar': user_data.get('avatar')
+    }
+    session['is_admin'] = (user_data.get('id') == ADMIN_USER_ID)
+    
+    # Redirect based on admin status
+    if session['is_admin']:
+        return redirect(url_for('index'))
+    else:
+        # Redirect to user's player page
+        return redirect(url_for('get_player_details', player_id=user_data.get('id')))
+
+@app.route('/logout')
+def logout():
+    """Log out the current user"""
+    session.clear()
+    return redirect(url_for('login'))
+
+# ==================== Protected Routes ====================
+
 @app.route('/')
+@admin_required
 def index():
-    return render_template('index.html')
+    return render_template('index.html', user=session.get('discord_user'))
 
 @app.route('/api/bot/status')
 def bot_status():
@@ -76,6 +187,7 @@ def bot_status():
     })
 
 @app.route('/api/bot/start', methods=['POST'])
+@admin_required
 def start_bot():
     global bot_instance, bot_thread
     if bot_instance is None or not bot_instance.is_ready():
@@ -89,6 +201,7 @@ def start_bot():
     return jsonify({'status': 'already_running'})
 
 @app.route('/api/bot/stop', methods=['POST'])
+@admin_required
 def stop_bot():
     global bot_instance, bot_thread
     if bot_instance and bot_instance.is_ready():
@@ -100,6 +213,7 @@ def stop_bot():
     return jsonify({'status': 'not_running'})
 
 @app.route('/api/players')
+@admin_required
 def get_players():
     db = get_db()
     players = db.execute('''
@@ -114,7 +228,15 @@ def get_players():
     return render_template('players.html', players=players)
 
 @app.route('/api/player/<int:player_id>')
+@login_required
 def get_player_details(player_id):
+    # Check if user is admin or viewing their own page
+    current_user_id = session.get('discord_user', {}).get('id')
+    is_admin = session.get('is_admin', False)
+    
+    if not is_admin and str(player_id) != current_user_id:
+        return "Access denied: You can only view your own player page", 403
+    
     db = get_db()
     player = db.execute('SELECT * FROM players WHERE id = ?', [player_id]).fetchone()
     
@@ -183,10 +305,13 @@ def get_player_details(player_id):
         quests=quests_with_details,
         kills=kills,
         total_kills=total_kills['total'] if total_kills else 0,
-        deaths=deaths
+        deaths=deaths,
+        user=session.get('discord_user'),
+        is_admin=session.get('is_admin', False)
     )
 
 @app.route('/api/items')
+@admin_required
 def get_items():
     # Load items from YAML config
     items_list = []
@@ -209,6 +334,7 @@ def get_items():
     return render_template('items.html', items=items_list)
 
 @app.route('/api/quests')
+@admin_required
 def get_quests():
     # Load quests from YAML config
     quests_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'src', 'config', 'quests.yaml')
@@ -295,6 +421,7 @@ def get_quests():
     return render_template('quests.html', quests=quests_list)
 
 @app.route('/api/players/reset', methods=['POST'])
+@admin_required
 def reset_all_players():
     try:
         db = get_db()

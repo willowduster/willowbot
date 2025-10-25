@@ -28,8 +28,15 @@
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
             <a class="navbar-brand" href="/">🎮 WillowBot Dashboard</a>
-            <div class="collapse navbar-collapse">
-                <ul class="navbar-nav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    {% if session.get('is_admin') %}
+                    <li class="nav-item">
+                        <a class="nav-link {% block nav_dashboard %}{% endblock %}" href="/">🏠 Dashboard</a>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link {% block nav_players %}{% endblock %}" href="/api/players">👥 Players</a>
                     </li>
@@ -39,6 +46,30 @@
                     <li class="nav-item">
                         <a class="nav-link {% block nav_quests %}{% endblock %}" href="/api/quests">📜 Quests</a>
                     </li>
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav">
+                    {% if session.get('discord_user') %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            {{ session.get('discord_user').username }}
+                            {% if session.get('is_admin') %}
+                            <span class="badge bg-danger">Admin</span>
+                            {% endif %}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            {% if not session.get('is_admin') %}
+                            <li><a class="dropdown-item" href="/api/player/{{ session.get('discord_user').id }}">My Profile</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            {% endif %}
+                            <li><a class="dropdown-item" href="/logout">Logout</a></li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login">Login with Discord</a>
+                    </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>

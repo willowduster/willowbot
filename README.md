@@ -54,6 +54,8 @@ A Discord RPG bot that allows users to create and manage characters with stats, 
   - Auto-start combat when clicking "Next Quest" button
 
 - **Web Dashboard**
+  - **Secure Discord OAuth2 Authentication** - Login with Discord
+  - **Role-Based Access Control** - Admins get full access, players see only their own data
   - Dark mode interface with GitHub-inspired theme
   - Real-time bot status monitoring
   - Player statistics and leaderboards
@@ -184,6 +186,7 @@ Recent difficulty increase (+15% across the board):
 2. Create a `.env` file based on `example.env` with your:
    - Discord bot token (`DISCORD_TOKEN`)
    - Admin user ID (`ADMIN_USER_ID`)
+   - Discord OAuth2 credentials (see **Web Dashboard Authentication** below)
 3. Install dependencies:
    ```bash
    python -m pip install -r requirements.txt
@@ -213,19 +216,49 @@ Recent difficulty increase (+15% across the board):
    - Mount the database file in the `data` directory
 4. Access the web interface at http://localhost:5000
 
+### Web Dashboard Authentication
+
+The web dashboard uses Discord OAuth2 for secure authentication:
+
+1. Go to [Discord Developer Portal](https://discord.com/developers/applications)
+2. Select your bot application
+3. Navigate to **OAuth2** → **General**
+4. Copy your **Client ID** and **Client Secret**
+5. Add redirect URI: `http://localhost:5000/callback` (or your production URL)
+6. Update your `.env` file:
+   ```env
+   DISCORD_CLIENT_ID=your_client_id
+   DISCORD_CLIENT_SECRET=your_client_secret
+   DISCORD_REDIRECT_URI=http://localhost:5000/callback
+   FLASK_SECRET_KEY=generate_random_secret_key
+   ```
+
+**Generate a Flask secret key:**
+```bash
+python -c "import secrets; print(secrets.token_hex(32))"
+```
+
+See [DISCORD_OAUTH_SETUP.md](DISCORD_OAUTH_SETUP.md) for detailed setup instructions.
+
+**Access Control:**
+- **Admin** (your Discord ID): Full dashboard access
+- **Players** (other Discord users): Can only view their own stats/inventory
+
 ## Web Interface
 
 The web interface provides a modern dark mode dashboard to monitor and manage your bot:
 
 **Features:**
-- **Dashboard** (`/`) - Bot control panel with start/stop functionality and quick stats
-- **Players** (`/api/players`) - Complete player list with detailed stats including:
+- **Secure Login** - Discord OAuth2 authentication with role-based access
+- **Dashboard** (`/`) - Bot control panel with start/stop functionality and quick stats (admin only)
+- **Players** (`/api/players`) - Complete player list with detailed stats (admin only):
   - Level, XP, HP, Mana
   - Gold and inventory items
   - Death and kill statistics
   - Active quests with quest names and IDs
   - Quest completion records
   - Detailed death history with timestamps
+- **Player Page** - Individual players can view their own stats, inventory, quests, and death history
 - **Items** (`/api/items`) - Comprehensive item catalog with:
   - Rarity-based color coding
   - Detailed stats and effects
