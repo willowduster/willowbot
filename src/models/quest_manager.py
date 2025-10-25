@@ -380,4 +380,30 @@ class QuestManager:
 
             await db.commit()
             logger.info(f"Claimed rewards and marked quest {quest_id} as completed for player {player_id}")
+
+            # Handle level ups: convert accumulated XP into level increases and update stats
+            async with db.execute('SELECT level, xp, max_health, max_mana FROM players WHERE id = ?', (player_id,)) as cursor:
+                row = await cursor.fetchone()
+            if row:
+                cur_level, cur_xp, cur_max_health, cur_max_mana = row
+                leveled = False
+                # Apply level ups while XP threshold met
+                while cur_xp >= (cur_level * 100):
+                    xp_needed = cur_level * 100
+                    cur_xp -= xp_needed
+                    cur_level += 1
+                    cur_max_health += 10
+                    cur_max_mana += 5
+                    leveled = True
+
+                if leveled:
+                    # Update player's level and stats in DB
+                    await db.execute('''
+                        UPDATE players
+                        SET level = ?, xp = ?, max_health = ?, health = ?, max_mana = ?, mana = ?
+                        WHERE id = ?
+                    ''', (cur_level, cur_xp, cur_max_health, cur_max_health, cur_max_mana, cur_max_mana, player_id))
+                    await db.commit()
+                    logger.info(f"Leveled up player {player_id} to level {cur_level}")
+
             return quest.rewards
