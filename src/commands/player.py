@@ -104,11 +104,22 @@ class PlayerCommands(commands.Cog):
         if first_quest:
             embed.add_field(
                 name="🎯 First Quest Started!",
-                value=f"**{first_quest.title}**\n{first_quest.description}\n\nUse `!w quest_progress` to check your progress!",
+                value=f"**{first_quest.title}**\n{first_quest.description}\n\nStarting your first battle...",
                 inline=False
             )
         
         await ctx.send(embed=embed)
+        
+        # Auto-start combat for the first quest
+        if first_quest:
+            combat_cog = self.bot.get_cog('CombatCommands')
+            if combat_cog:
+                try:
+                    await combat_cog.start_quest_combat(ctx.channel, ctx.author.id)
+                    logger.info(f"Auto-started combat for new player {ctx.author.id}")
+                except Exception as e:
+                    logger.error(f"Failed to auto-start combat: {e}", exc_info=True)
+                    await ctx.send("Use `!w quests` to begin your first quest!")
 
     @commands.command(name='stats', aliases=['s'])
     async def stats(self, ctx):
