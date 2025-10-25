@@ -134,17 +134,12 @@ class CombatCommands(commands.Cog):
                 inline=True
             )
             
-            # Check if player has mana restore items
-            has_mana_items = await self.has_mana_restore_items(user_id)
-            
             actions_text = f"{self.MELEE_EMOJI} Melee Attack\n{self.MAGIC_EMOJI} Magic Attack\n{self.ITEM_EMOJI} Use Item"
             if healing_item_count > 0:
                 actions_text += f" ({healing_item_count} healing items)"
             
-            # Add Pray option if no mana restore items
-            if not has_mana_items:
-                actions_text += f"\n{self.PRAY_EMOJI} Pray (restore mana)"
-            
+            # Always show pray option
+            actions_text += f"\n{self.PRAY_EMOJI} Pray (restore mana)"
             actions_text += f"\n{self.FLEE_EMOJI} Flee"
             
             init_embed.add_field(
@@ -163,7 +158,6 @@ class CombatCommands(commands.Cog):
                 'player': player,
                 'enemy': enemy,
                 'turn_history': [],  # Track all combat turns
-                'has_mana_items': has_mana_items  # Store this for later reference
             }
             logger.info(f"Stored combat session for user {user_id}")
             
@@ -171,9 +165,8 @@ class CombatCommands(commands.Cog):
             for emoji in self.combat_emojis:
                 await combat_msg.add_reaction(emoji)
             
-            # Add pray emoji if no mana items
-            if not has_mana_items:
-                await combat_msg.add_reaction(self.PRAY_EMOJI)
+            # Always add pray emoji
+            await combat_msg.add_reaction(self.PRAY_EMOJI)
             
             logger.info("Added combat reaction emojis")
             
@@ -840,9 +833,8 @@ class CombatCommands(commands.Cog):
         if healing_item_count > 0:
             actions_text += f" ({healing_item_count} healing items)"
         
-        # Add Pray option if no mana restore items
-        if not has_mana_items:
-            actions_text += f"\n{self.PRAY_EMOJI} Pray (restore mana)"
+        # Always show pray option
+        actions_text += f"\n{self.PRAY_EMOJI} Pray (restore mana)"
         
         actions_text += f"\n{self.FLEE_EMOJI} Flee"
         
@@ -1064,9 +1056,8 @@ class CombatCommands(commands.Cog):
         if healing_item_count > 0:
             actions_text += f" ({healing_item_count} healing items)"
         
-        # Add Pray option if no mana restore items
-        if not has_mana_items:
-            actions_text += f"\n{self.PRAY_EMOJI} Pray (restore mana)"
+        # Always show pray option
+        actions_text += f"\n{self.PRAY_EMOJI} Pray (restore mana)"
         
         actions_text += f"\n{self.FLEE_EMOJI} Flee"
         
@@ -1207,7 +1198,7 @@ class CombatCommands(commands.Cog):
                 if healing_item_count > 0:
                     actions_text += f" ({healing_item_count} healing items)"
                 
-                # Add Pray option if no mana restore items
+                # Always show pray option
                 if not has_mana_items:
                     actions_text += f"\n{self.PRAY_EMOJI} Pray (restore mana)"
                 
@@ -1443,9 +1434,8 @@ class CombatCommands(commands.Cog):
             if healing_item_count > 0:
                 actions_text += f" ({healing_item_count} healing items)"
             
-            # Add Pray option if no mana restore items
-            if not has_mana_items:
-                actions_text += f"\n{self.PRAY_EMOJI} Pray (restore mana)"
+            # Always show pray option
+            actions_text += f"\n{self.PRAY_EMOJI} Pray (restore mana)"
             
             actions_text += f"\n{self.FLEE_EMOJI} Flee"
             
