@@ -63,17 +63,25 @@ DATABASE_PATH=/app/data/willowbot.db
 
 **Keep your existing localhost redirect** for local development!
 
-## Step 5: Configure Persistent Storage
+## Step 5: Configure Persistent Storage (REQUIRED)
 
-Railway provides persistent volumes for your database:
+**Important:** Railway volumes must be configured through the Railway dashboard, not in your Dockerfile.
 
 1. In your Railway project, click **"+ New"**
 2. Select **"Volume"**
-3. Set mount path: `/app/data`
-4. Click **"Add"**
-5. Connect the volume to your service
+3. Name it: `willowbot-data`
+4. Set mount path: `/app/data`
+5. Click **"Add"**
+6. The volume will automatically connect to your service
 
-This ensures your SQLite database persists across deployments.
+**Why this is required:**
+- Your SQLite database lives in `/app/data/willowbot.db`
+- Without a volume, your database will be lost on every deployment
+- Railway provides free persistent storage with volumes
+
+**Verification:**
+- Check that the volume shows as "Connected" to your service
+- After first deployment, your database will persist across redeploys
 
 ## Step 6: Deploy!
 

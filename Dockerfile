@@ -20,7 +20,6 @@ COPY . .
 
 # Create directory for SQLite database
 RUN mkdir -p data
-VOLUME /app/data
 
 # Expose the Flask port
 EXPOSE 5000
