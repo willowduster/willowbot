@@ -237,9 +237,8 @@ class PlayerCommands(commands.Cog):
             name="💡 Quick Tips",
             value=(
                 "🙏 **Prayer** restores 20-40% mana when you have no potions\n"
-                "⚡ **XP carries over** when you level up\n"
-                "� **Death penalty** is 10% gold/XP but you can retry instantly\n"
-                "🌐 **Web Dashboard** at http://localhost:5000"
+                "⚡ **XP and loot** is awarded after each battle\n"
+                "💀 **Death penalty** is 10% gold/XP but you can retry instantly"
             ),
             inline=False
         )
