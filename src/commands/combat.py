@@ -39,6 +39,19 @@ class CombatCommands(commands.Cog):
         self.defeat_emojis = [self.RESTART_EMOJI, self.LEAVE_EMOJI]
         logger.info("Combat Commands initialized with emojis: %s", self.combat_emojis)
     
+    def format_combat_history(self, turn_history: list, last_n: int = 10) -> str:
+        """Format combat history with the last message in bold"""
+        recent_history = turn_history[-last_n:]
+        if not recent_history:
+            return ""
+        
+        # Make the last entry bold
+        if len(recent_history) > 0:
+            formatted = recent_history[:-1] + [f"**{recent_history[-1]}**"]
+            return "\n".join(formatted)
+        
+        return "\n".join(recent_history)
+    
     def generate_loot(self, enemy: CombatEntity) -> list:
         """Generate random loot drops based on enemy level"""
         loot = []
@@ -352,7 +365,7 @@ class CombatCommands(commands.Cog):
             turn_history.append(error_text)
             
             # Build history display
-            history_display = "\n".join(turn_history[-10:])  # Show last 10 turns
+            history_display = self.format_combat_history(turn_history)
             
             error_embed = discord.Embed(
                 title="⚔️ Combat",
@@ -383,7 +396,7 @@ class CombatCommands(commands.Cog):
             turn_history.append(f"⚔️ You tried {attack.name} - {result['message']}")
         
         # Build history display
-        history_display = "\n".join(turn_history[-10:])  # Show last 10 turns
+        history_display = self.format_combat_history(turn_history)
         
         player_embed = discord.Embed(
             title="⚔️ Combat - Your Attack",
@@ -666,7 +679,7 @@ class CombatCommands(commands.Cog):
                 turn_history.append(f"🏃 {enemy.name} fled from battle!")
                 
                 # Build history display
-                history_display = "\n".join(turn_history[-10:])
+                history_display = self.format_combat_history(turn_history)
                 
                 enemy_embed = discord.Embed(
                     title="Enemy Fled!",
@@ -896,7 +909,7 @@ class CombatCommands(commands.Cog):
                 turn_history.append(f"🔴 {enemy.name} tried {enemy_attack.name} - {enemy_result['message']}")
         
         # Build history display
-        history_display = "\n".join(turn_history[-10:])
+        history_display = self.format_combat_history(turn_history)
         
         enemy_embed = discord.Embed(
             title="⚔️ Combat - Enemy's Turn",
@@ -1002,7 +1015,7 @@ class CombatCommands(commands.Cog):
         actions_text += f"\n{self.FLEE_EMOJI} Flee"
         
         # Build history display
-        history_display = "\n".join(turn_history[-10:])  # Show last 10 turns
+        history_display = self.format_combat_history(turn_history)  # Show last 10 turns
         
         options_embed = discord.Embed(
             title="⚔️ Combat - Your Turn",
@@ -1095,7 +1108,7 @@ class CombatCommands(commands.Cog):
             flee_chance = 0.15
             if random.random() < flee_chance:
                 turn_history.append(f"🏃 {enemy.name} fled from battle!")
-                history_display = "\n".join(turn_history[-10:])
+                history_display = self.format_combat_history(turn_history)
                 
                 enemy_embed = discord.Embed(
                     title="Enemy Fled!",
@@ -1126,7 +1139,7 @@ class CombatCommands(commands.Cog):
                 turn_history.append(f"🔴 {enemy.name} tried {enemy_attack.name} - {enemy_result['message']}")
         
         # Build history display
-        history_display = "\n".join(turn_history[-10:])
+        history_display = self.format_combat_history(turn_history)
         
         enemy_embed = discord.Embed(
             title="⚔️ Combat - Enemy's Turn",
@@ -1228,7 +1241,7 @@ class CombatCommands(commands.Cog):
         actions_text += f"\n{self.FLEE_EMOJI} Flee"
         
         # Build history display
-        history_display = "\n".join(turn_history[-10:])
+        history_display = self.format_combat_history(turn_history)
         
         options_embed = discord.Embed(
             title="⚔️ Combat - Your Turn",
@@ -1355,7 +1368,7 @@ class CombatCommands(commands.Cog):
                 combat_msg = await channel.fetch_message(message_id)
                 
                 # Build history display
-                history_display = "\n".join(turn_history[-10:])
+                history_display = self.format_combat_history(turn_history)
                 
                 # Check if player has mana restore items (from stored combat data)
                 has_mana_items = combat_data.get('has_mana_items', True)
@@ -1541,7 +1554,7 @@ class CombatCommands(commands.Cog):
                 combat_msg = await channel.fetch_message(message_id)
                 
                 # Build history display
-                history_display = "\n".join(turn_history[-10:])
+                history_display = self.format_combat_history(turn_history)
                 
                 item_embed = discord.Embed(
                     title="🧪 Item Used",
@@ -1591,7 +1604,7 @@ class CombatCommands(commands.Cog):
             combat_msg = await channel.fetch_message(message_id)
             
             # Build history display
-            history_display = "\n".join(turn_history[-10:])
+            history_display = self.format_combat_history(turn_history)
             
             # Check if player has mana restore items (from stored combat data)
             has_mana_items = combat_data.get('has_mana_items', True)
