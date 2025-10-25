@@ -224,7 +224,7 @@ The web dashboard uses Discord OAuth2 for secure authentication:
 2. Select your bot application
 3. Navigate to **OAuth2** → **General**
 4. Copy your **Client ID** and **Client Secret**
-5. Add redirect URI: `http://localhost:5000/callback` (or your production URL)
+5. Add redirect URI: `http://localhost:5000/callback` (for local testing)
 6. Update your `.env` file:
    ```env
    DISCORD_CLIENT_ID=your_client_id
@@ -243,6 +243,12 @@ See [DISCORD_OAUTH_SETUP.md](DISCORD_OAUTH_SETUP.md) for detailed setup instruct
 **Access Control:**
 - **Admin** (your Discord ID): Full dashboard access
 - **Players** (other Discord users): Can only view their own stats/inventory
+
+**For Production Deployment:**
+When deploying to Railway, Render, or other platforms:
+1. Add production callback URL to Discord OAuth2 settings (e.g., `https://your-app.railway.app/callback`)
+2. Update `DISCORD_REDIRECT_URI` environment variable to match production URL
+3. Ensure all environment variables are set in your hosting platform
 
 ## Web Interface
 
@@ -272,6 +278,42 @@ The web interface provides a modern dark mode dashboard to monitor and manage yo
 
 **Design:**
 - GitHub-inspired dark theme
+- Bootstrap 5.3.0 with native dark mode
+- Responsive card-based layout
+- Unified navigation across all pages
+- Color-coded rarity system for items
+
+The interface runs on **port 5000** by default. Access it at `http://localhost:5000` after starting the bot.
+
+## Production Deployment
+
+### Railway.app (Recommended) 🚀
+
+Deploy WillowBot to Railway for free hosting with automatic deployments:
+
+1. **Sign up** at [Railway.app](https://railway.app)
+2. **Deploy from GitHub** - Select your willowbot repository
+3. **Add environment variables** - Configure all required credentials
+4. **Attach persistent volume** - Mount `/app/data` for database storage
+5. **Add production OAuth2 redirect** - Update Discord Developer Portal with Railway URL
+
+**See [RAILWAY_DEPLOYMENT.md](RAILWAY_DEPLOYMENT.md) for complete step-by-step instructions.**
+
+Railway provides:
+- ✅ $5/month free credit (enough for small-medium bots)
+- ✅ Automatic deployments from GitHub
+- ✅ Persistent storage for SQLite database
+- ✅ Built-in HTTPS and custom domains
+- ✅ Real-time logs and monitoring
+
+### Alternative Platforms
+
+- **Render.com** - Free background workers, auto-deploy from GitHub
+- **Fly.io** - 3 free VMs with persistent volumes
+- **Oracle Cloud** - Always-free tier with full VM control
+- **Google Cloud Run** - Pay-per-use, scales to zero
+
+See the main deployment guide for configuration details for each platform.
 - Bootstrap 5.3.0 with native dark mode
 - Responsive card-based layout
 - Unified navigation across all pages
