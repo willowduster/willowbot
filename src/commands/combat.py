@@ -1805,7 +1805,21 @@ class CombatCommands(commands.Cog):
                 inline=False
             )
             
-            inv_msg = await channel.send(embed=embed)
+            # Check if we should edit existing message or send new one
+            victory_data = self.victory_messages.get(user.id)
+            if victory_data and victory_data.get('message_id'):
+                try:
+                    # Try to fetch and edit the existing message
+                    msg = await channel.fetch_message(victory_data['message_id'])
+                    await msg.edit(embed=embed)
+                    # Clear old reactions
+                    await msg.clear_reactions()
+                    inv_msg = msg
+                except (discord.NotFound, discord.Forbidden, discord.HTTPException):
+                    # If we can't edit, send a new message
+                    inv_msg = await channel.send(embed=embed)
+            else:
+                inv_msg = await channel.send(embed=embed)
             
             # Add reaction buttons
             await inv_msg.add_reaction("🛏️")  # Rest
@@ -1814,9 +1828,6 @@ class CombatCommands(commands.Cog):
             await inv_msg.add_reaction("🛡️")  # Equipment
             
             # Store message for reaction handling
-            if user.id in self.victory_messages:
-                del self.victory_messages[user.id]
-            
             self.victory_messages[user.id] = {
                 'message_id': inv_msg.id,
                 'channel_id': channel.id,
@@ -1871,7 +1882,21 @@ class CombatCommands(commands.Cog):
                 inline=False
             )
             
-            stats_msg = await channel.send(embed=embed)
+            # Check if we should edit existing message or send new one
+            victory_data = self.victory_messages.get(user.id)
+            if victory_data and victory_data.get('message_id'):
+                try:
+                    # Try to fetch and edit the existing message
+                    msg = await channel.fetch_message(victory_data['message_id'])
+                    await msg.edit(embed=embed)
+                    # Clear old reactions
+                    await msg.clear_reactions()
+                    stats_msg = msg
+                except (discord.NotFound, discord.Forbidden, discord.HTTPException):
+                    # If we can't edit, send a new message
+                    stats_msg = await channel.send(embed=embed)
+            else:
+                stats_msg = await channel.send(embed=embed)
             
             # Add reaction buttons
             await stats_msg.add_reaction("🛏️")  # Rest
@@ -1880,9 +1905,6 @@ class CombatCommands(commands.Cog):
             await stats_msg.add_reaction("🛡️")  # Equipment
             
             # Store message for reaction handling
-            if user.id in self.victory_messages:
-                del self.victory_messages[user.id]
-            
             self.victory_messages[user.id] = {
                 'message_id': stats_msg.id,
                 'channel_id': channel.id,
@@ -1986,7 +2008,21 @@ class CombatCommands(commands.Cog):
             inline=False
         )
         
-        equip_msg = await channel.send(embed=embed)
+        # Check if we should edit existing message or send new one
+        victory_data = self.victory_messages.get(user.id)
+        if victory_data and victory_data.get('message_id'):
+            try:
+                # Try to fetch and edit the existing message
+                msg = await channel.fetch_message(victory_data['message_id'])
+                await msg.edit(embed=embed)
+                # Clear old reactions
+                await msg.clear_reactions()
+                equip_msg = msg
+            except (discord.NotFound, discord.Forbidden, discord.HTTPException):
+                # If we can't edit, send a new message
+                equip_msg = await channel.send(embed=embed)
+        else:
+            equip_msg = await channel.send(embed=embed)
         
         # Add reaction buttons
         await equip_msg.add_reaction("🛏️")  # Rest
@@ -1995,9 +2031,6 @@ class CombatCommands(commands.Cog):
         await equip_msg.add_reaction("📊")  # Stats
         
         # Store message for reaction handling
-        if user.id in self.victory_messages:
-            del self.victory_messages[user.id]
-        
         self.victory_messages[user.id] = {
             'message_id': equip_msg.id,
             'channel_id': channel.id,
