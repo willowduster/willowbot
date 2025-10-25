@@ -219,9 +219,15 @@ class QuestManager:
         enemy_prefix: Optional[str] = None,
         enemy_suffix: Optional[str] = None,
         attack_type: Optional[str] = None
-    ) -> List[Tuple[Quest, bool]]:  # Returns [(Quest, was_completed)]
-        """Update quest progress after combat"""
+    ) -> tuple[List[Tuple[Quest, bool]], int, int]:  # Returns [(Quest, was_completed)], old_level, new_level
+        """Update quest progress after combat
+        
+        Returns:
+            tuple: (list of (Quest, was_completed) tuples, old_level, new_level)
+        """
         results = []
+        old_level = 0
+        new_level = 0
         
         # Get all active quests
         async with await self.bot.db_connect() as db:
@@ -284,7 +290,7 @@ class QuestManager:
 
             if was_completed:
                 # Auto-claim rewards when quest is completed
-                await self.claim_quest_rewards(player_id, quest_id)
+                reward_result, old_level, new_level = await self.claim_quest_rewards(player_id, quest_id)
                 logger.info(f"Auto-claimed rewards for quest {quest_id} for player {player_id}")
                 
                 # If this completes a chain, record it
@@ -330,10 +336,14 @@ class QuestManager:
                                 await self.start_quest(player_id, next_quest_id)
                                 logger.info(f"Auto-started next quest {next_quest_id} for player {player_id}")
 
-        return results
+        return (results, old_level, new_level)
 
-    async def claim_quest_rewards(self, player_id: int, quest_id: str) -> Optional[QuestReward]:
-        """Claim rewards for a completed quest"""
+    async def claim_quest_rewards(self, player_id: int, quest_id: str) -> tuple[Optional[QuestReward], int, int]:
+        """Claim rewards for a completed quest
+        
+        Returns:
+            tuple: (QuestReward or None, old_level, new_level)
+        """
         # Check if quest is completed and rewards aren't claimed
         async with await self.bot.db_connect() as db:
             async with db.execute(
@@ -344,9 +354,14 @@ class QuestManager:
             ) as cursor:
                 result = await cursor.fetchone()
                 if not result or not result[0] or result[1]:
-                    return None
+                    return (None, 0, 0)
 
             quest = self.quests[quest_id]
+            
+            # Get current level before applying rewards
+            async with db.execute('SELECT level FROM players WHERE id = ?', (player_id,)) as cursor:
+                old_level_row = await cursor.fetchone()
+                old_level = old_level_row[0] if old_level_row else 1
             
             # Update player stats
             await db.execute('''
@@ -404,6 +419,7 @@ class QuestManager:
                         WHERE id = ?
                     ''', (cur_level, cur_xp, cur_max_health, cur_max_health, cur_max_mana, cur_max_mana, player_id))
                     await db.commit()
-                    logger.info(f"Leveled up player {player_id} to level {cur_level}")
+                    logger.info(f"Leveled up player {player_id} from level {old_level} to level {cur_level}")
+                    return (quest.rewards, old_level, cur_level)
 
-            return quest.rewards
+            return (quest.rewards, old_level, old_level)

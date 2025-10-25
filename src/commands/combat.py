@@ -442,12 +442,15 @@ class CombatCommands(commands.Cog):
                     enemy_type = " ".join(enemy_name_parts[1:])
             
             # Update quest progress for combat
-            quest_results = await self.quest_manager.update_quest_progress(
+            quest_results, quest_old_level, quest_new_level = await self.quest_manager.update_quest_progress(
                 user_id,
                 enemy_type=enemy_type,
                 enemy_prefix=enemy_prefix,
                 enemy_suffix=enemy_suffix
             )
+            
+            # Check if quest rewards triggered a level-up
+            quest_leveled_up = quest_new_level > quest_old_level
             
             # Calculate rewards
             xp_gained = 50 + (enemy.level * 10)
@@ -544,6 +547,10 @@ class CombatCommands(commands.Cog):
                                     if progress[i] < obj.count:
                                         quest_text.append(f"📜 **{quest.title}**: {progress[i]}/{obj.count} {obj.description}")
                                         break
+                
+                # Add quest level-up notification if occurred
+                if quest_leveled_up:
+                    quest_text.append(f"🎉 **Level Up!** {quest_old_level} → {quest_new_level} (from quest rewards!)")
                 
                 if quest_text:
                     victory_embed.add_field(
@@ -710,12 +717,15 @@ class CombatCommands(commands.Cog):
                         enemy_prefix = enemy_name_parts[0]
                         enemy_type = " ".join(enemy_name_parts[1:])
                 
-                quest_results = await self.quest_manager.update_quest_progress(
+                quest_results, quest_old_level, quest_new_level = await self.quest_manager.update_quest_progress(
                     user_id,
                     enemy_type=enemy_type,
                     enemy_prefix=enemy_prefix,
                     enemy_suffix=enemy_suffix
                 )
+                
+                # Check if quest rewards triggered a level-up
+                quest_leveled_up = quest_new_level > quest_old_level
                 
                 # Calculate rewards
                 xp_gained = 50 + (enemy.level * 10)

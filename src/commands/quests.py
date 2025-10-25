@@ -286,7 +286,7 @@ class QuestCommands(commands.Cog):
     @commands.command(name='claim_rewards')
     async def claim_rewards(self, ctx, quest_id: str):
         """Claim rewards for a completed quest"""
-        rewards = await self.quest_manager.claim_quest_rewards(ctx.author.id, quest_id)
+        rewards, old_level, new_level = await self.quest_manager.claim_quest_rewards(ctx.author.id, quest_id)
         
         if not rewards:
             await ctx.send("No rewards to claim! Make sure the quest is complete and hasn't been claimed already.")
@@ -311,6 +311,10 @@ class QuestCommands(commands.Cog):
         if rewards.title:
             title = self.quest_manager.titles[rewards.title]
             rewards_text.append(f"• Title: {title.name}")
+        
+        # Add level-up notification
+        if new_level > old_level:
+            rewards_text.append(f"\n🎉 **Level Up!** {old_level} → {new_level}")
 
         embed.add_field(
             name="Rewards",
