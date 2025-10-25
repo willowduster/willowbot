@@ -1,8 +1,12 @@
 import discord
 from discord.ext import commands
 from src.models.player import Player
+from src.models.quest_manager import QuestManager
 import aiosqlite
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 class PlayerCommands(commands.Cog):
     def __init__(self, bot):
@@ -31,6 +35,13 @@ class PlayerCommands(commands.Cog):
                     ''', (user_id,))
                     
                     await db.commit()
+                    
+                    # Start the first quest automatically
+                    quest_manager = QuestManager(self.bot)
+                    first_quest = await quest_manager.start_quest(user_id, 'quest_1_1')
+                    if first_quest:
+                        logger.info(f"Auto-started quest_1_1 for new player {user_id}")
+                    
                     return await self.get_player(user_id)
                 elif row:
                     return Player(
@@ -76,6 +87,10 @@ class PlayerCommands(commands.Cog):
         )
         await self.save_player(player)
         
+        # Start the first quest automatically
+        quest_manager = QuestManager(self.bot)
+        first_quest = await quest_manager.start_quest(ctx.author.id, 'quest_1_1')
+        
         embed = discord.Embed(
             title="Welcome to the Adventure!",
             description=f"Character created for {ctx.author.mention}",
@@ -85,6 +100,13 @@ class PlayerCommands(commands.Cog):
         embed.add_field(name="Health", value=f"{player.health}/{player.max_health}")
         embed.add_field(name="Mana", value=f"{player.mana}/{player.max_mana}")
         embed.add_field(name="XP", value=f"{player.xp}/{player.xp_needed_for_next_level()}")
+        
+        if first_quest:
+            embed.add_field(
+                name="🎯 First Quest Started!",
+                value=f"**{first_quest.title}**\n{first_quest.description}\n\nUse `!w quest_progress` to check your progress!",
+                inline=False
+            )
         
         await ctx.send(embed=embed)
 
