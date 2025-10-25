@@ -168,7 +168,7 @@ class QuestCommands(commands.Cog):
                 combat_cog = self.bot.get_cog('CombatCommands')
                 if not combat_cog:
                     logger.error("Combat cog not found!")
-                    await message.channel.send("There was an error initializing combat. Please try again.")
+                    await message.channel.send("❌ There was an error initializing combat. Please try again.")
                     return
                 
                 # If we managed to keep the old message, delete it after sending the new one
@@ -180,16 +180,17 @@ class QuestCommands(commands.Cog):
                     
                 try:
                     # Start combat directly - no need for intermediate message
-                    logger.info(f"Starting combat for user {user.id}")
+                    logger.info(f"Calling start_quest_combat for user {user.id} in channel {message.channel}")
                     combat_msg = await combat_cog.start_quest_combat(message.channel, user.id)
+                    logger.info(f"start_quest_combat returned: {combat_msg}")
                     if combat_msg:
-                        logger.info(f"Combat started successfully for user {user.id}")
+                        logger.info(f"✅ Combat started successfully for user {user.id}")
                     else:
-                        logger.error(f"Failed to start combat for user {user.id}")
-                        await message.channel.send("There was an error starting combat. Please try again.")
+                        logger.error(f"❌ start_quest_combat returned None for user {user.id}")
+                        await message.channel.send("❌ Combat could not be started. Please check the logs or try `!w quests` again.")
                 except Exception as e:
-                    logger.error(f"Error starting combat: {str(e)}", exc_info=True)
-                    await message.channel.send("There was an error starting combat. Please try again.")
+                    logger.error(f"❌ Exception while starting combat: {str(e)}", exc_info=True)
+                    await message.channel.send(f"❌ Error starting combat: {str(e)}\nPlease try again or contact an admin.")
             else:
                 # For objectives that don't require combat, just send the quest info
                 quest_embed = discord.Embed(
