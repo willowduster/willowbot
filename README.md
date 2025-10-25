@@ -48,6 +48,8 @@ A Discord RPG bot that allows users to create and manage characters with stats, 
   - All combat-focused quests for streamlined gameplay
   - Progressive difficulty scaling
   - Rewards including items, XP, gold, and titles
+  - **Auto-start first quest** - New players automatically begin Quest 1 on character creation
+  - **Instant combat** - First battle starts immediately after `!w start` command
   - Automatic quest chain progression
   - Quest completion tracking (quests marked as completed, not deleted)
   - Automatic reward claiming on completion
@@ -64,6 +66,19 @@ A Discord RPG bot that allows users to create and manage characters with stats, 
   - Death history viewer
 
 ## Recent Improvements
+
+### New Player Experience (October 2025)
+- **Instant Action**: New players jump straight into combat after character creation
+  - `!w start` command now automatically:
+    - Creates your character with starting stats
+    - Assigns the first quest ("Quest 1: The Beginning")
+    - Creates a dedicated combat thread
+    - Starts the first battle immediately
+  - No tutorial walls, no waiting - adventure begins in seconds!
+- **Streamlined Onboarding**: 
+  - Starting inventory includes 3 Mana Potions
+  - First quest designed for level 1 characters
+  - Clear combat instructions in thread welcome message
 
 ### Persistent Player Threads (October 2025)
 - **Dedicated Player Threads**: Each player gets their own persistent Discord thread for their adventure
@@ -146,6 +161,9 @@ Recent difficulty increase (+15% across the board):
 
 **Character Management:**
 - `!w start` - Create your character and begin your adventure
+  - Automatically starts Quest 1: "The Beginning"
+  - Immediately enters first combat encounter in a dedicated thread
+  - No additional commands needed to start playing!
 - `!w stats` or `!w s` - View your character's current stats including deaths and kills
 
 **Equipment & Inventory:**
