@@ -1579,6 +1579,42 @@ class CombatCommands(commands.Cog):
                 await self.handle_show_equipment(reaction.message.channel, user)
             return
         
+        # Check if this is an inventory screen reaction
+        if victory_data and victory_data.get('type') == 'inventory':
+            if emoji == "🛏️":  # Rest to restore HP/Mana
+                await self.handle_rest(reaction.message.channel, user)
+            elif emoji == "▶️":  # Next Quest
+                await self.handle_next_quest(reaction.message.channel, user)
+            elif emoji == "📊":  # Show Stats
+                await self.handle_show_stats(reaction.message.channel, user)
+            elif emoji == "🛡️":  # Show Equipment
+                await self.handle_show_equipment(reaction.message.channel, user)
+            return
+        
+        # Check if this is a stats screen reaction
+        if victory_data and victory_data.get('type') == 'stats':
+            if emoji == "🛏️":  # Rest to restore HP/Mana
+                await self.handle_rest(reaction.message.channel, user)
+            elif emoji == "▶️":  # Next Quest
+                await self.handle_next_quest(reaction.message.channel, user)
+            elif emoji == "🎒":  # Show Inventory
+                await self.handle_show_inventory(reaction.message.channel, user)
+            elif emoji == "🛡️":  # Show Equipment
+                await self.handle_show_equipment(reaction.message.channel, user)
+            return
+        
+        # Check if this is an equipment screen reaction
+        if victory_data and victory_data.get('type') == 'equipment':
+            if emoji == "🛏️":  # Rest to restore HP/Mana
+                await self.handle_rest(reaction.message.channel, user)
+            elif emoji == "▶️":  # Next Quest
+                await self.handle_next_quest(reaction.message.channel, user)
+            elif emoji == "🎒":  # Show Inventory
+                await self.handle_show_inventory(reaction.message.channel, user)
+            elif emoji == "📊":  # Show Stats
+                await self.handle_show_stats(reaction.message.channel, user)
+            return
+        
         # Victory reactions
         if emoji == "🛏️":  # Rest to restore HP/Mana
             await self.handle_rest(reaction.message.channel, user)
@@ -1762,7 +1798,30 @@ class CombatCommands(commands.Cog):
             if other:
                 embed.add_field(name="📦 Other", value="\n".join(other), inline=False)
             
-            await channel.send(embed=embed)
+            # Add action buttons
+            embed.add_field(
+                name="Actions",
+                value="🛏️ Rest | ▶️ Next Quest | 📊 Stats | 🛡️ Equipment",
+                inline=False
+            )
+            
+            inv_msg = await channel.send(embed=embed)
+            
+            # Add reaction buttons
+            await inv_msg.add_reaction("🛏️")  # Rest
+            await inv_msg.add_reaction("▶️")  # Next quest
+            await inv_msg.add_reaction("📊")  # Stats
+            await inv_msg.add_reaction("🛡️")  # Equipment
+            
+            # Store message for reaction handling
+            if user.id in self.victory_messages:
+                del self.victory_messages[user.id]
+            
+            self.victory_messages[user.id] = {
+                'message_id': inv_msg.id,
+                'channel_id': channel.id,
+                'type': 'inventory'
+            }
     
     async def handle_show_stats(self, channel, user):
         """Display the player's stats"""
@@ -1805,7 +1864,30 @@ class CombatCommands(commands.Cog):
                 inline=True
             )
             
-            await channel.send(embed=embed)
+            # Add action buttons
+            embed.add_field(
+                name="Actions",
+                value="🛏️ Rest | ▶️ Next Quest | 🎒 Inventory | 🛡️ Equipment",
+                inline=False
+            )
+            
+            stats_msg = await channel.send(embed=embed)
+            
+            # Add reaction buttons
+            await stats_msg.add_reaction("🛏️")  # Rest
+            await stats_msg.add_reaction("▶️")  # Next quest
+            await stats_msg.add_reaction("🎒")  # Inventory
+            await stats_msg.add_reaction("🛡️")  # Equipment
+            
+            # Store message for reaction handling
+            if user.id in self.victory_messages:
+                del self.victory_messages[user.id]
+            
+            self.victory_messages[user.id] = {
+                'message_id': stats_msg.id,
+                'channel_id': channel.id,
+                'type': 'stats'
+            }
     
     async def handle_show_equipment(self, channel, user):
         """Display the player's equipped items in Diablo 2 style layout"""
@@ -1896,8 +1978,31 @@ class CombatCommands(commands.Cog):
                 value=" | ".join(stats_text),
                 inline=False
             )
-
-        await channel.send(embed=embed)
+        
+        # Add action buttons
+        embed.add_field(
+            name="Actions",
+            value="🛏️ Rest | ▶️ Next Quest | 🎒 Inventory | 📊 Stats",
+            inline=False
+        )
+        
+        equip_msg = await channel.send(embed=embed)
+        
+        # Add reaction buttons
+        await equip_msg.add_reaction("🛏️")  # Rest
+        await equip_msg.add_reaction("▶️")  # Next quest
+        await equip_msg.add_reaction("🎒")  # Inventory
+        await equip_msg.add_reaction("📊")  # Stats
+        
+        # Store message for reaction handling
+        if user.id in self.victory_messages:
+            del self.victory_messages[user.id]
+        
+        self.victory_messages[user.id] = {
+            'message_id': equip_msg.id,
+            'channel_id': channel.id,
+            'type': 'equipment'
+        }
     
     async def handle_rest(self, channel, user):
         """Allow the player to rest and restore HP and Mana"""
