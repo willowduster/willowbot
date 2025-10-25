@@ -219,25 +219,7 @@ class WillowBot(commands.Bot):
     async def close(self):
         await super().close()
 
-# Create bot instance if running directly
+# Run bot when executed directly
 if __name__ == '__main__':
     bot = WillowBot()
     bot.run(os.getenv('DISCORD_TOKEN'))
-
-
-
-async def load_extensions():
-    for extension in bot.initial_extensions:
-        try:
-            await bot.load_extension(extension)
-        except Exception as e:
-            print(f'Failed to load extension {extension}. Error: {e}')
-
-async def main():
-    async with bot:
-        await load_extensions()
-        await bot.start(os.getenv('DISCORD_TOKEN'))
-
-if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
