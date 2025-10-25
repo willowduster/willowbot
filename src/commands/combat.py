@@ -23,6 +23,8 @@ class CombatCommands(commands.Cog):
         self.active_combats = {}
         # Track victory messages for post-combat actions
         self.victory_messages = {}
+        # Track persistent player threads (player_id -> thread_id)
+        self.player_threads = {}
         # Reaction emojis for combat actions
         self.MELEE_EMOJI = "⚔️"
         self.MAGIC_EMOJI = "🔮"
@@ -98,20 +100,79 @@ class CombatCommands(commands.Cog):
         
         return loot, gold_amount
     
+    async def get_or_create_player_thread(self, channel, user_id: int, player_name: str):
+        """Get existing player thread or create a new one"""
+        # Check if player already has a thread
+        if user_id in self.player_threads:
+            thread_id = self.player_threads[user_id]
+            try:
+                thread = self.bot.get_channel(thread_id)
+                if thread and isinstance(thread, discord.Thread) and not thread.archived:
+                    logger.info(f"Reusing existing thread {thread_id} for player {user_id}")
+                    return thread
+                else:
+                    logger.info(f"Thread {thread_id} is archived or not found, creating new one")
+                    # Thread is archived or doesn't exist, remove from tracking
+                    del self.player_threads[user_id]
+            except Exception as e:
+                logger.warning(f"Error getting thread {thread_id}: {e}")
+                del self.player_threads[user_id]
+        
+        # If channel is already a thread, return the parent channel for thread creation
+        if isinstance(channel, discord.Thread):
+            logger.info(f"Channel is a thread, using parent channel for thread creation")
+            parent_channel = channel.parent
+        else:
+            parent_channel = channel
+        
+        # Create new thread for player
+        thread_name = f"🎮 Level 1 {player_name}"
+        thread = await parent_channel.create_thread(
+            name=thread_name,
+            auto_archive_duration=1440,  # 24 hours instead of 60 minutes
+            type=discord.ChannelType.public_thread
+        )
+        self.player_threads[user_id] = thread.id
+        logger.info(f"Created new player thread {thread.id} for {player_name}")
+        
+        # Send welcome message
+        await thread.send(f"🎮 Welcome {player_name}! This is your personal adventure thread. All your battles and progress will happen here!")
+        
+        return thread
+    
+    def update_thread_name(self, user_id: int, player_name: str, level: int, status: str):
+        """Update the player's thread name to reflect current state (non-blocking)"""
+        if user_id not in self.player_threads:
+            return
+        
+        thread_id = self.player_threads[user_id]
+        
+        # Make this non-blocking by scheduling it as a background task
+        async def _update():
+            try:
+                thread = self.bot.get_channel(thread_id)
+                if thread and isinstance(thread, discord.Thread):
+                    # Format: "🎮 Level X PlayerName - Status"
+                    new_name = f"🎮 Lv{level} {player_name} - {status}"
+                    await thread.edit(name=new_name)
+                    logger.info(f"Updated thread name to: {new_name}")
+            except discord.HTTPException as e:
+                if e.status == 429:
+                    logger.warning(f"Rate limited when updating thread name, skipping update")
+                else:
+                    logger.warning(f"Failed to update thread name: {e}")
+            except Exception as e:
+                logger.warning(f"Failed to update thread name: {e}")
+        
+        # Schedule the update as a background task so it doesn't block
+        self.bot.loop.create_task(_update())
+    
     async def end_combat_thread(self, user_id: int, reason: str = "Combat ended"):
         """Archive the combat thread and clean up combat state"""
-        combat_data = self.active_combats.get(user_id)
-        if combat_data and 'thread_id' in combat_data:
-            try:
-                thread = self.bot.get_channel(combat_data['thread_id'])
-                if thread and isinstance(thread, discord.Thread):
-                    # Send a final message before archiving
-                    await thread.send(f"✅ {reason}. This thread will be archived shortly.")
-                    # Archive the thread
-                    await thread.edit(archived=True)
-                    logger.info(f"Archived combat thread {thread.id} for user {user_id}")
-            except Exception as e:
-                logger.warning(f"Failed to archive thread for user {user_id}: {e}")
+        # Note: We no longer archive threads automatically
+        # Threads persist for the player's session
+        logger.info(f"Combat ended for user {user_id}: {reason}")
+        # We keep the thread active for continuous play
         
     async def start_quest_combat(self, channel, user_id: int, enemy_type: str = None):
         """Start combat as part of a quest"""
@@ -163,20 +224,16 @@ class CombatCommands(commands.Cog):
             enemy = self.enemy_generator.generate_enemy(player.level)
             logger.info(f"Generated enemy: {enemy.name} (Level {enemy.level})")
             
-            # Create a thread for this combat
+            # Get or create persistent player thread
             user = await self.bot.fetch_user(user_id)
-            thread_name = f"⚔️ {player.name} vs {enemy.name}"
+            thread = await self.get_or_create_player_thread(channel, user_id, player.name)
+            logger.info(f"Using player thread (ID: {thread.id}) for combat")
             
-            # Create the thread (auto-archives after 60 minutes of inactivity)
-            thread = await channel.create_thread(
-                name=thread_name,
-                auto_archive_duration=60,
-                type=discord.ChannelType.public_thread
-            )
-            logger.info(f"Created combat thread: {thread_name} (ID: {thread.id})")
+            # Update thread name to show combat status (non-blocking)
+            self.update_thread_name(user_id, player.name, player.level, f"⚔️ Fighting {enemy.name}")
             
-            # Send initial message to thread mentioning the user
-            await thread.send(f"{user.mention} Your combat has begun! React to the message below to take actions.")
+            # Send combat start message to thread
+            await thread.send(f"{user.mention} **⚔️ Combat has begun!** React to the message below to take actions.")
             
             # Get healing item count
             healing_item_count = await self.get_healing_consumable_count(user_id)
@@ -560,8 +617,8 @@ class CombatCommands(commands.Cog):
                 'channel_id': channel.id
             }
             
-            # Clean up combat and archive thread
-            await self.end_combat_thread(user_id, "Victory! Combat completed")
+            # Update thread name to show victory status (non-blocking)
+            self.update_thread_name(user_id, player.name, player.level, "🏆 Victory!")
             del self.active_combats[user_id]
             return
         
@@ -813,8 +870,8 @@ class CombatCommands(commands.Cog):
                     'channel_id': channel.id
                 }
                 
-                # Clean up combat and archive thread
-                await self.end_combat_thread(user_id, "Enemy fled! Victory!")
+                # Update thread name to show victory status (non-blocking)
+                self.update_thread_name(user_id, player.name, player.level, "🏆 Victory!")
                 del self.active_combats[user_id]
                 return
             else:
@@ -920,8 +977,8 @@ class CombatCommands(commands.Cog):
                 ''', (player.health, player.mana, player.id))
                 await db.commit()
             
-            # Clean up combat and archive thread
-            await self.end_combat_thread(user_id, "Defeated! You may rest and retry")
+            # Update thread name to show defeated status (non-blocking)
+            self.update_thread_name(user_id, player.name, player.level, "💀 Defeated")
             del self.active_combats[user_id]
             return
         
@@ -1146,8 +1203,8 @@ class CombatCommands(commands.Cog):
                 ''', (player.health, player.mana, player.id))
                 await db.commit()
             
-            # Clean up combat and archive thread
-            await self.end_combat_thread(user_id, "Defeated! You may rest and retry")
+            # Update thread name to show defeated status (non-blocking)
+            self.update_thread_name(user_id, player.name, player.level, "💀 Defeated")
             del self.active_combats[user_id]
             return
         
@@ -1258,7 +1315,7 @@ class CombatCommands(commands.Cog):
             )
             flee_embed.add_field(
                 name="What would you like to do?",
-                value=f"🛏️ Rest (restore HP and Mana)\n🔄 Retry Quest (start combat again)\n🎒 View Inventory\n📊 View Stats\n🛡️ View Equipment",
+                value=f"🛏️ Rest (restore HP and Mana)\n🔄 Continue Quest Line\n🎒 View Inventory\n📊 View Stats\n🛡️ View Equipment",
                 inline=False
             )
             
@@ -1266,7 +1323,7 @@ class CombatCommands(commands.Cog):
             
             # Add reaction buttons
             await flee_msg.add_reaction("🛏️")  # Rest
-            await flee_msg.add_reaction("🔄")  # Retry quest
+            await flee_msg.add_reaction("🔄")  # Continue Quest Line
             await flee_msg.add_reaction("🎒")  # Inventory
             await flee_msg.add_reaction("📊")  # Stats
             await flee_msg.add_reaction("🛡️")  # Equipment
@@ -1278,8 +1335,9 @@ class CombatCommands(commands.Cog):
                 'type': 'flee'
             }
             
-            # Clean up combat and archive thread
-            await self.end_combat_thread(user.id, "Fled successfully!")
+            # Update thread name to show fled status (non-blocking)
+            player = combat_data['player']
+            self.update_thread_name(user.id, player.name, player.level, "🏃 Fled")
             del self.active_combats[user.id]
         else:
             # Failed to flee - update combat log
@@ -2135,7 +2193,7 @@ class CombatCommands(commands.Cog):
             
             embed.add_field(
                 name="What would you like to do?",
-                value=f"▶️ Next Quest\n🔄 Retry Quest (start combat again)\n🎒 View Inventory\n📊 View Stats\n🛡️ View Equipment",
+                value=f"▶️ Next Quest\n🔄 Continue Quest Line\n🎒 View Inventory\n📊 View Stats\n🛡️ View Equipment",
                 inline=False
             )
             
@@ -2143,7 +2201,7 @@ class CombatCommands(commands.Cog):
             
             # Add reaction buttons
             await rest_msg.add_reaction("▶️")  # Next quest
-            await rest_msg.add_reaction("🔄")  # Retry quest
+            await rest_msg.add_reaction("🔄")  # Continue Quest Line
             await rest_msg.add_reaction("🎒")  # Inventory
             await rest_msg.add_reaction("📊")  # Stats
             await rest_msg.add_reaction("🛡️")  # Equipment

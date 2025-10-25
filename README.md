@@ -24,6 +24,8 @@ A Discord RPG bot that allows users to create and manage characters with stats, 
   - Use consumables for healing and buffs
 
 - **Combat System**
+  - **Persistent player threads** - Each player gets their own dedicated thread that stays active across battles
+  - **Dynamic thread names** - Thread names update to show current game state (combat, victory, defeat, etc.)
   - Turn-based combat with enemies
   - Melee and magic attacks with emoji reactions
   - **Equipment bonuses displayed in combat** - See your total Attack, Defense, Magic Defense, and Crit Chance from gear
@@ -61,6 +63,26 @@ A Discord RPG bot that allows users to create and manage characters with stats, 
 
 ## Recent Improvements
 
+### Persistent Player Threads (October 2025)
+- **Dedicated Player Threads**: Each player gets their own persistent Discord thread for their adventure
+  - Thread stays active across multiple combat sessions
+  - No more searching for new threads after each battle
+  - Full combat history preserved in one continuous conversation
+  - Threads auto-archive after 24 hours of inactivity (up from 60 minutes)
+- **Dynamic Thread Names**: Thread names update automatically to reflect game state
+  - `🎮 Lv5 PlayerName - ⚔️ Fighting EnemyName` (during combat)
+  - `🎮 Lv5 PlayerName - 🏆 Victory!` (after winning)
+  - `🎮 Lv5 PlayerName - 💀 Defeated` (after losing)
+  - `🎮 Lv5 PlayerName - 🏃 Fled` (after fleeing)
+- **Non-Blocking Updates**: Thread name updates happen in the background
+  - Combat never gets stuck waiting for Discord API rate limits
+  - Smooth gameplay even during rapid quest progression
+  - Graceful handling of rate limit errors
+- **Multi-User Support**: Thread-based isolation allows multiple players in the same channel
+  - Each player's combat happens in their own thread
+  - No interference between concurrent battles
+  - Clean, organized gameplay experience
+
 ### UI/UX Enhancements (October 2025)
 - **Seamless Navigation**: All info screens (Inventory, Stats, Equipment) now edit the current message instead of creating new ones
   - Reduces message spam and provides cleaner chat experience
@@ -69,6 +91,7 @@ A Discord RPG bot that allows users to create and manage characters with stats, 
 - **Universal Reaction Navigation**: Added reaction buttons to all info screens:
   - 🛏️ Rest - Restore HP/Mana
   - ▶️ Next Quest - Continue your adventure
+  - 🔄 Continue Quest Line - Retry current quest or continue progression
   - 🎒 Inventory - View items
   - 📊 Stats - View character stats
   - 🛡️ Equipment - View equipped gear
@@ -82,7 +105,8 @@ A Discord RPG bot that allows users to create and manage characters with stats, 
 - **Victory Screen Actions**: Added "Rest" to the victory actions list for clarity
 - **Rest Screen Improvements**: 
   - Added "Next Quest" button to rest screen
-  - All post-combat actions now work from rest screen (Next Quest, Retry, Inventory, Stats)
+  - All post-combat actions now work from rest screen (Next Quest, Continue Quest Line, Inventory, Stats)
+- **Clearer Button Labels**: Changed "Retry Quest" to "Continue Quest Line" to better reflect quest progression
 
 ### Loot System Overhaul
 - **Increased Equipment Drops**: 75% drop rate (up from 60%)
