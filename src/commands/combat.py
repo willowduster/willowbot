@@ -29,6 +29,7 @@ class CombatCommands(commands.Cog):
         self.FLEE_EMOJI = "🏃"
         self.ITEM_EMOJI = "🧪"
         self.PRAY_EMOJI = "🙏"
+        self.EQUIPMENT_EMOJI = "🛡️"
         self.combat_emojis = [self.MELEE_EMOJI, self.MAGIC_EMOJI, self.ITEM_EMOJI, self.FLEE_EMOJI]
         # Defeat reaction emojis
         self.RESTART_EMOJI = "🔄"  # Heal and restart quest
@@ -40,51 +41,60 @@ class CombatCommands(commands.Cog):
         """Generate random loot drops based on enemy level"""
         loot = []
         
-        # Equipment loot pools by level
+        # Equipment loot pools by level (using correct item IDs from items.yaml)
         # Level 1-3: Basic equipment
-        basic_equipment = ['rusty_sword', 'leather_cap', 'cloth_robe', 'wooden_shield', 'basic_staff', 'worn_boots']
+        basic_equipment = ['weapon_1', 'helmet_1', 'armor_1', 'pants_1', 'boots_1']  # Rusty Sword, Leather Cap, etc.
         # Level 3-6: Common equipment
-        common_equipment = ['iron_sword', 'leather_armor', 'iron_helmet', 'iron_shield', 'apprentice_staff', 'leather_boots']
+        common_equipment = ['weapon_2', 'weapon_3', 'helmet_2', 'armor_2', 'armor_3', 'pants_2', 'boots_2']
         # Level 5+: Uncommon equipment
-        uncommon_equipment = ['steel_sword', 'chainmail_armor', 'steel_helmet', 'steel_shield', 'mage_staff', 'iron_boots']
+        uncommon_equipment = ['weapon_4', 'weapon_5', 'helmet_3', 'helmet_4', 'armor_4', 'pants_3', 'boots_3']
         
-        # Consumables
-        consumables = ['health_potion', 'mana_potion', 'greater_health_potion']
+        # Consumables by tier (using correct item IDs)
+        basic_consumables = ['consumable_1', 'consumable_2']  # Health Potion, Mana Potion
+        advanced_consumables = ['consumable_3', 'consumable_4']  # Greater Health/Mana Potions
         
         # Gold always drops
         gold_amount = random.randint(15 * enemy.level, 30 * enemy.level)
         
-        # Equipment drop chance: 75% chance to drop equipment
-        if random.random() < 0.75:
-            # Choose equipment tier based on enemy level
-            if enemy.level <= 3:
+        # GUARANTEED: 1 piece of equipment always drops
+        # Choose equipment tier based on enemy level
+        if enemy.level <= 3:
+            item_id = random.choice(basic_equipment)
+        elif enemy.level <= 6:
+            # 60% common, 40% basic
+            if random.random() < 0.6:
+                item_id = random.choice(common_equipment)
+            else:
                 item_id = random.choice(basic_equipment)
-            elif enemy.level <= 6:
-                # 60% common, 40% basic
-                if random.random() < 0.6:
-                    item_id = random.choice(common_equipment)
-                else:
-                    item_id = random.choice(basic_equipment)
+        else:
+            # 50% uncommon, 35% common, 15% basic
+            roll = random.random()
+            if roll < 0.5:
+                item_id = random.choice(uncommon_equipment)
+            elif roll < 0.85:
+                item_id = random.choice(common_equipment)
             else:
-                # 50% uncommon, 35% common, 15% basic
-                roll = random.random()
-                if roll < 0.5:
-                    item_id = random.choice(uncommon_equipment)
-                elif roll < 0.85:
-                    item_id = random.choice(common_equipment)
-                else:
-                    item_id = random.choice(basic_equipment)
-            
-            loot.append((item_id, 1))
+                item_id = random.choice(basic_equipment)
         
-        # Consumable drop chance: 40% chance
-        if random.random() < 0.4:
-            # Choose consumable based on enemy level
+        loot.append((item_id, 1))
+        
+        # GUARANTEED: 1 consumable always drops (health or mana potion)
+        # Choose consumable based on enemy level
+        if enemy.level >= 5 and random.random() < 0.5:
+            # 50% chance for advanced consumable at level 5+
+            consumable = random.choice(advanced_consumables)
+        else:
+            consumable = random.choice(basic_consumables)
+        
+        loot.append((consumable, 1))
+        
+        # BONUS: 30% chance for additional consumable
+        if random.random() < 0.3:
             if enemy.level >= 5:
-                consumable = random.choice(consumables)
+                bonus_consumable = random.choice(basic_consumables + advanced_consumables)
             else:
-                consumable = random.choice(['health_potion', 'mana_potion'])
-            loot.append((consumable, random.randint(1, 2)))
+                bonus_consumable = random.choice(basic_consumables)
+            loot.append((bonus_consumable, 1))
         
         return loot, gold_amount
         
@@ -141,15 +151,37 @@ class CombatCommands(commands.Cog):
             # Get healing item count
             healing_item_count = await self.get_healing_consumable_count(user_id)
             
+            # Get equipment bonuses
+            equipment = await self.inventory_manager.get_equipment(user_id)
+            equipment_stats = equipment.get_total_stats() if equipment else {}
+            
             # Initialize combat
             init_embed = discord.Embed(
                 title="⚔️ Combat Started!",
                 description=f"You are fighting a level {enemy.level} {enemy.name}!",
                 color=discord.Color.red()
             )
+            
+            # Build player stats with equipment bonuses
+            player_stats_text = f"Health: {player.health}/{player.max_health}\nMana: {player.mana}/{player.max_mana}"
+            if equipment_stats:
+                bonus_parts = []
+                if equipment_stats.get('damage', 0) > 0:
+                    bonus_parts.append(f"⚔️ +{equipment_stats['damage']} Attack")
+                if equipment_stats.get('magic_damage', 0) > 0:
+                    bonus_parts.append(f"🔮 +{equipment_stats['magic_damage']} Magic")
+                if equipment_stats.get('defense', 0) > 0:
+                    bonus_parts.append(f"🛡️ +{equipment_stats['defense']} Defense")
+                if equipment_stats.get('magic_defense', 0) > 0:
+                    bonus_parts.append(f"✨ +{equipment_stats['magic_defense']} Magic Def")
+                if equipment_stats.get('crit_chance', 0) > 0:
+                    bonus_parts.append(f"💥 +{equipment_stats['crit_chance']}% Crit")
+                if bonus_parts:
+                    player_stats_text += "\n" + " | ".join(bonus_parts)
+            
             init_embed.add_field(
                 name="Your Stats", 
-                value=f"Health: {player.health}/{player.max_health}\nMana: {player.mana}/{player.max_mana}",
+                value=player_stats_text,
                 inline=True
             )
             init_embed.add_field(
@@ -440,7 +472,9 @@ class CombatCommands(commands.Cog):
                 
                 # Get updated stats for display including deaths and kills
                 cursor = await db.execute('''
-                    SELECT level, health, max_health, mana, max_mana, xp, gold, deaths 
+                    SELECT level, health, max_health, mana, max_mana, xp, gold, deaths,
+                           damage_bonus, magic_damage_bonus, defense, magic_defense, 
+                           crit_chance_bonus
                     FROM players WHERE id = ?
                 ''', (user_id,))
                 stats = await cursor.fetchone()
@@ -455,15 +489,20 @@ class CombatCommands(commands.Cog):
             
             # Add stats footer
             if stats:
-                level, hp, max_hp, mana, max_mana, xp, gold, deaths = stats
+                level, hp, max_hp, mana, max_mana, xp, gold, deaths, damage_bonus, magic_damage_bonus, defense, magic_defense, crit_chance_bonus = stats
                 xp_needed = level * 100
+                
+                # Format combat stats
+                combat_stats = f"⚔️ Damage: +{damage_bonus} | 🔮 Magic: +{magic_damage_bonus}\n"
+                combat_stats += f"🛡️ Defense: {defense} | 🌟 Magic Def: {magic_defense}\n"
+                combat_stats += f"💥 Crit Chance: +{crit_chance_bonus:.1f}%"
+                
                 victory_embed.add_field(
                     name="📊 Your Stats",
                     value=f"**Level {level}**\n"
-                          f"HP: {hp}/{max_hp}\n"
-                          f"Mana: {mana}/{max_mana}\n"
-                          f"XP: {xp}/{xp_needed}\n"
-                          f"Gold: {gold}\n"
+                          f"HP: {hp}/{max_hp} | Mana: {mana}/{max_mana}\n"
+                          f"XP: {xp}/{xp_needed} | Gold: {gold}\n"
+                          f"{combat_stats}\n"
                           f"💀 Deaths: {deaths} | ⚔️ Kills: {kills}",
                     inline=False
                 )
@@ -471,7 +510,7 @@ class CombatCommands(commands.Cog):
             # Add action options footer
             victory_embed.add_field(
                 name="⚙️ Actions",
-                value="🛏️ Rest\n▶️ Next Quest\n🎒 Inventory\n📊 Stats",
+                value="🛏️ Rest\n▶️ Next Quest\n🎒 Inventory\n📊 Stats\n🛡️ Equipment",
                 inline=False
             )
             
@@ -482,6 +521,7 @@ class CombatCommands(commands.Cog):
             await victory_msg.add_reaction("▶️")  # Next quest
             await victory_msg.add_reaction("🎒")  # Inventory
             await victory_msg.add_reaction("📊")  # Stats
+            await victory_msg.add_reaction("🛡️")  # Equipment
             
             # Store victory message for reaction handling
             self.victory_messages[user_id] = {
@@ -693,7 +733,9 @@ class CombatCommands(commands.Cog):
                           player.max_health, player.max_mana, user_id))
                     
                     cursor = await db.execute('''
-                        SELECT level, health, max_health, mana, max_mana, xp, gold 
+                        SELECT level, health, max_health, mana, max_mana, xp, gold,
+                               damage_bonus, magic_damage_bonus, defense, magic_defense,
+                               crit_chance_bonus
                         FROM players WHERE id = ?
                     ''', (user_id,))
                     stats = await cursor.fetchone()
@@ -701,22 +743,27 @@ class CombatCommands(commands.Cog):
                 
                 # Add stats footer
                 if stats:
-                    level, hp, max_hp, mana, max_mana, xp, gold = stats
+                    level, hp, max_hp, mana, max_mana, xp, gold, damage_bonus, magic_damage_bonus, defense, magic_defense, crit_chance_bonus = stats
                     xp_needed = level * 100
+                    
+                    # Format combat stats
+                    combat_stats = f"⚔️ Damage: +{damage_bonus} | 🔮 Magic: +{magic_damage_bonus}\n"
+                    combat_stats += f"🛡️ Defense: {defense} | 🌟 Magic Def: {magic_defense}\n"
+                    combat_stats += f"💥 Crit Chance: +{crit_chance_bonus:.1f}%"
+                    
                     victory_embed.add_field(
                         name="📊 Your Stats",
                         value=f"**Level {level}**\n"
-                              f"HP: {hp}/{max_hp}\n"
-                              f"Mana: {mana}/{max_mana}\n"
-                              f"XP: {xp}/{xp_needed}\n"
-                              f"Gold: {gold}",
+                              f"HP: {hp}/{max_hp} | Mana: {mana}/{max_mana}\n"
+                              f"XP: {xp}/{xp_needed} | Gold: {gold}\n"
+                              f"{combat_stats}",
                         inline=False
                     )
                 
                 # Add action options footer
                 victory_embed.add_field(
                     name="⚙️ Actions",
-                    value="▶️ Next Quest\n🎒 Inventory\n📊 Stats",
+                    value="▶️ Next Quest\n🎒 Inventory\n📊 Stats\n🛡️ Equipment",
                     inline=False
                 )
                 
@@ -726,6 +773,7 @@ class CombatCommands(commands.Cog):
                 await victory_msg.add_reaction("▶️")  # Next quest
                 await victory_msg.add_reaction("🎒")  # Inventory
                 await victory_msg.add_reaction("📊")  # Stats
+                await victory_msg.add_reaction("🛡️")  # Equipment
                 
                 # Store victory message for reaction handling
                 self.victory_messages[user_id] = {
@@ -1177,7 +1225,7 @@ class CombatCommands(commands.Cog):
             )
             flee_embed.add_field(
                 name="What would you like to do?",
-                value=f"🛏️ Rest (restore HP and Mana)\n🔄 Retry Quest (start combat again)\n🎒 View Inventory\n📊 View Stats",
+                value=f"🛏️ Rest (restore HP and Mana)\n🔄 Retry Quest (start combat again)\n🎒 View Inventory\n📊 View Stats\n🛡️ View Equipment",
                 inline=False
             )
             
@@ -1188,6 +1236,7 @@ class CombatCommands(commands.Cog):
             await flee_msg.add_reaction("🔄")  # Retry quest
             await flee_msg.add_reaction("🎒")  # Inventory
             await flee_msg.add_reaction("📊")  # Stats
+            await flee_msg.add_reaction("🛡️")  # Equipment
             
             # Store flee message for reaction handling
             self.victory_messages[user.id] = {
@@ -1512,6 +1561,8 @@ class CombatCommands(commands.Cog):
                 await self.handle_show_inventory(reaction.message.channel, user)
             elif emoji == "📊":  # Show Stats
                 await self.handle_show_stats(reaction.message.channel, user)
+            elif emoji == "🛡️":  # Show Equipment
+                await self.handle_show_equipment(reaction.message.channel, user)
             return
         
         # Check if this is a rest reaction
@@ -1524,6 +1575,8 @@ class CombatCommands(commands.Cog):
                 await self.handle_show_inventory(reaction.message.channel, user)
             elif emoji == "📊":  # Show Stats
                 await self.handle_show_stats(reaction.message.channel, user)
+            elif emoji == "🛡️":  # Show Equipment
+                await self.handle_show_equipment(reaction.message.channel, user)
             return
         
         # Victory reactions
@@ -1535,6 +1588,8 @@ class CombatCommands(commands.Cog):
             await self.handle_show_inventory(reaction.message.channel, user)
         elif emoji == "📊":  # Show Stats
             await self.handle_show_stats(reaction.message.channel, user)
+        elif emoji == "🛡️":  # Show Equipment
+            await self.handle_show_equipment(reaction.message.channel, user)
     
     async def handle_next_quest(self, channel, user):
         """Activate the next available quest"""
@@ -1752,6 +1807,98 @@ class CombatCommands(commands.Cog):
             
             await channel.send(embed=embed)
     
+    async def handle_show_equipment(self, channel, user):
+        """Display the player's equipped items in Diablo 2 style layout"""
+        from ..models.inventory import ItemRarity
+        
+        equipment = await self.inventory_manager.get_equipment(user.id)
+        if not equipment:
+            await channel.send(f"{user.mention} No equipment found!")
+            return
+
+        def format_item(item):
+            """Format an item with its effects"""
+            if not item:
+                return "*(Empty)*"
+            
+            rarity_prefix = "⚪" if item.rarity == ItemRarity.COMMON else \
+                          "🟢" if item.rarity == ItemRarity.UNCOMMON else \
+                          "🔵" if item.rarity == ItemRarity.RARE else \
+                          "🟣" if item.rarity == ItemRarity.EPIC else "🟡"
+            
+            result = f"{rarity_prefix} **{item.name}** *(Lvl {item.level_requirement})*"
+            
+            # Add item effects on same line
+            if item.effects:
+                effects = []
+                for effect_obj in item.effects:
+                    effect_type = effect_obj.type
+                    effect_value = effect_obj.value
+                    
+                    if effect_value != 0:
+                        if effect_type == 'damage':
+                            effects.append(f"+{effect_value} Dmg")
+                        elif effect_type == 'magic_damage':
+                            effects.append(f"+{effect_value} Magic")
+                        elif effect_type == 'defense':
+                            effects.append(f"+{effect_value} Def")
+                        elif effect_type == 'magic_defense':
+                            effects.append(f"+{effect_value} M.Def")
+                        elif effect_type == 'crit_chance':
+                            effects.append(f"+{effect_value}% Crit")
+                        elif effect_type == 'health_bonus':
+                            effects.append(f"+{effect_value} HP")
+                        elif effect_type == 'mana_bonus':
+                            effects.append(f"+{effect_value} Mana")
+                        elif effect_type == 'flee_chance':
+                            effects.append(f"+{effect_value}% Flee")
+                if effects:
+                    result += "\n" + " | ".join(effects)
+            
+            return result
+
+        embed = discord.Embed(
+            title=f"⚔️ {user.name}'s Equipment",
+            color=discord.Color.gold()
+        )
+
+        # Simple left-aligned list
+        embed.add_field(name="🪖 Helmet", value=format_item(equipment.helmet), inline=False)
+        embed.add_field(name="📿 Amulet", value=format_item(equipment.amulet), inline=False)
+        embed.add_field(name="⚔️ Weapon", value=format_item(equipment.weapon), inline=False)
+        embed.add_field(name="🥋 Armor", value=format_item(equipment.armor), inline=False)
+        embed.add_field(name="💍 Ring 1", value=format_item(equipment.ring1), inline=False)
+        embed.add_field(name="💍 Ring 2", value=format_item(equipment.ring2), inline=False)
+        embed.add_field(name="👖 Pants", value=format_item(equipment.pants), inline=False)
+        embed.add_field(name="👢 Boots", value=format_item(equipment.boots), inline=False)
+
+        # Add total stats summary
+        stats = equipment.get_total_stats()
+        stats_text = []
+        if stats.get('damage', 0) > 0:
+            stats_text.append(f"⚔️ +{stats['damage']} Damage")
+        if stats.get('magic_damage', 0) > 0:
+            stats_text.append(f"🔮 +{stats['magic_damage']} Magic Damage")
+        if stats.get('defense', 0) > 0:
+            stats_text.append(f"🛡️ +{stats['defense']} Defense")
+        if stats.get('magic_defense', 0) > 0:
+            stats_text.append(f"✨ +{stats['magic_defense']} Magic Defense")
+        if stats.get('crit_chance', 0) > 0:
+            stats_text.append(f"💥 +{stats['crit_chance']}% Crit Chance")
+        if stats.get('health_bonus', 0) > 0:
+            stats_text.append(f"❤️ +{stats['health_bonus']} Max HP")
+        if stats.get('mana_bonus', 0) > 0:
+            stats_text.append(f"💙 +{stats['mana_bonus']} Max Mana")
+
+        if stats_text:
+            embed.add_field(
+                name="📊 Total Bonuses",
+                value=" | ".join(stats_text),
+                inline=False
+            )
+
+        await channel.send(embed=embed)
+    
     async def handle_rest(self, channel, user):
         """Allow the player to rest and restore HP and Mana"""
         async with await self.bot.db_connect() as db:
@@ -1813,7 +1960,7 @@ class CombatCommands(commands.Cog):
             
             embed.add_field(
                 name="What would you like to do?",
-                value=f"▶️ Next Quest\n🔄 Retry Quest (start combat again)\n🎒 View Inventory\n📊 View Stats",
+                value=f"▶️ Next Quest\n🔄 Retry Quest (start combat again)\n🎒 View Inventory\n📊 View Stats\n🛡️ View Equipment",
                 inline=False
             )
             
@@ -1824,6 +1971,7 @@ class CombatCommands(commands.Cog):
             await rest_msg.add_reaction("🔄")  # Retry quest
             await rest_msg.add_reaction("🎒")  # Inventory
             await rest_msg.add_reaction("📊")  # Stats
+            await rest_msg.add_reaction("🛡️")  # Equipment
             
             # Store rest message for reaction handling (reuse victory_messages)
             # Clean up old victory message first

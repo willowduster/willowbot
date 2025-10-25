@@ -26,6 +26,8 @@ A Discord RPG bot that allows users to create and manage characters with stats, 
 - **Combat System**
   - Turn-based combat with enemies
   - Melee and magic attacks with emoji reactions
+  - **Equipment bonuses displayed in combat** - See your total Attack, Defense, Magic Defense, and Crit Chance from gear
+  - **Equipment viewer** - View all equipped items and their stats with 🛡️ reaction button
   - **Prayer system** - Restore mana during combat (20-40% mana restore, always available)
   - Critical hits and miss chances
   - **150+ unique enemy combinations** with affixes
@@ -105,6 +107,7 @@ Recent difficulty increase (+15% across the board):
 - `!w equip <item>` - Equip an item
 - `!w unequip <slot>` - Unequip an item from a slot
 - `!w use <item>` - Use a consumable item
+- `🛡️` - View equipped items with stats (available after victory, defeat, flee, rest, or from stats screen)
 
 **Combat:**
 - `⚔️` - Use a melee attack (reaction emoji)
@@ -112,6 +115,7 @@ Recent difficulty increase (+15% across the board):
 - `🧪` - Use a potion during combat (reaction emoji)
 - `🏃` - Attempt to flee from combat (reaction emoji)
 - `🙏` - Pray to restore mana (20-40% mana restore, always available in combat)
+- `🛡️` - View equipped items and total stats (available during and after combat)
 - Interactive defeat system with options to heal or leave
 - `🛏️` - Rest to restore HP and Mana after victory or successful flee (reaction emoji)
 - `▶️` - Continue to next quest or enemy (reaction emoji)
