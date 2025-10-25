@@ -97,6 +97,21 @@ class CombatCommands(commands.Cog):
             loot.append((bonus_consumable, 1))
         
         return loot, gold_amount
+    
+    async def end_combat_thread(self, user_id: int, reason: str = "Combat ended"):
+        """Archive the combat thread and clean up combat state"""
+        combat_data = self.active_combats.get(user_id)
+        if combat_data and 'thread_id' in combat_data:
+            try:
+                thread = self.bot.get_channel(combat_data['thread_id'])
+                if thread and isinstance(thread, discord.Thread):
+                    # Send a final message before archiving
+                    await thread.send(f"✅ {reason}. This thread will be archived shortly.")
+                    # Archive the thread
+                    await thread.edit(archived=True)
+                    logger.info(f"Archived combat thread {thread.id} for user {user_id}")
+            except Exception as e:
+                logger.warning(f"Failed to archive thread for user {user_id}: {e}")
         
     async def start_quest_combat(self, channel, user_id: int, enemy_type: str = None):
         """Start combat as part of a quest"""
@@ -147,6 +162,21 @@ class CombatCommands(commands.Cog):
             # Generate enemy based on player level
             enemy = self.enemy_generator.generate_enemy(player.level)
             logger.info(f"Generated enemy: {enemy.name} (Level {enemy.level})")
+            
+            # Create a thread for this combat
+            user = await self.bot.fetch_user(user_id)
+            thread_name = f"⚔️ {player.name} vs {enemy.name}"
+            
+            # Create the thread (auto-archives after 60 minutes of inactivity)
+            thread = await channel.create_thread(
+                name=thread_name,
+                auto_archive_duration=60,
+                type=discord.ChannelType.public_thread
+            )
+            logger.info(f"Created combat thread: {thread_name} (ID: {thread.id})")
+            
+            # Send initial message to thread mentioning the user
+            await thread.send(f"{user.mention} Your combat has begun! React to the message below to take actions.")
             
             # Get healing item count
             healing_item_count = await self.get_healing_consumable_count(user_id)
@@ -204,18 +234,19 @@ class CombatCommands(commands.Cog):
                 inline=False
             )
             
-            combat_msg = await channel.send(embed=init_embed)
-            logger.info("Sent combat initialization message")
+            combat_msg = await thread.send(embed=init_embed)
+            logger.info("Sent combat initialization message to thread")
             
             # Store combat session IMMEDIATELY before adding reactions
-            # This prevents race condition where user clicks before session is stored
+            # Store both message_id and thread_id for later use
             self.active_combats[user_id] = {
                 'message_id': combat_msg.id,
+                'thread_id': thread.id,
                 'player': player,
                 'enemy': enemy,
                 'turn_history': [],  # Track all combat turns
             }
-            logger.info(f"Stored combat session for user {user_id}")
+            logger.info(f"Stored combat session for user {user_id} in thread {thread.id}")
             
             # Add combat action reactions AFTER storing the session
             for emoji in self.combat_emojis:
@@ -529,7 +560,8 @@ class CombatCommands(commands.Cog):
                 'channel_id': channel.id
             }
             
-            # Clean up combat
+            # Clean up combat and archive thread
+            await self.end_combat_thread(user_id, "Victory! Combat completed")
             del self.active_combats[user_id]
             return
         
@@ -781,7 +813,8 @@ class CombatCommands(commands.Cog):
                     'channel_id': channel.id
                 }
                 
-                # Clean up combat
+                # Clean up combat and archive thread
+                await self.end_combat_thread(user_id, "Enemy fled! Victory!")
                 del self.active_combats[user_id]
                 return
             else:
@@ -887,7 +920,8 @@ class CombatCommands(commands.Cog):
                 ''', (player.health, player.mana, player.id))
                 await db.commit()
             
-            # Clean up combat
+            # Clean up combat and archive thread
+            await self.end_combat_thread(user_id, "Defeated! You may rest and retry")
             del self.active_combats[user_id]
             return
         
@@ -1112,6 +1146,8 @@ class CombatCommands(commands.Cog):
                 ''', (player.health, player.mana, player.id))
                 await db.commit()
             
+            # Clean up combat and archive thread
+            await self.end_combat_thread(user_id, "Defeated! You may rest and retry")
             del self.active_combats[user_id]
             return
         
@@ -1205,9 +1241,6 @@ class CombatCommands(commands.Cog):
                 ''', (player.health, player.mana, user.id))
                 await db.commit()
             
-            # Clear combat data
-            del self.active_combats[user.id]
-            
             # Clear reactions from combat message
             message = await channel.fetch_message(combat_data['message_id'])
             await message.clear_reactions()
@@ -1244,6 +1277,10 @@ class CombatCommands(commands.Cog):
                 'channel_id': channel.id,
                 'type': 'flee'
             }
+            
+            # Clean up combat and archive thread
+            await self.end_combat_thread(user.id, "Fled successfully!")
+            del self.active_combats[user.id]
         else:
             # Failed to flee - update combat log
             player = combat_data['player']

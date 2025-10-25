@@ -30,7 +30,10 @@ class WillowBot(commands.Bot):
             read_message_history=True,
             embed_links=True,      # For sending embeds
             attach_files=True,     # For potential future features
-            external_emojis=True   # For custom emojis if needed
+            external_emojis=True,  # For custom emojis if needed
+            create_public_threads=True,  # For creating combat threads
+            send_messages_in_threads=True,  # For posting in combat threads
+            manage_threads=True    # For archiving threads after combat
         )
         
         super().__init__(command_prefix='!w ', intents=intents)
